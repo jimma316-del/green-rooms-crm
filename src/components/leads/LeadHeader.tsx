@@ -1,0 +1,168 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import { STAGE_CONFIG, SALES_STAGES, PROJECT_STAGES } from '@/types'
+import type { Stage, Pipeline } from '@/types'
+import { ChevronLeft, Flame, Phone, MessageCircle, Mail } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+
+interface Lead {
+  id: string
+  name: string
+  stage: string
+  pipeline: string
+  is_hot: boolean
+  mobile: string | null
+  email: string | null
+}
+
+export function LeadHeader({ lead }: { lead: Lead }) {
+  const [stage, setStage] = useState(lead.stage)
+  const [isHot, setIsHot] = useState(lead.is_hot)
+  const [saving, setSaving] = useState(false)
+  const router = useRouter()
+  const supabase = createClient()
+  const cfg = STAGE_CONFIG[stage as Stage]
+
+  const pipeline: Pipeline = lead.pipeline as Pipeline
+  const stages = pipeline === 'sales' ? SALES_STAGES : PROJECT_STAGES
+
+  async function changeStage(newStage: string) {
+    if (newStage === stage) return
+    setSaving(true)
+    const { data: { user } } = await supabase.auth.getUser()
+
+    await Promise.all([
+      supabase.from('leads').update({ stage: newStage }).eq('id', lead.id),
+      supabase.from('stage_history').insert({
+        lead_id: lead.id,
+        from_stage: stage,
+        to_stage: newStage,
+        changed_by: user!.id,
+      }),
+      supabase.from('activities').insert({
+        lead_id: lead.id,
+        created_by: user!.id,
+        type: 'stage_change',
+        body: `Moved from ${STAGE_CONFIG[stage as Stage]?.label} to ${STAGE_CONFIG[newStage as Stage]?.label}`,
+      }),
+    ])
+
+    if (newStage === 'quote_sent') {
+      const due = new Date(Date.now() + 2 * 86400000).toISOString()
+      await supabase.from('tasks').insert({
+        lead_id: lead.id,
+        created_by: user!.id,
+        assigned_to: user!.id,
+        title: 'Follow up on quote sent',
+        type: 'followup',
+        priority: 'high',
+        due_date: due,
+      })
+      toast.success('Stage updated — follow-up task set for 48hrs')
+    } else {
+      toast.success('Stage updated')
+    }
+
+    setStage(newStage)
+    setSaving(false)
+    router.refresh()
+  }
+
+  async function toggleHot() {
+    const newHot = !isHot
+    setIsHot(newHot)
+    await supabase.from('leads').update({ is_hot: newHot }).eq('id', lead.id)
+  }
+
+  function whatsappUrl() {
+    const phone = lead.mobile?.replace(/\D/g, '').replace(/^0/, '44')
+    return `https://wa.me/${phone}`
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 p-4">
+      {/* Back + hot */}
+      <div className="flex items-center justify-between mb-3">
+        <Link href="/leads" className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          <ChevronLeft className="w-4 h-4" /> All leads
+        </Link>
+        <button
+          onClick={toggleHot}
+          className={cn(
+            'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors',
+            isHot
+              ? 'bg-orange-100 text-orange-600'
+              : 'bg-gray-100 text-gray-500 hover:bg-orange-50 hover:text-orange-400'
+          )}
+        >
+          <Flame className="w-3.5 h-3.5" />
+          {isHot ? 'Hot lead' : 'Mark hot'}
+        </button>
+      </div>
+
+      {/* Name + stage */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">{lead.name}</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${cfg?.color ?? 'bg-gray-100 text-gray-600'}`}>
+              {cfg?.label ?? stage}
+            </span>
+            <span className="text-xs text-gray-400 capitalize">{lead.pipeline} pipeline</span>
+          </div>
+        </div>
+
+        {/* Stage selector */}
+        <div className="flex items-center gap-2">
+          <Select value={stage} onValueChange={(v) => v && changeStage(v)} disabled={saving}>
+            <SelectTrigger className="w-48 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {stages.map(s => (
+                <SelectItem key={s} value={s}>
+                  {STAGE_CONFIG[s as Stage]?.label ?? s}
+                </SelectItem>
+              ))}
+              <SelectItem value="lost">Lost</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Quick action buttons */}
+      <div className="flex gap-2 mt-4 flex-wrap">
+        {lead.mobile && (
+          <>
+            <a href={`tel:${lead.mobile}`}>
+              <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+                <Phone className="w-3.5 h-3.5" /> Call
+              </Button>
+            </a>
+            <a href={whatsappUrl()} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" variant="outline" className="gap-1.5 text-xs text-green-700 border-green-200 hover:bg-green-50">
+                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+              </Button>
+            </a>
+          </>
+        )}
+        {lead.email && (
+          <a href={`mailto:${lead.email}`}>
+            <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+              <Mail className="w-3.5 h-3.5" /> Email
+            </Button>
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}
