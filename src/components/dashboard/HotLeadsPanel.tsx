@@ -15,11 +15,11 @@ interface Lead {
 
 export function HotLeadsPanel({ leads }: { leads: Lead[] }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4">
+    <div className="bg-white rounded-xl border border-border p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
           <Flame className="w-4 h-4 text-orange-500" />
-          <h2 className="text-sm font-semibold text-gray-700">Hot Leads</h2>
+          <h2 className="text-sm font-semibold text-[var(--primary)]">Hot Leads</h2>
         </div>
         <Link href="/leads?hot=true" className="text-xs text-[var(--primary)] hover:underline">View all →</Link>
       </div>

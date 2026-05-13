@@ -4,13 +4,14 @@ export type Pipeline = 'sales' | 'project' | 'lost'
 
 export type SalesStage =
   | 'new_lead'
-  | 'attempting_contact'
-  | 'contact_made'
-  | 'site_survey_required'
+  | 'sent_sms'
+  | 'sent_brochures'
+  | 'site_survey_booked'
+  | 'quoting'
   | 'quote_sent'
-  | 'quote_followup'
-  | 'deposit_requested'
-  | 'won'
+  | 'followup'
+  | 'final_followup'
+  | 'job_booked'
 
 export type ProjectStage =
   | 'pre_start'
@@ -36,13 +37,15 @@ export type LostReason =
 
 export type LeadSource =
   | 'manual'
+  | 'referral'
+  | 'instagram'
+  | 'facebook'
+  | 'google'
+  | 'google_organic'
+  | 'phone'
+  | 'other'
   | 'website_form'
   | 'calculator'
-  | 'referral'
-  | 'facebook'
-  | 'phone'
-  | 'walkin'
-  | 'other'
 
 export type ProjectType =
   | 'garden_room'
@@ -67,7 +70,16 @@ export type ActivityType =
   | 'payment_recorded'
   | 'lead_created'
 
-export type TaskType = 'call' | 'email' | 'followup' | 'site_survey' | 'other'
+export type TaskType = 'amend_quote' | 'amend_design' | 'in_person_meeting' | 'send_info' | 'call' | 'email'
+
+export const TASK_TYPE_LABELS: Record<TaskType, string> = {
+  amend_quote:       'Amend Quote',
+  amend_design:      'Amend Design',
+  in_person_meeting: 'In Person Meeting',
+  send_info:         'Send Info',
+  call:              'Call',
+  email:             'Email',
+}
 export type TaskPriority = 'low' | 'normal' | 'high'
 
 export interface User {
@@ -182,17 +194,17 @@ export interface StageHistory {
 }
 
 // Stage config for labels, pipeline grouping, colours
-export const STAGE_CONFIG: Record<Stage, { label: string; pipeline: Pipeline; color: string }> = {
+export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; color: string }> = {
   new_lead:             { label: 'New Lead',              pipeline: 'sales',   color: 'bg-slate-100 text-slate-700' },
-  attempting_contact:   { label: 'Attempting Contact',    pipeline: 'sales',   color: 'bg-yellow-100 text-yellow-800' },
-  contact_made:         { label: 'Contact Made',          pipeline: 'sales',   color: 'bg-blue-100 text-blue-800' },
-  site_survey_required: { label: 'Site Survey Required',  pipeline: 'sales',   color: 'bg-purple-100 text-purple-800' },
+  sent_sms:             { label: 'Sent SMS',              pipeline: 'sales',   color: 'bg-yellow-100 text-yellow-800' },
+  sent_brochures:       { label: 'Sent Brochures',        pipeline: 'sales',   color: 'bg-blue-100 text-blue-800' },
+  site_survey_booked:   { label: 'Site Survey Booked',    pipeline: 'sales',   color: 'bg-purple-100 text-purple-800' },
+  quoting:              { label: 'Quoting',               pipeline: 'sales',   color: 'bg-indigo-100 text-indigo-800' },
   quote_sent:           { label: 'Quote Sent',            pipeline: 'sales',   color: 'bg-orange-100 text-orange-800' },
-  quote_followup:       { label: 'Quote Follow-Up',       pipeline: 'sales',   color: 'bg-amber-100 text-amber-800' },
-  deposit_requested:    { label: 'Deposit Requested',     pipeline: 'sales',   color: 'bg-indigo-100 text-indigo-800' },
-  won:                  { label: 'Won',                   pipeline: 'sales',   color: 'bg-green-100 text-green-800' },
+  followup:             { label: 'Follow-Up',             pipeline: 'sales',   color: 'bg-amber-100 text-amber-800' },
+  final_followup:       { label: 'Final Follow-Up',       pipeline: 'sales',   color: 'bg-rose-100 text-rose-800' },
+  job_booked:           { label: 'Job Booked',            pipeline: 'sales',   color: 'bg-green-100 text-green-800' },
   pre_start:            { label: 'Pre-Start',             pipeline: 'project', color: 'bg-teal-100 text-teal-800' },
-  job_booked:           { label: 'Job Booked',            pipeline: 'project', color: 'bg-cyan-100 text-cyan-800' },
   in_build:             { label: 'In Build',              pipeline: 'project', color: 'bg-sky-100 text-sky-800' },
   completion_due:       { label: 'Completion Due',        pipeline: 'project', color: 'bg-rose-100 text-rose-800' },
   paid_closed:          { label: 'Paid / Closed',         pipeline: 'project', color: 'bg-emerald-100 text-emerald-800' },
@@ -201,8 +213,8 @@ export const STAGE_CONFIG: Record<Stage, { label: string; pipeline: Pipeline; co
 }
 
 export const SALES_STAGES: SalesStage[] = [
-  'new_lead', 'attempting_contact', 'contact_made', 'site_survey_required',
-  'quote_sent', 'quote_followup', 'deposit_requested', 'won',
+  'new_lead', 'sent_sms', 'sent_brochures', 'site_survey_booked',
+  'quoting', 'quote_sent', 'followup', 'final_followup', 'job_booked',
 ]
 
 export const PROJECT_STAGES: ProjectStage[] = [
@@ -222,13 +234,15 @@ export const LOST_REASON_LABELS: Record<LostReason, string> = {
 
 export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   manual:       'Manual Entry',
+  referral:     'Referral',
+  instagram:    'Instagram',
+  facebook:     'Facebook',
+  google:         'Google - Paid',
+  google_organic: 'Google - Organic',
+  phone:        'Phone Call',
+  other:        'Other',
   website_form: 'Website Form',
   calculator:   'Calculator',
-  referral:     'Referral',
-  facebook:     'Facebook',
-  phone:        'Phone Call',
-  walkin:       'Walk-In',
-  other:        'Other',
 }
 
 export const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {

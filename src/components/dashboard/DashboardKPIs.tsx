@@ -59,13 +59,13 @@ export function DashboardKPIs({ kpis }: { kpis: KPIs }) {
         <Link
           key={key}
           href={href}
-          className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col gap-3 hover:shadow-md transition-shadow"
+          className="bg-white rounded-xl border border-border p-4 flex flex-col gap-3 hover:shadow-md transition-shadow"
         >
           <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}>
             <Icon className="w-4.5 h-4.5" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-gray-900 leading-none">{kpis[key]}</p>
+            <p className="text-2xl font-bold text-[var(--primary)] leading-none">{kpis[key]}</p>
             <p className="text-xs font-medium text-gray-700 mt-1 leading-tight">{label}</p>
             <p className="text-[10px] text-gray-400 mt-0.5">{sublabel}</p>
           </div>

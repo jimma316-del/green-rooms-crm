@@ -1,8 +1,19 @@
-import { Phone, Mail, MapPin, User, Tag } from 'lucide-react'
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { Phone, Mail, MapPin, User, Tag, Pencil, Check, X } from 'lucide-react'
 import { LEAD_SOURCE_LABELS } from '@/types'
 import type { LeadSource } from '@/types'
+import { Input } from '@/components/ui/input'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import { toast } from 'sonner'
 
 interface Lead {
+  id: string
   name: string
   mobile: string | null
   email: string | null
@@ -14,9 +25,157 @@ interface Lead {
 }
 
 export function LeadContact({ lead }: { lead: Lead }) {
+  const router = useRouter()
+  const supabase = createClient()
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const [form, setForm] = useState({
+    name: lead.name,
+    mobile: lead.mobile ?? '',
+    email: lead.email ?? '',
+    address: lead.address ?? '',
+    postcode: lead.postcode ?? '',
+    lead_source: lead.lead_source ?? 'manual',
+    source_referrer: lead.source_referrer ?? '',
+  })
+
+  function set(field: string, value: string) {
+    setForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  async function lookupPostcode(postcode: string) {
+    const clean = postcode.trim().replace(/\s+/g, '').toUpperCase()
+    if (clean.length < 3 || form.address) return
+    try {
+      const res = await fetch(`https://api.postcodes.io/postcodes/${clean}`)
+      const data = await res.json()
+      if (data.result) {
+        set('address', `${data.result.admin_district}, ${data.result.region}`)
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  async function save() {
+    if (!form.name.trim()) { toast.error('Name is required'); return }
+    setSaving(true)
+    const { error } = await supabase.from('leads').update({
+      name: form.name.trim(),
+      mobile: form.mobile || null,
+      email: form.email || null,
+      address: form.address || null,
+      postcode: form.postcode.toUpperCase() || null,
+      lead_source: form.lead_source || null,
+      source_referrer: form.source_referrer || null,
+    }).eq('id', lead.id)
+
+    if (error) {
+      toast.error('Failed to save')
+    } else {
+      toast.success('Contact details saved')
+      setEditing(false)
+      router.refresh()
+    }
+    setSaving(false)
+  }
+
+  function cancel() {
+    setForm({
+      name: lead.name,
+      mobile: lead.mobile ?? '',
+      email: lead.email ?? '',
+      address: lead.address ?? '',
+      postcode: lead.postcode ?? '',
+      lead_source: lead.lead_source ?? 'manual',
+      source_referrer: lead.source_referrer ?? '',
+    })
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div className="bg-white rounded-xl border border-border p-4">
+        <h2 className="text-sm font-semibold text-[var(--primary)] mb-3">Contact Details</h2>
+        <div className="space-y-3">
+          <div>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Full Name</p>
+            <Input value={form.name} onChange={e => set('name', e.target.value)} autoFocus />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Mobile</p>
+              <Input type="tel" value={form.mobile} onChange={e => set('mobile', e.target.value)} placeholder="07700 900123" />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Email</p>
+              <Input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="james@email.com" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2">
+              <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Address / Town</p>
+              <Input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Oxford, Oxfordshire" />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Postcode</p>
+              <Input
+                value={form.postcode}
+                onChange={e => set('postcode', e.target.value)}
+                onBlur={e => lookupPostcode(e.target.value)}
+                placeholder="OX4 2AB"
+              />
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Lead Source</p>
+            <Select value={form.lead_source} onValueChange={v => v && set('lead_source', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(LEAD_SOURCE_LABELS).map(([v, l]) => (
+                  <SelectItem key={v} value={v}>{l}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {form.lead_source === 'referral' && (
+            <div>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Referred by</p>
+              <Input value={form.source_referrer} onChange={e => set('source_referrer', e.target.value)} placeholder="Who referred them?" />
+            </div>
+          )}
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={save}
+              disabled={saving}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[var(--primary)] text-white rounded-lg hover:opacity-90 disabled:opacity-50"
+            >
+              <Check className="w-3.5 h-3.5" /> {saving ? 'Saving…' : 'Save'}
+            </button>
+            <button
+              onClick={cancel}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50"
+            >
+              <X className="w-3.5 h-3.5" /> Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-4">
-      <h2 className="text-sm font-semibold text-gray-700 mb-3">Contact Details</h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-gray-700">Contact Details</h2>
+        <button
+          onClick={() => setEditing(true)}
+          className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600"
+        >
+          <Pencil className="w-3 h-3" /> Edit
+        </button>
+      </div>
       <div className="space-y-2.5">
         <Row icon={<User className="w-4 h-4 text-gray-400" />} label="Name" value={lead.name} />
         {lead.mobile && (
@@ -40,6 +199,11 @@ export function LeadContact({ lead }: { lead: Lead }) {
             </div>
           </div>
         )}
+        {!lead.mobile && !lead.email && !lead.address && !lead.postcode && (
+          <button onClick={() => setEditing(true)} className="text-sm text-gray-400 underline hover:text-gray-600">
+            Add contact details
+          </button>
+        )}
         {lead.lead_source && (
           <Row
             icon={<Tag className="w-4 h-4 text-gray-400" />}
@@ -48,7 +212,7 @@ export function LeadContact({ lead }: { lead: Lead }) {
           />
         )}
         {lead.source_referrer && (
-          <Row icon={<User className="w-4 h-4 text-gray-400" />} label="Referred by" value={lead.source_referrer} />
+          <Row icon={<Tag className="w-4 h-4 text-gray-400" />} label="Heard via" value={lead.source_referrer} />
         )}
         {lead.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1">

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { STAGE_CONFIG, SALES_STAGES, PROJECT_STAGES } from '@/types'
 import type { Stage, Pipeline } from '@/types'
-import { ChevronLeft, Flame, Phone, MessageCircle, Mail } from 'lucide-react'
+import { ChevronLeft, Flame, Phone, MessageCircle, Mail, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -58,15 +58,24 @@ export function LeadHeader({ lead }: { lead: Lead }) {
 
     if (newStage === 'quote_sent') {
       const due = new Date(Date.now() + 2 * 86400000).toISOString()
-      await supabase.from('tasks').insert({
-        lead_id: lead.id,
-        created_by: user!.id,
-        assigned_to: user!.id,
-        title: 'Follow up on quote sent',
-        type: 'followup',
-        priority: 'high',
-        due_date: due,
-      })
+      await Promise.all([
+        // Create the follow-up task
+        supabase.from('tasks').insert({
+          lead_id: lead.id,
+          created_by: user!.id,
+          assigned_to: user!.id,
+          title: 'Follow up on quote sent',
+          type: 'call',
+          priority: 'high',
+          due_date: due,
+        }),
+        // Complete any open "[Name] Quote" or "[Name] Site Visit" task
+        supabase.from('tasks')
+          .update({ completed_at: new Date().toISOString(), completed_by: user!.id })
+          .eq('lead_id', lead.id)
+          .in('title', [`${lead.name} Quote`, `${lead.name} Site Visit`])
+          .is('completed_at', null),
+      ])
       toast.success('Stage updated — follow-up task set for 48hrs')
     } else {
       toast.success('Stage updated')
@@ -74,6 +83,13 @@ export function LeadHeader({ lead }: { lead: Lead }) {
 
     setStage(newStage)
     setSaving(false)
+    router.refresh()
+  }
+
+  async function deleteLead() {
+    if (!confirm(`Delete ${lead.name}? This cannot be undone.`)) return
+    await supabase.from('leads').delete().eq('id', lead.id)
+    router.push('/leads')
     router.refresh()
   }
 
@@ -89,13 +105,21 @@ export function LeadHeader({ lead }: { lead: Lead }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4">
+    <div className="bg-white rounded-xl border border-border p-4">
       {/* Back + hot */}
       <div className="flex items-center justify-between mb-3">
         <Link href="/leads" className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
           <ChevronLeft className="w-4 h-4" /> All leads
         </Link>
-        <button
+        <div className="flex items-center gap-2">
+          <button
+            onClick={deleteLead}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete
+          </button>
+          <button
           onClick={toggleHot}
           className={cn(
             'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors',
@@ -106,7 +130,8 @@ export function LeadHeader({ lead }: { lead: Lead }) {
         >
           <Flame className="w-3.5 h-3.5" />
           {isHot ? 'Hot lead' : 'Mark hot'}
-        </button>
+          </button>
+        </div>
       </div>
 
       {/* Name + stage */}

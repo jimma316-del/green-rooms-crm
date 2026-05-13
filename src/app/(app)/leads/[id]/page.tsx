@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { autoAdvanceSiteVisits } from '@/lib/autoAdvance'
 import { LeadHeader } from '@/components/leads/LeadHeader'
 import { LeadContact } from '@/components/leads/LeadContact'
 import { LeadProject } from '@/components/leads/LeadProject'
-import { ActivityFeed } from '@/components/leads/ActivityFeed'
+import { LeadDates } from '@/components/leads/LeadDates'
 import { TasksList } from '@/components/tasks/TasksList'
 
 interface Props {
@@ -14,9 +15,10 @@ export default async function LeadPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
 
+  await autoAdvanceSiteVisits(supabase)
+
   const [
     { data: lead },
-    { data: activities },
     { data: tasks },
   ] = await Promise.all([
     supabase
@@ -24,11 +26,6 @@ export default async function LeadPage({ params }: Props) {
       .select('*, users(id, full_name, avatar_url)')
       .eq('id', id)
       .single(),
-    supabase
-      .from('activities')
-      .select('*, users(full_name, avatar_url)')
-      .eq('lead_id', id)
-      .order('created_at', { ascending: false }),
     supabase
       .from('tasks')
       .select('*, users!tasks_assigned_to_fkey(full_name)')
@@ -47,13 +44,13 @@ export default async function LeadPage({ params }: Props) {
         {/* Left column */}
         <div className="md:col-span-1 space-y-4">
           <LeadContact lead={lead} />
-          <LeadProject lead={lead} />
+          <LeadDates lead={lead} />
         </div>
 
         {/* Right column */}
         <div className="md:col-span-2 space-y-4">
+          <LeadProject lead={lead} />
           <TasksList tasks={tasks ?? []} leadId={id} />
-          <ActivityFeed activities={activities ?? []} leadId={id} />
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { AlertCircle } from 'lucide-react'
-import { formatDistanceToNow } from '@/utils/date'
+import { CheckSquare, AlertCircle } from 'lucide-react'
+import { formatDate, isOverdue } from '@/utils/date'
 
 interface Task {
   id: string
@@ -14,42 +14,47 @@ interface Task {
 
 export function OverdueTasksPanel({ tasks }: { tasks: Task[] }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4">
+    <div className="bg-white rounded-xl border border-border p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
-          <AlertCircle className="w-4 h-4 text-red-500" />
-          <h2 className="text-sm font-semibold text-gray-700">Overdue Tasks</h2>
+          <CheckSquare className="w-4 h-4 text-[var(--primary)]" />
+          <h2 className="text-sm font-semibold text-[var(--primary)]">Tasks</h2>
           {tasks.length > 0 && (
-            <span className="text-[10px] font-semibold bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">
               {tasks.length}
             </span>
           )}
         </div>
-        <Link href="/tasks?filter=overdue" className="text-xs text-[var(--primary)] hover:underline">View all →</Link>
+        <Link href="/tasks" className="text-xs text-[var(--primary)] hover:underline">View all →</Link>
       </div>
 
       {tasks.length === 0 ? (
-        <p className="text-sm text-gray-400 py-4 text-center">All caught up!</p>
+        <p className="text-sm text-gray-400 py-4 text-center">No open tasks</p>
       ) : (
         <div className="space-y-2">
-          {tasks.map(task => (
-            <Link
-              key={task.id}
-              href={`/leads/${task.lead_id}`}
-              className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
-            >
-              <div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate group-hover:text-[var(--primary)]">{task.title}</p>
-                <p className="text-xs text-gray-500">
-                  {task.leads?.name ?? 'Unknown lead'}
-                  {task.due_date && (
-                    <span className="text-red-400 ml-1">· {formatDistanceToNow(task.due_date)} overdue</span>
-                  )}
-                </p>
-              </div>
-            </Link>
-          ))}
+          {tasks.map(task => {
+            const over = task.due_date ? isOverdue(task.due_date) : false
+            return (
+              <Link
+                key={task.id}
+                href={`/leads/${task.lead_id}`}
+                className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
+              >
+                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${over ? 'bg-red-400' : 'bg-gray-300'}`} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 truncate group-hover:text-[var(--primary)]">{task.title}</p>
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    {task.leads?.name ?? 'Unknown lead'}
+                    {task.due_date && (
+                      <span className={over ? 'text-red-400 flex items-center gap-0.5' : 'text-gray-400'}>
+                        · {over && <AlertCircle className="w-3 h-3 inline" />} {formatDate(task.due_date)}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

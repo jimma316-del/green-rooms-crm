@@ -50,7 +50,7 @@
 
 :root {
   /* Green Rooms brand theme */
-  --background: oklch(0.98 0.003 150);
+  --background: oklch(0.965 0.018 150);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -58,15 +58,15 @@
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.38 0.09 155);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.96 0.008 150);
+  --secondary: oklch(0.96 0.012 150);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.96 0.005 150);
+  --muted: oklch(0.96 0.010 150);
   --muted-foreground: oklch(0.5 0 0);
-  --accent: oklch(0.93 0.015 150);
+  --accent: oklch(0.91 0.028 150);
   --accent-foreground: oklch(0.38 0.09 155);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.008 150);
-  --input: oklch(0.91 0.008 150);
+  --border: oklch(0.87 0.022 150);
+  --input: oklch(0.91 0.014 150);
   --ring: oklch(0.38 0.09 155);
   --chart-1: oklch(0.38 0.09 155);
   --chart-2: oklch(0.55 0.12 155);

@@ -15,11 +15,11 @@ interface ActivityRow {
 
 export function RecentActivityPanel({ activities }: { activities: ActivityRow[] }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4">
+    <div className="bg-white rounded-xl border border-border p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
           <Activity className="w-4 h-4 text-[var(--primary)]" />
-          <h2 className="text-sm font-semibold text-gray-700">Recent Activity</h2>
+          <h2 className="text-sm font-semibold text-[var(--primary)]">Recent Activity</h2>
         </div>
       </div>
 
