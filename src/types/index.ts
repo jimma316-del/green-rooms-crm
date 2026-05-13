@@ -42,6 +42,7 @@ export type LeadSource =
   | 'facebook'
   | 'google'
   | 'google_organic'
+  | 'direct'
   | 'phone'
   | 'other'
   | 'website_form'
@@ -239,6 +240,7 @@ export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   facebook:     'Facebook',
   google:         'Google - Paid',
   google_organic: 'Google - Organic',
+  direct:         'Direct Traffic',
   phone:        'Phone Call',
   other:        'Other',
   website_form: 'Website Form',
