@@ -83,17 +83,26 @@ export function PipelineBoard({ leads: initialLeads, pipeline }: Props) {
       }),
     ])
 
-    // Auto-create follow-up task when quote is sent
-    if (toStage === 'quote_sent') {
-      const due = new Date(Date.now() + 2 * 86400000).toISOString()
+    if (toStage === 'quoting') {
       await supabase.from('tasks').insert({
         lead_id: dragging,
         created_by: user!.id,
         assigned_to: user!.id,
-        title: 'Follow up on quote sent',
-        type: 'followup',
+        title: 'Prepare quote',
+        type: 'quote',
         priority: 'high',
-        due_date: due,
+        due_date: new Date(Date.now() + 2 * 86400000).toISOString(),
+      })
+      toast.success('Stage updated — quote task created')
+    } else if (toStage === 'quote_sent') {
+      await supabase.from('tasks').insert({
+        lead_id: dragging,
+        created_by: user!.id,
+        assigned_to: user!.id,
+        title: 'Quote follow up',
+        type: 'whatsapp',
+        priority: 'normal',
+        due_date: new Date(Date.now() + 2 * 86400000).toISOString(),
       })
       toast.success('Stage updated — follow-up task created for 48hrs')
     } else {

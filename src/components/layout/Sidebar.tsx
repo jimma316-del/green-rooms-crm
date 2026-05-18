@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, KanbanSquare, CheckSquare,
-  Settings, LogOut, TreePine, BarChart3
+  Settings, LogOut, TreePine, BarChart3, Mail
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { href: '/leads', label: 'All Leads', icon: Users },
+  { href: '/newsletter', label: 'Newsletter', icon: Mail },
   { href: '/tasks', label: 'Tasks', icon: CheckSquare },
   { href: '/reports', label: 'Reports', icon: BarChart3 },
 ]

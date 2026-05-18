@@ -40,7 +40,9 @@ export function OverdueTasksPanel({ tasks }: { tasks: Task[] }) {
                 href={`/leads/${task.lead_id}`}
                 className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
               >
-                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${over ? 'bg-red-400' : 'bg-gray-300'}`} />
+                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
+                  over ? 'bg-red-400' : task.priority === 'high' ? 'bg-orange-400' : 'bg-gray-300'
+                }`} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 truncate group-hover:text-[var(--primary)]">{task.title}</p>
                   <p className="text-xs text-gray-500 flex items-center gap-1">

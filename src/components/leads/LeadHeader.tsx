@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { STAGE_CONFIG, SALES_STAGES, PROJECT_STAGES } from '@/types'
-import type { Stage, Pipeline } from '@/types'
+import type { Stage } from '@/types'
 import { ChevronLeft, Flame, Phone, MessageCircle, Mail, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -32,9 +32,6 @@ export function LeadHeader({ lead }: { lead: Lead }) {
   const supabase = createClient()
   const cfg = STAGE_CONFIG[stage as Stage]
 
-  const pipeline: Pipeline = lead.pipeline as Pipeline
-  const stages = pipeline === 'sales' ? SALES_STAGES : PROJECT_STAGES
-
   async function changeStage(newStage: string) {
     if (newStage === stage) return
     setSaving(true)
@@ -56,24 +53,34 @@ export function LeadHeader({ lead }: { lead: Lead }) {
       }),
     ])
 
-    if (newStage === 'quote_sent') {
+    if (newStage === 'quoting') {
+      const due = new Date(Date.now() + 2 * 86400000).toISOString()
+      await supabase.from('tasks').insert({
+        lead_id: lead.id,
+        created_by: user!.id,
+        assigned_to: user!.id,
+        title: `Prepare quote`,
+        type: 'quote',
+        priority: 'high',
+        due_date: due,
+      })
+      toast.success('Stage updated — quote task created')
+    } else if (newStage === 'quote_sent') {
       const due = new Date(Date.now() + 2 * 86400000).toISOString()
       await Promise.all([
-        // Create the follow-up task
         supabase.from('tasks').insert({
           lead_id: lead.id,
           created_by: user!.id,
           assigned_to: user!.id,
-          title: 'Follow up on quote sent',
-          type: 'call',
-          priority: 'high',
+          title: 'Quote follow up',
+          type: 'whatsapp',
+          priority: 'normal',
           due_date: due,
         }),
-        // Complete any open "[Name] Quote" or "[Name] Site Visit" task
         supabase.from('tasks')
           .update({ completed_at: new Date().toISOString(), completed_by: user!.id })
           .eq('lead_id', lead.id)
-          .in('title', [`${lead.name} Quote`, `${lead.name} Site Visit`])
+          .in('title', [`${lead.name} Quote`, `${lead.name} Site Visit`, 'Prepare quote'])
           .is('completed_at', null),
       ])
       toast.success('Stage updated — follow-up task set for 48hrs')
@@ -149,16 +156,25 @@ export function LeadHeader({ lead }: { lead: Lead }) {
         {/* Stage selector */}
         <div className="flex items-center gap-2">
           <Select value={stage} onValueChange={(v) => v && changeStage(v)} disabled={saving}>
-            <SelectTrigger className="w-48 text-sm">
-              <SelectValue />
+            <SelectTrigger className="w-56 text-sm">
+              <span>{STAGE_CONFIG[stage as Stage]?.label ?? stage}</span>
             </SelectTrigger>
             <SelectContent>
-              {stages.map(s => (
-                <SelectItem key={s} value={s}>
-                  {STAGE_CONFIG[s as Stage]?.label ?? s}
-                </SelectItem>
-              ))}
-              <SelectItem value="lost">Lost</SelectItem>
+              <SelectGroup>
+                <SelectLabel className="text-[10px] uppercase tracking-wide text-gray-400">Sales</SelectLabel>
+                {SALES_STAGES.map(s => (
+                  <SelectItem key={s} value={s}>{STAGE_CONFIG[s]?.label ?? s}</SelectItem>
+                ))}
+              </SelectGroup>
+              <SelectGroup>
+                <SelectLabel className="text-[10px] uppercase tracking-wide text-gray-400">Project</SelectLabel>
+                {PROJECT_STAGES.map(s => (
+                  <SelectItem key={s} value={s}>{STAGE_CONFIG[s]?.label ?? s}</SelectItem>
+                ))}
+              </SelectGroup>
+              <SelectGroup>
+                <SelectItem value="lost">Lost</SelectItem>
+              </SelectGroup>
             </SelectContent>
           </Select>
         </div>

@@ -28,10 +28,10 @@ const cards = [
   },
   {
     key: 'quotesWaiting' as const,
-    label: 'Quotes Waiting',
-    sublabel: '> 48hrs no response',
+    label: 'Quotes To Prepare',
+    sublabel: 'in quoting stage',
     icon: FileText,
-    href: '/leads?stage=quote_sent',
+    href: '/leads?stage=quoting',
     color: 'bg-orange-50 text-orange-600',
   },
   {

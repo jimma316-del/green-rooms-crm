@@ -2,20 +2,26 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(req: NextRequest) {
-  const secret = req.headers.get('x-webhook-secret')
-  if (secret !== process.env.WEBHOOK_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
   const body = await req.json()
 
-  // Map common Webflow field names to CRM schema
-  const name = body.name || body.full_name || body['Name'] || body['Full Name'] || 'Unknown'
-  const email = body.email || body['Email'] || null
-  const phone = body.phone || body.mobile || body['Phone'] || body['Mobile'] || null
-  const message = body.message || body.notes || body['Message'] || null
-  const postcode = body.postcode || body['Postcode'] || null
-  const project = body.project_type || body['Project Type'] || null
+  // Webflow wraps form fields inside payload.data
+  const fields = body?.payload?.data ?? body?.Payload?.data ?? body
+
+  // If this is a calculator submission, ignore it — the calculator endpoint handles it
+  if (fields['Desired Width In Meters']) {
+    return NextResponse.json({ skip: true })
+  }
+
+  const firstName = fields['First Name 2'] || fields['Name'] || fields.name || ''
+  const surname = fields['Surname 2'] || fields['Surname'] || ''
+  const name = [firstName, surname].filter(Boolean).join(' ') || 'Unknown'
+  const email = fields['Email Address 2'] || fields['Email'] || fields.email || null
+  const phone = fields['Contact Number 2'] || fields['Phone Number'] || fields.phone || null
+  const postcode = fields['Postcode 2'] || fields['Postcode'] || fields.postcode || null
+  const message = fields['Message 2'] || fields['Garden Room Project'] || fields.message || null
+  const hearAboutUs = fields['Question 2'] || fields['How did you hear about us?'] || null
+  const marketingRaw = fields['Form Subscribe 2'] ?? fields['Keep Me Updated'] ?? null
+  const marketing_consent = marketingRaw === true || String(marketingRaw).toLowerCase() === 'yes' || String(marketingRaw).toLowerCase() === 'true'
 
   const supabase = createAdminClient()
 
@@ -23,14 +29,15 @@ export async function POST(req: NextRequest) {
     name,
     email,
     mobile: phone,
-    notes: message,
+    notes: message || null,
+    source_referrer: hearAboutUs,
     postcode: postcode?.toUpperCase(),
-    project_type: project,
     lead_source: 'website_form',
     stage: 'new_lead',
     pipeline: 'sales',
     is_hot: false,
     tags: ['website_form'],
+    marketing_consent,
   }).select().single()
 
   if (error) {

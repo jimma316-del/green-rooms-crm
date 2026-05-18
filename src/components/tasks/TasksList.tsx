@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
@@ -12,11 +13,13 @@ import { CheckSquare, Plus, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { isOverdue, formatDate } from '@/utils/date'
 import { cn } from '@/lib/utils'
-import type { TaskType, TaskPriority } from '@/types'
+import { TASK_TYPE_LABELS } from '@/types'
+import type { TaskType } from '@/types'
 
 interface Task {
   id: string
   title: string
+  notes: string | null
   due_date: string | null
   type: string
   priority: string
@@ -31,15 +34,15 @@ interface Props {
 export function TasksList({ tasks: initialTasks, leadId }: Props) {
   const [tasks, setTasks] = useState(initialTasks)
   const [adding, setAdding] = useState(false)
-  const [title, setTitle] = useState('')
-  const [taskType, setTaskType] = useState<TaskType>('followup')
+  const [taskType, setTaskType] = useState<TaskType>('whatsapp')
   const [dueDate, setDueDate] = useState('')
+  const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
   async function createTask() {
-    if (!title.trim()) return
+    if (!dueDate) { toast.error('Due date is required'); return }
     setSaving(true)
 
     const { data: { user } } = await supabase.auth.getUser()
@@ -47,10 +50,11 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
       lead_id: leadId,
       created_by: user!.id,
       assigned_to: user!.id,
-      title: title.trim(),
+      title: TASK_TYPE_LABELS[taskType],
       type: taskType,
+      notes: notes.trim() || null,
       priority: 'normal',
-      due_date: dueDate ? new Date(dueDate).toISOString() : null,
+      due_date: new Date(dueDate).toISOString(),
     }).select('*, users!tasks_assigned_to_fkey(full_name)').single()
 
     if (error) {
@@ -60,11 +64,12 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
         lead_id: leadId,
         created_by: user!.id,
         type: 'task_created',
-        body: title.trim(),
+        body: notes.trim() || TASK_TYPE_LABELS[taskType],
       })
       setTasks(prev => [...prev, task])
-      setTitle('')
+      setTaskType('whatsapp')
       setDueDate('')
+      setNotes('')
       setAdding(false)
       toast.success('Task created')
       router.refresh()
@@ -115,24 +120,18 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
       {/* Add task form */}
       {adding && (
         <div className="mb-4 p-3 bg-gray-50 rounded-lg space-y-2 border border-gray-100">
-          <Input
-            placeholder="Task title…"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            autoFocus
-            onKeyDown={e => e.key === 'Enter' && createTask()}
-          />
           <div className="flex gap-2">
-            <Select value={taskType} onValueChange={v => setTaskType(v as TaskType)}>
+            <Select value={taskType} onValueChange={v => v && setTaskType(v as TaskType)}>
               <SelectTrigger className="flex-1 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="call">📞 Call</SelectItem>
-                <SelectItem value="email">✉️ Email</SelectItem>
-                <SelectItem value="followup">🔄 Follow-up</SelectItem>
-                <SelectItem value="site_survey">📍 Site Survey</SelectItem>
-                <SelectItem value="other">• Other</SelectItem>
+                <SelectItem value="amend_quote">Amend Quote</SelectItem>
+                <SelectItem value="amend_design">Amend Design</SelectItem>
+                <SelectItem value="in_person_meeting">In Person Meeting</SelectItem>
+                <SelectItem value="send_info">Send Info</SelectItem>
+                <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                <SelectItem value="email">Email</SelectItem>
               </SelectContent>
             </Select>
             <Input
@@ -142,8 +141,15 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
               className="flex-1 text-xs"
             />
           </div>
+          <Textarea
+            placeholder="Notes (optional)"
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            rows={2}
+            className="text-xs"
+          />
           <div className="flex gap-2">
-            <Button size="sm" onClick={createTask} disabled={!title.trim() || saving} className="bg-[var(--primary)] hover:bg-[var(--primary)]/90">
+            <Button size="sm" onClick={createTask} disabled={!dueDate || saving} className="bg-[var(--primary)] hover:bg-[var(--primary)]/90">
               {saving ? 'Saving…' : 'Create'}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>Cancel</Button>
@@ -167,6 +173,9 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-800 leading-snug">{task.title}</p>
+                  {task.notes && (
+                    <p className="text-xs text-gray-500 mt-0.5">{task.notes}</p>
+                  )}
                   <div className="flex items-center gap-2 mt-0.5">
                     {task.due_date && (
                       <span className={cn(
@@ -177,7 +186,6 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
                         {formatDate(task.due_date)}
                       </span>
                     )}
-                    <span className="text-[10px] text-gray-400 capitalize">{task.type}</span>
                   </div>
                 </div>
               </div>

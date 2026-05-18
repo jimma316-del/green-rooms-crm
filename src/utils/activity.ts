@@ -15,6 +15,7 @@ export function activityIcon(type: string): string {
     quote_sent: '📤',
     payment_recorded: '💰',
     lead_created: '🌱',
+    sms_sent: '💬',
   }
   return icons[type] ?? '•'
 }
@@ -34,6 +35,7 @@ export function activityLabel(type: string): string {
     quote_sent: 'Quote sent',
     payment_recorded: 'Payment recorded',
     lead_created: 'Lead created',
+    sms_sent: 'Auto SMS sent',
   }
   return labels[type] ?? type
 }

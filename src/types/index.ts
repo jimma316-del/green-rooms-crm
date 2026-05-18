@@ -14,12 +14,13 @@ export type SalesStage =
   | 'job_booked'
 
 export type ProjectStage =
-  | 'pre_start'
-  | 'job_booked'
+  | 'doors_windows_ordered'
+  | 'final_designs_confirmed'
+  | 'design_book_created'
+  | 'schedule_sent_to_client'
   | 'in_build'
-  | 'completion_due'
   | 'paid_closed'
-  | 'review_followup'
+  | 'snagging'
 
 export type LostStage = 'lost'
 
@@ -71,14 +72,15 @@ export type ActivityType =
   | 'payment_recorded'
   | 'lead_created'
 
-export type TaskType = 'amend_quote' | 'amend_design' | 'in_person_meeting' | 'send_info' | 'call' | 'email'
+export type TaskType = 'quote' | 'amend_quote' | 'amend_design' | 'in_person_meeting' | 'send_info' | 'whatsapp' | 'email'
 
 export const TASK_TYPE_LABELS: Record<TaskType, string> = {
+  quote:             'Prepare Quote',
   amend_quote:       'Amend Quote',
   amend_design:      'Amend Design',
   in_person_meeting: 'In Person Meeting',
   send_info:         'Send Info',
-  call:              'Call',
+  whatsapp:          'WhatsApp',
   email:             'Email',
 }
 export type TaskPriority = 'low' | 'normal' | 'high'
@@ -204,12 +206,14 @@ export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; c
   quote_sent:           { label: 'Quote Sent',            pipeline: 'sales',   color: 'bg-orange-100 text-orange-800' },
   followup:             { label: 'Follow-Up',             pipeline: 'sales',   color: 'bg-amber-100 text-amber-800' },
   final_followup:       { label: 'Final Follow-Up',       pipeline: 'sales',   color: 'bg-rose-100 text-rose-800' },
-  job_booked:           { label: 'Job Booked',            pipeline: 'sales',   color: 'bg-green-100 text-green-800' },
-  pre_start:            { label: 'Pre-Start',             pipeline: 'project', color: 'bg-teal-100 text-teal-800' },
-  in_build:             { label: 'In Build',              pipeline: 'project', color: 'bg-sky-100 text-sky-800' },
-  completion_due:       { label: 'Completion Due',        pipeline: 'project', color: 'bg-rose-100 text-rose-800' },
-  paid_closed:          { label: 'Paid / Closed',         pipeline: 'project', color: 'bg-emerald-100 text-emerald-800' },
-  review_followup:      { label: 'Review Follow-Up',      pipeline: 'project', color: 'bg-lime-100 text-lime-800' },
+  job_booked:                { label: 'Job Booked',                pipeline: 'sales',   color: 'bg-green-100 text-green-800' },
+  doors_windows_ordered:     { label: 'Doors & Windows Ordered',   pipeline: 'project', color: 'bg-cyan-100 text-cyan-800' },
+  final_designs_confirmed:   { label: 'Final Designs Confirmed',   pipeline: 'project', color: 'bg-violet-100 text-violet-800' },
+  design_book_created:       { label: 'Design Book Created',       pipeline: 'project', color: 'bg-indigo-100 text-indigo-700' },
+  schedule_sent_to_client:   { label: 'Schedule Sent To Client',   pipeline: 'project', color: 'bg-teal-100 text-teal-800' },
+  in_build:                  { label: 'In Build',                  pipeline: 'project', color: 'bg-sky-100 text-sky-800' },
+  paid_closed:               { label: 'Paid / Closed',             pipeline: 'project', color: 'bg-emerald-100 text-emerald-800' },
+  snagging:                  { label: 'Snagging',                  pipeline: 'project', color: 'bg-orange-100 text-orange-800' },
   lost:                 { label: 'Lost',                  pipeline: 'lost',    color: 'bg-red-100 text-red-700' },
 }
 
@@ -219,7 +223,8 @@ export const SALES_STAGES: SalesStage[] = [
 ]
 
 export const PROJECT_STAGES: ProjectStage[] = [
-  'pre_start', 'job_booked', 'in_build', 'completion_due', 'paid_closed', 'review_followup',
+  'doors_windows_ordered', 'final_designs_confirmed', 'design_book_created',
+  'schedule_sent_to_client', 'in_build', 'paid_closed', 'snagging',
 ]
 
 export const LOST_REASON_LABELS: Record<LostReason, string> = {

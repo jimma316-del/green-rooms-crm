@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Phone, Mail, MapPin, User, Tag, Pencil, Check, X } from 'lucide-react'
+import { Phone, Mail, MapPin, User, Tag, Pencil, Check, X, MessageSquare } from 'lucide-react'
 import { LEAD_SOURCE_LABELS } from '@/types'
 import type { LeadSource } from '@/types'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { formatDateTime } from '@/utils/date'
 
 interface Lead {
   id: string
@@ -22,6 +23,8 @@ interface Lead {
   lead_source: string | null
   source_referrer: string | null
   tags: string[]
+  sms_sent_at: string | null
+  marketing_consent: boolean
 }
 
 export function LeadContact({ lead }: { lead: Lead }) {
@@ -29,6 +32,24 @@ export function LeadContact({ lead }: { lead: Lead }) {
   const supabase = createClient()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [sendingSms, setSendingSms] = useState(false)
+
+  async function sendSms() {
+    setSendingSms(true)
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/sms`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error ?? 'Failed to send SMS')
+      } else {
+        toast.success(`SMS sent (${data.miles} miles)`)
+        router.refresh()
+      }
+    } catch {
+      toast.error('Failed to send SMS')
+    }
+    setSendingSms(false)
+  }
 
   const [form, setForm] = useState({
     name: lead.name,
@@ -38,6 +59,7 @@ export function LeadContact({ lead }: { lead: Lead }) {
     postcode: lead.postcode ?? '',
     lead_source: lead.lead_source ?? 'manual',
     source_referrer: lead.source_referrer ?? '',
+    marketing_consent: lead.marketing_consent,
   })
 
   function set(field: string, value: string) {
@@ -69,6 +91,7 @@ export function LeadContact({ lead }: { lead: Lead }) {
       postcode: form.postcode.toUpperCase() || null,
       lead_source: form.lead_source || null,
       source_referrer: form.source_referrer || null,
+      marketing_consent: form.marketing_consent,
     }).eq('id', lead.id)
 
     if (error) {
@@ -90,6 +113,7 @@ export function LeadContact({ lead }: { lead: Lead }) {
       postcode: lead.postcode ?? '',
       lead_source: lead.lead_source ?? 'manual',
       source_referrer: lead.source_referrer ?? '',
+      marketing_consent: lead.marketing_consent,
     })
     setEditing(false)
   }
@@ -145,6 +169,15 @@ export function LeadContact({ lead }: { lead: Lead }) {
               <Input value={form.source_referrer} onChange={e => set('source_referrer', e.target.value)} placeholder="Who referred them?" />
             </div>
           )}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.marketing_consent}
+              onChange={e => setForm(prev => ({ ...prev, marketing_consent: e.target.checked }))}
+              className="w-4 h-4 rounded accent-[var(--primary)]"
+            />
+            <span className="text-xs text-gray-700">Opted in to marketing</span>
+          </label>
           <div className="flex gap-2 pt-1">
             <button
               onClick={save}
@@ -219,6 +252,38 @@ export function LeadContact({ lead }: { lead: Lead }) {
             {lead.tags.map(tag => (
               <span key={tag} className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">{tag}</span>
             ))}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 pt-0.5">
+          <input
+            type="checkbox"
+            checked={lead.marketing_consent}
+            readOnly
+            className="w-4 h-4 rounded accent-[var(--primary)] pointer-events-none"
+          />
+          <span className="text-xs text-gray-500">
+            {lead.marketing_consent ? 'Opted in to marketing' : 'Not opted in to marketing'}
+          </span>
+        </div>
+
+        {lead.mobile && (
+          <div className="pt-2 border-t border-gray-50 flex items-center justify-between">
+            {lead.sms_sent_at ? (
+              <span className="text-[10px] text-green-600 flex items-center gap-1">
+                <MessageSquare className="w-3 h-3" /> SMS sent {formatDateTime(lead.sms_sent_at)}
+              </span>
+            ) : (
+              <span className="text-[10px] text-gray-400">No SMS sent yet</span>
+            )}
+            <button
+              onClick={sendSms}
+              disabled={sendingSms}
+              className="flex items-center gap-1 text-xs px-2.5 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+            >
+              <MessageSquare className="w-3 h-3" />
+              {sendingSms ? 'Sending…' : lead.sms_sent_at ? 'Resend' : 'Send SMS'}
+            </button>
           </div>
         )}
       </div>

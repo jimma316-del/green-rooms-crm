@@ -11,8 +11,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { LEAD_SOURCE_LABELS, PROJECT_TYPE_LABELS } from '@/types'
-import type { LeadSource, ProjectType } from '@/types'
+import { LEAD_SOURCE_LABELS } from '@/types'
+import type { LeadSource } from '@/types'
 
 interface Props {
   onSuccess: () => void
@@ -30,9 +30,6 @@ export function NewLeadForm({ onSuccess }: Props) {
     address: '',
     postcode: '',
     lead_source: 'manual' as LeadSource,
-    project_type: '' as ProjectType | '',
-    budget_min: '',
-    budget_max: '',
     approx_size_sqm: '',
     notes: '',
   })
@@ -76,9 +73,6 @@ export function NewLeadForm({ onSuccess }: Props) {
       address: form.address || null,
       postcode: form.postcode.toUpperCase() || null,
       lead_source: form.lead_source,
-      project_type: (form.project_type as ProjectType) || null,
-      budget_min: form.budget_min ? Math.round(parseFloat(form.budget_min) * 100) : null,
-      budget_max: form.budget_max ? Math.round(parseFloat(form.budget_max) * 100) : null,
       approx_size_sqm: form.approx_size_sqm ? parseFloat(form.approx_size_sqm) : null,
       notes: form.notes || null,
       stage: 'new_lead',
@@ -160,42 +154,19 @@ export function NewLeadForm({ onSuccess }: Props) {
         </div>
       </div>
 
-      {/* Source + Project type */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label>Lead Source</Label>
-          <Select value={form.lead_source} onValueChange={v => v && set('lead_source', v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {Object.entries(LEAD_SOURCE_LABELS).map(([v, l]) => (
+      {/* Lead Source */}
+      <div className="space-y-1.5">
+        <Label>Lead Source</Label>
+        <Select value={form.lead_source} onValueChange={v => v && set('lead_source', v)}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {Object.entries(LEAD_SOURCE_LABELS)
+              .filter(([v]) => !['website_form', 'calculator'].includes(v))
+              .map(([v, l]) => (
                 <SelectItem key={v} value={v}>{l}</SelectItem>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label>Project Type</Label>
-          <Select value={form.project_type} onValueChange={v => v && set('project_type', v)}>
-            <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
-            <SelectContent>
-              {Object.entries(PROJECT_TYPE_LABELS).map(([v, l]) => (
-                <SelectItem key={v} value={v}>{l}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Budget */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="budget_min">Budget From (£)</Label>
-          <Input id="budget_min" type="number" placeholder="20000" value={form.budget_min} onChange={e => set('budget_min', e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="budget_max">Budget To (£)</Label>
-          <Input id="budget_max" type="number" placeholder="35000" value={form.budget_max} onChange={e => set('budget_max', e.target.value)} />
-        </div>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Size */}

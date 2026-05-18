@@ -1,4 +1,7 @@
+export const dynamic = 'force-dynamic'
+
 import { createClient } from '@/lib/supabase/server'
+import { autoAdvanceSiteVisits } from '@/lib/autoAdvance'
 import { DashboardKPIs } from '@/components/dashboard/DashboardKPIs'
 import { HotLeadsPanel } from '@/components/dashboard/HotLeadsPanel'
 import { OverdueTasksPanel } from '@/components/dashboard/OverdueTasksPanel'
@@ -8,6 +11,9 @@ import { PipelineSummary } from '@/components/dashboard/PipelineSummary'
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  // Auto-advance any leads whose site visit has passed
+  await autoAdvanceSiteVisits(supabase)
 
   // Fetch all dashboard data in parallel
   const [
@@ -31,10 +37,9 @@ export default async function DashboardPage() {
       .is('completed_at', null)
       .lte('due_date', new Date(new Date().setHours(23, 59, 59, 999)).toISOString()),
 
-    // Quotes sent > 48 hours ago, no response
+    // Leads in Quoting stage — quotes to prepare
     supabase.from('leads').select('id', { count: 'exact' })
-      .eq('stage', 'quote_sent')
-      .lte('updated_at', new Date(Date.now() - 2 * 86400000).toISOString()),
+      .eq('stage', 'quoting'),
 
     // Deposits outstanding
     supabase.from('leads').select('id', { count: 'exact' })
@@ -45,21 +50,20 @@ export default async function DashboardPage() {
       .eq('pipeline', 'project')
       .in('stage', ['job_booked', 'in_build']),
 
-    // Hot leads
+    // Hot leads: manually flagged with the flame icon
     supabase.from('leads')
-      .select('id, name, stage, project_type, updated_at, postcode, is_hot')
+      .select('id, name, stage, project_type, updated_at, postcode')
       .eq('is_hot', true)
-      .neq('pipeline', 'lost')
+      .eq('is_newsletter', false)
       .order('updated_at', { ascending: false })
-      .limit(5),
+      .limit(8),
 
-    // Overdue tasks
+    // All open tasks, soonest due first
     supabase.from('tasks')
       .select('id, title, due_date, type, priority, lead_id, leads(name)')
       .is('completed_at', null)
-      .lt('due_date', new Date().toISOString())
-      .order('due_date', { ascending: true })
-      .limit(8),
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .limit(15),
 
     // Recent activity
     supabase.from('activities')
@@ -72,6 +76,18 @@ export default async function DashboardPage() {
       .select('stage, pipeline')
       .neq('pipeline', 'lost'),
   ])
+
+  type TaskItem = { id: string; title: string; due_date: string | null; type: string; priority: string; lead_id: string; leads: { name: string } | null }
+  const PRIORITY_ORDER: Record<string, number> = { high: 0, normal: 1, low: 2 }
+  const sortedTasks = ((overdueTasks ?? []) as TaskItem[]).sort((a, b) => {
+    const pa = PRIORITY_ORDER[a.priority] ?? 1
+    const pb = PRIORITY_ORDER[b.priority] ?? 1
+    if (pa !== pb) return pa - pb
+    if (!a.due_date && !b.due_date) return 0
+    if (!a.due_date) return 1
+    if (!b.due_date) return -1
+    return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+  })
 
   const kpis = {
     newLeads: newLeads?.length ?? 0,
@@ -97,7 +113,7 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
         <HotLeadsPanel leads={hotLeads ?? []} />
-        <OverdueTasksPanel tasks={overdueTasks ?? []} />
+        <OverdueTasksPanel tasks={sortedTasks} />
         <RecentActivityPanel activities={recentActivity ?? []} />
       </div>
     </div>

@@ -19,7 +19,12 @@ type LeadsRow = {
   budget_max: number | null; approx_size_sqm: number | null; notes: string | null; stage: string; pipeline: string
   lost_reason: string | null; lost_notes: string | null; lead_source: string | null; source_referrer: string | null
   utm_source: string | null; utm_medium: string | null; utm_campaign: string | null; assigned_to: string | null
-  calculator_data: Json | null; is_hot: boolean; tags: string[]
+  calculator_data: Json | null; is_hot: boolean; tags: string[]; marketing_consent: boolean
+  site_visit_date: string | null; job_date: string | null; job_end_date: string | null
+  first_contact_at: string | null; is_newsletter: boolean
+  xero_quote_url: string | null; xero_invoice_url: string | null
+  sms_sent_at: string | null
+  distance_miles: number | null
 }
 type LeadsInsert = {
   id?: string; created_at?: string; updated_at?: string; name: string; mobile?: string | null; email?: string | null
@@ -27,16 +32,21 @@ type LeadsInsert = {
   budget_max?: number | null; approx_size_sqm?: number | null; notes?: string | null; stage?: string; pipeline?: string
   lost_reason?: string | null; lost_notes?: string | null; lead_source?: string | null; source_referrer?: string | null
   utm_source?: string | null; utm_medium?: string | null; utm_campaign?: string | null; assigned_to?: string | null
-  calculator_data?: Json | null; is_hot?: boolean; tags?: string[]
+  calculator_data?: Json | null; is_hot?: boolean; tags?: string[]; marketing_consent?: boolean
+  site_visit_date?: string | null; job_date?: string | null; job_end_date?: string | null
+  first_contact_at?: string | null; is_newsletter?: boolean
+  xero_quote_url?: string | null; xero_invoice_url?: string | null
+  sms_sent_at?: string | null
+  distance_miles?: number | null
 }
 type LeadsUpdate = Partial<LeadsInsert>
 
 type ActivitiesRow = { id: string; lead_id: string; created_at: string; created_by: string; type: string; body: string | null; metadata: Json | null }
-type ActivitiesInsert = { id?: string; lead_id: string; created_at?: string; created_by: string; type: string; body?: string | null; metadata?: Json | null }
+type ActivitiesInsert = { id?: string; lead_id: string; created_at?: string; created_by?: string | null; type: string; body?: string | null; metadata?: Json | null }
 type ActivitiesUpdate = Partial<ActivitiesInsert>
 
-type TasksRow = { id: string; lead_id: string; created_by: string; assigned_to: string; title: string; due_date: string | null; completed_at: string | null; completed_by: string | null; priority: string; type: string }
-type TasksInsert = { id?: string; lead_id: string; created_by: string; assigned_to: string; title: string; due_date?: string | null; completed_at?: string | null; completed_by?: string | null; priority?: string; type?: string }
+type TasksRow = { id: string; lead_id: string; created_by: string; assigned_to: string; title: string; notes: string | null; due_date: string | null; completed_at: string | null; completed_by: string | null; priority: string; type: string }
+type TasksInsert = { id?: string; lead_id: string; created_by: string; assigned_to: string; title: string; notes?: string | null; due_date?: string | null; completed_at?: string | null; completed_by?: string | null; priority?: string; type?: string }
 type TasksUpdate = Partial<TasksInsert>
 
 type QuotesRow = { id: string; lead_id: string; created_by: string; created_at: string; quote_number: string; status: string; total_amount: number; line_items: Json; notes: string | null; sent_at: string | null; viewed_at: string | null; responded_at: string | null; file_url: string | null }
@@ -48,7 +58,7 @@ type PaymentsInsert = { id?: string; lead_id: string; type: string; amount: numb
 type PaymentsUpdate = Partial<PaymentsInsert>
 
 type StageHistoryRow = { id: string; lead_id: string; from_stage: string | null; to_stage: string; changed_by: string; changed_at: string; note: string | null }
-type StageHistoryInsert = { id?: string; lead_id: string; from_stage?: string | null; to_stage: string; changed_by: string; changed_at?: string; note?: string | null }
+type StageHistoryInsert = { id?: string; lead_id: string; from_stage?: string | null; to_stage: string; changed_by?: string | null; changed_at?: string; note?: string | null }
 type StageHistoryUpdate = Partial<StageHistoryInsert>
 
 export interface Database {

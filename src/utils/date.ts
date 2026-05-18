@@ -33,6 +33,11 @@ export function isOverdue(dateStr: string | null | undefined): boolean {
   return new Date(dateStr).getTime() < Date.now()
 }
 
+export function formatShortDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
+}
+
 export function formatBudget(pence: number | null | undefined): string {
   if (!pence) return '—'
   return '£' + (pence / 100).toLocaleString('en-GB', { maximumFractionDigits: 0 })
