@@ -48,6 +48,7 @@ export default async function LeadsPage({ searchParams }: Props) {
 
   const { data: leads, count } = await query
     .order(sortCol, { ascending, nullsFirst: false })
+    .order('created_at', { ascending: false })
     .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
 
   // Find emails that appear more than once (duplicates)
