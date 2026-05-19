@@ -289,17 +289,21 @@ export function LeadContact({ lead }: { lead: Lead }) {
             {lead.marketing_consent ? 'Opted in to marketing' : 'Not opted in to marketing'}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
             checked={lead.brochures_sent}
-            readOnly
-            className="w-4 h-4 rounded accent-[var(--primary)] pointer-events-none"
+            onChange={async (e) => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              await (supabase.from('leads') as any).update({ brochures_sent: e.target.checked }).eq('id', lead.id)
+              router.refresh()
+            }}
+            className="w-4 h-4 rounded accent-[var(--primary)]"
           />
           <span className="text-xs text-gray-500">
             {lead.brochures_sent ? 'Brochures sent' : 'Brochures not sent'}
           </span>
-        </div>
+        </label>
 
         {lead.mobile && (
           <div className="pt-2 border-t border-gray-50 flex items-center justify-between">
