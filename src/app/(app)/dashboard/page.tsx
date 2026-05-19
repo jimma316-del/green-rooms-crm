@@ -41,9 +41,11 @@ export default async function DashboardPage() {
     supabase.from('leads').select('id', { count: 'exact' })
       .eq('stage', 'quoting'),
 
-    // Deposits outstanding
+    // Site visits booked (future only)
     supabase.from('leads').select('id', { count: 'exact' })
-      .eq('stage', 'deposit_requested'),
+      .eq('is_newsletter', false)
+      .not('site_visit_date', 'is', null)
+      .gt('site_visit_date', new Date().toISOString()),
 
     // Jobs in progress
     supabase.from('leads').select('id', { count: 'exact' })
@@ -93,7 +95,7 @@ export default async function DashboardPage() {
     newLeads: newLeads?.length ?? 0,
     todayTasks: todayTasks?.length ?? 0,
     quotesWaiting: quotesWaiting?.length ?? 0,
-    depositsOut: depositsOut?.length ?? 0,
+    siteVisitsBooked: depositsOut?.length ?? 0,
     jobsInProgress: jobsInProgress?.length ?? 0,
   }
 

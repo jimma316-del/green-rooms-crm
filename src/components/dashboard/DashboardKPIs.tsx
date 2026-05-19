@@ -1,11 +1,11 @@
 import Link from 'next/link'
-import { Users, CalendarCheck, FileText, PiggyBank, HardHat } from 'lucide-react'
+import { Users, CalendarCheck, FileText, MapPin, HardHat } from 'lucide-react'
 
 interface KPIs {
   newLeads: number
   todayTasks: number
   quotesWaiting: number
-  depositsOut: number
+  siteVisitsBooked: number
   jobsInProgress: number
 }
 
@@ -35,11 +35,11 @@ const cards = [
     color: 'bg-orange-50 text-orange-600',
   },
   {
-    key: 'depositsOut' as const,
-    label: 'Deposits Outstanding',
-    sublabel: 'awaiting payment',
-    icon: PiggyBank,
-    href: '/leads?stage=deposit_requested',
+    key: 'siteVisitsBooked' as const,
+    label: 'Site Visits Booked',
+    sublabel: 'upcoming visits',
+    icon: MapPin,
+    href: '/leads?stage=site_survey_booked',
     color: 'bg-purple-50 text-purple-600',
   },
   {
