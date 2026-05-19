@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { CheckSquare, Plus, AlertCircle } from 'lucide-react'
+import { CheckSquare, Plus, AlertCircle, Pencil, Trash2, Check, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { isOverdue, formatDate } from '@/utils/date'
 import { cn } from '@/lib/utils'
@@ -38,6 +38,8 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
   const [dueDate, setDueDate] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<{ type: string; due_date: string; notes: string }>({ type: '', due_date: '', notes: '' })
   const router = useRouter()
   const supabase = createClient()
 
@@ -94,6 +96,36 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
     })
 
     toast.success('Task completed')
+    router.refresh()
+  }
+
+  function startEdit(task: Task) {
+    setEditingId(task.id)
+    setEditForm({
+      type: task.type,
+      due_date: task.due_date ? task.due_date.slice(0, 10) : '',
+      notes: task.notes ?? '',
+    })
+  }
+
+  async function saveEdit(taskId: string) {
+    const title = TASK_TYPE_LABELS[editForm.type as TaskType] ?? editForm.type
+    await supabase.from('tasks').update({
+      type: editForm.type,
+      title,
+      notes: editForm.notes.trim() || null,
+      due_date: editForm.due_date ? new Date(editForm.due_date).toISOString() : null,
+    }).eq('id', taskId)
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, type: editForm.type, title, notes: editForm.notes.trim() || null, due_date: editForm.due_date ? new Date(editForm.due_date).toISOString() : null } : t))
+    setEditingId(null)
+    toast.success('Task updated')
+  }
+
+  async function deleteTask(taskId: string) {
+    if (!confirm('Delete this task?')) return
+    setTasks(prev => prev.filter(t => t.id !== taskId))
+    await supabase.from('tasks').delete().eq('id', taskId)
+    toast.success('Task deleted')
     router.refresh()
   }
 
@@ -164,6 +196,33 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
         <div className="space-y-2">
           {tasks.map(task => {
             const overdue = isOverdue(task.due_date)
+            if (editingId === task.id) {
+              return (
+                <div key={task.id} className="p-3 bg-gray-50 rounded-lg space-y-2 border border-gray-100">
+                  <div className="flex gap-2">
+                    <Select value={editForm.type} onValueChange={v => v && setEditForm(f => ({ ...f, type: v }))}>
+                      <SelectTrigger className="flex-1 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="amend_quote">Amend Quote</SelectItem>
+                        <SelectItem value="amend_design">Amend Design</SelectItem>
+                        <SelectItem value="in_person_meeting">In Person Meeting</SelectItem>
+                        <SelectItem value="send_info">Send Info</SelectItem>
+                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input type="date" value={editForm.due_date} onChange={e => setEditForm(f => ({ ...f, due_date: e.target.value }))} className="flex-1 text-xs" />
+                  </div>
+                  <Textarea placeholder="Notes (optional)" value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="text-xs" />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => saveEdit(task.id)} className="bg-[var(--primary)] hover:bg-[var(--primary)]/90">
+                      <Check className="w-3 h-3 mr-1" /> Save
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}><X className="w-3 h-3 mr-1" /> Cancel</Button>
+                  </div>
+                </div>
+              )
+            }
             return (
               <div key={task.id} className="flex items-start gap-2.5 group">
                 <button
@@ -187,6 +246,10 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
                       </span>
                     )}
                   </div>
+                </div>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => startEdit(task)} className="p-1 text-gray-400 hover:text-gray-600"><Pencil className="w-3 h-3" /></button>
+                  <button onClick={() => deleteTask(task.id)} className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-3 h-3" /></button>
                 </div>
               </div>
             )

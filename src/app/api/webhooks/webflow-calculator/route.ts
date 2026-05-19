@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
   // Auto-lost if more than 100 miles away
   const tooFar = distance_miles !== null && distance_miles > 100
-  const stage = tooFar ? 'lost' : 'new_lead'
+  const stage = tooFar ? 'out_of_area' : 'new_lead'
   const pipeline = tooFar ? 'lost' : 'sales'
 
   // Check for duplicate email — if found, update existing lead instead of creating
