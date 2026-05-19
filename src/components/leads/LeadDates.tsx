@@ -11,6 +11,7 @@ interface Lead {
   name: string
   mobile: string | null
   address: string | null
+  city: string | null
   postcode: string | null
   site_visit_date: string | null
   job_date: string | null
@@ -28,7 +29,7 @@ function toCalendarDate(iso: string) {
 }
 
 function fullAddress(lead: Lead) {
-  return [lead.address, lead.postcode].filter(Boolean).join(', ')
+  return [lead.address, lead.city, lead.postcode].filter(Boolean).join(', ')
 }
 
 function siteVisitCalendarUrl(lead: Lead, date: string) {

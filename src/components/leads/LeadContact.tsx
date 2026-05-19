@@ -19,6 +19,7 @@ interface Lead {
   mobile: string | null
   email: string | null
   address: string | null
+  city: string | null
   postcode: string | null
   lead_source: string | null
   source_referrer: string | null
@@ -56,6 +57,7 @@ export function LeadContact({ lead }: { lead: Lead }) {
     mobile: lead.mobile ?? '',
     email: lead.email ?? '',
     address: lead.address ?? '',
+    city: lead.city ?? '',
     postcode: lead.postcode ?? '',
     lead_source: lead.lead_source ?? 'manual',
     source_referrer: lead.source_referrer ?? '',
@@ -68,12 +70,12 @@ export function LeadContact({ lead }: { lead: Lead }) {
 
   async function lookupPostcode(postcode: string) {
     const clean = postcode.trim().replace(/\s+/g, '').toUpperCase()
-    if (clean.length < 3 || form.address) return
+    if (clean.length < 3) return
     try {
       const res = await fetch(`https://api.postcodes.io/postcodes/${clean}`)
       const data = await res.json()
       if (data.result) {
-        set('address', `${data.result.admin_district}, ${data.result.region}`)
+        if (!form.city) set('city', data.result.admin_district)
       }
     } catch {
       // ignore
@@ -88,6 +90,7 @@ export function LeadContact({ lead }: { lead: Lead }) {
       mobile: form.mobile || null,
       email: form.email || null,
       address: form.address || null,
+      city: form.city || null,
       postcode: form.postcode.toUpperCase() || null,
       lead_source: form.lead_source || null,
       source_referrer: form.source_referrer || null,
@@ -110,6 +113,7 @@ export function LeadContact({ lead }: { lead: Lead }) {
       mobile: lead.mobile ?? '',
       email: lead.email ?? '',
       address: lead.address ?? '',
+      city: lead.city ?? '',
       postcode: lead.postcode ?? '',
       lead_source: lead.lead_source ?? 'manual',
       source_referrer: lead.source_referrer ?? '',
@@ -137,10 +141,14 @@ export function LeadContact({ lead }: { lead: Lead }) {
               <Input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="james@email.com" />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="col-span-2">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Address / Town</p>
-              <Input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Oxford, Oxfordshire" />
+          <div>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Address</p>
+            <Input value={form.address} onChange={e => set('address', e.target.value)} placeholder="12 High Street" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">City / Town</p>
+              <Input value={form.city} onChange={e => set('city', e.target.value)} placeholder="Oxford" />
             </div>
             <div>
               <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Postcode</p>
@@ -223,11 +231,12 @@ export function LeadContact({ lead }: { lead: Lead }) {
             <span className="text-sm text-gray-700 group-hover:text-[var(--primary)] truncate">{lead.email}</span>
           </a>
         )}
-        {(lead.address || lead.postcode) && (
+        {(lead.address || lead.city || lead.postcode) && (
           <div className="flex items-start gap-2.5">
             <MapPin className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
             <div className="text-sm text-gray-700">
               {lead.address && <p>{lead.address}</p>}
+              {lead.city && <p>{lead.city}</p>}
               {lead.postcode && <p className="font-mono">{lead.postcode}</p>}
             </div>
           </div>
