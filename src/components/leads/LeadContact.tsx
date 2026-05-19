@@ -85,7 +85,8 @@ export function LeadContact({ lead }: { lead: Lead }) {
   async function save() {
     if (!form.name.trim()) { toast.error('Name is required'); return }
     setSaving(true)
-    const { error } = await supabase.from('leads').update({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('leads') as any).update({
       name: form.name.trim(),
       mobile: form.mobile || null,
       email: form.email || null,
