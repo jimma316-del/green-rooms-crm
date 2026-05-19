@@ -9,7 +9,7 @@ import type { Stage } from '@/types'
 import { ChevronLeft, Flame, Phone, MessageCircle, Mail, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
-  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger,
+  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -172,7 +172,9 @@ export function LeadHeader({ lead }: { lead: Lead }) {
                   <SelectItem key={s} value={s}>{STAGE_CONFIG[s]?.label ?? s}</SelectItem>
                 ))}
               </SelectGroup>
+              <SelectSeparator />
               <SelectGroup>
+                <SelectLabel className="text-[10px] uppercase tracking-wide text-gray-400">Other</SelectLabel>
                 <SelectItem value="out_of_area">Out Of Area</SelectItem>
                 <SelectItem value="lost">Lost</SelectItem>
               </SelectGroup>

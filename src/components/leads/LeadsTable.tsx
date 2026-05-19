@@ -6,7 +6,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { STAGE_CONFIG, SALES_STAGES, PROJECT_STAGES } from '@/types'
 import type { Stage } from '@/types'
 import {
-  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger,
+  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger,
 } from '@/components/ui/select'
 import { Flame, Phone, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Search, X, Trash2, Download, Mail, MailCheck } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -109,7 +109,10 @@ function StageCell({ lead }: { lead: Lead }) {
             <SelectItem key={s} value={s}>{STAGE_CONFIG[s]?.label ?? s}</SelectItem>
           ))}
         </SelectGroup>
+        <SelectSeparator />
         <SelectGroup>
+          <SelectLabel className="text-[10px] uppercase tracking-wide text-gray-400">Other</SelectLabel>
+          <SelectItem value="out_of_area">Out Of Area</SelectItem>
           <SelectItem value="lost">Lost</SelectItem>
         </SelectGroup>
       </SelectContent>
