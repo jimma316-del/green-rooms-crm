@@ -10,6 +10,7 @@ interface Lead {
   id: string
   name: string
   mobile: string | null
+  address: string | null
   postcode: string | null
   site_visit_date: string | null
   job_date: string | null
@@ -26,6 +27,10 @@ function toCalendarDate(iso: string) {
   )
 }
 
+function fullAddress(lead: Lead) {
+  return [lead.address, lead.postcode].filter(Boolean).join(', ')
+}
+
 function siteVisitCalendarUrl(lead: Lead, date: string) {
   const start = toCalendarDate(date)
   const end = toCalendarDate(new Date(new Date(date).getTime() + 60 * 60 * 1000).toISOString())
@@ -33,8 +38,8 @@ function siteVisitCalendarUrl(lead: Lead, date: string) {
     action: 'TEMPLATE',
     text: `Site Visit – ${lead.name}`,
     dates: `${start}/${end}`,
-    details: [lead.mobile, lead.postcode].filter(Boolean).join(' | '),
-    location: lead.postcode ?? '',
+    details: [lead.mobile, fullAddress(lead)].filter(Boolean).join(' | '),
+    location: fullAddress(lead),
   })
   return `https://calendar.google.com/calendar/render?${params}`
 }
@@ -51,8 +56,8 @@ function jobCalendarUrl(lead: Lead, startDate: string, endDate: string) {
     action: 'TEMPLATE',
     text: `Job – ${lead.name}`,
     dates: `${start}/${fmt(endExclusive)}`,
-    details: [lead.mobile, lead.postcode].filter(Boolean).join(' | '),
-    location: lead.postcode ?? '',
+    details: [lead.mobile, fullAddress(lead)].filter(Boolean).join(' | '),
+    location: fullAddress(lead),
   })
   return `https://calendar.google.com/calendar/render?${params}`
 }
