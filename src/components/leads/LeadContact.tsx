@@ -26,6 +26,7 @@ interface Lead {
   tags: string[]
   sms_sent_at: string | null
   marketing_consent: boolean
+  brochures_sent: boolean
 }
 
 export function LeadContact({ lead }: { lead: Lead }) {
@@ -62,6 +63,7 @@ export function LeadContact({ lead }: { lead: Lead }) {
     lead_source: lead.lead_source ?? 'manual',
     source_referrer: lead.source_referrer ?? '',
     marketing_consent: lead.marketing_consent,
+    brochures_sent: lead.brochures_sent,
   })
 
   function set(field: string, value: string) {
@@ -96,6 +98,7 @@ export function LeadContact({ lead }: { lead: Lead }) {
       lead_source: form.lead_source || null,
       source_referrer: form.source_referrer || null,
       marketing_consent: form.marketing_consent,
+      brochures_sent: form.brochures_sent,
     }).eq('id', lead.id)
 
     if (error) {
@@ -119,6 +122,7 @@ export function LeadContact({ lead }: { lead: Lead }) {
       lead_source: lead.lead_source ?? 'manual',
       source_referrer: lead.source_referrer ?? '',
       marketing_consent: lead.marketing_consent,
+    brochures_sent: lead.brochures_sent,
     })
     setEditing(false)
   }
@@ -186,6 +190,15 @@ export function LeadContact({ lead }: { lead: Lead }) {
               className="w-4 h-4 rounded accent-[var(--primary)]"
             />
             <span className="text-xs text-gray-700">Opted in to marketing</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.brochures_sent}
+              onChange={e => setForm(prev => ({ ...prev, brochures_sent: e.target.checked }))}
+              className="w-4 h-4 rounded accent-[var(--primary)]"
+            />
+            <span className="text-xs text-gray-700">Brochures sent</span>
           </label>
           <div className="flex gap-2 pt-1">
             <button
@@ -274,6 +287,17 @@ export function LeadContact({ lead }: { lead: Lead }) {
           />
           <span className="text-xs text-gray-500">
             {lead.marketing_consent ? 'Opted in to marketing' : 'Not opted in to marketing'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={lead.brochures_sent}
+            readOnly
+            className="w-4 h-4 rounded accent-[var(--primary)] pointer-events-none"
+          />
+          <span className="text-xs text-gray-500">
+            {lead.brochures_sent ? 'Brochures sent' : 'Brochures not sent'}
           </span>
         </div>
 

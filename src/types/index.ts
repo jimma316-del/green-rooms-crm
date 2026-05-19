@@ -11,7 +11,10 @@ export type SalesStage =
   | 'quote_sent'
   | 'followup'
   | 'final_followup'
+  | 'in_conversation'
   | 'job_booked'
+
+export type OutOfAreaStage = 'out_of_area'
 
 export type ProjectStage =
   | 'doors_windows_ordered'
@@ -24,7 +27,7 @@ export type ProjectStage =
 
 export type LostStage = 'lost'
 
-export type Stage = SalesStage | ProjectStage | LostStage
+export type Stage = SalesStage | ProjectStage | OutOfAreaStage | LostStage
 
 export type LostReason =
   | 'too_expensive'
@@ -206,7 +209,8 @@ export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; c
   quote_sent:           { label: 'Quote Sent',            pipeline: 'sales',   color: 'bg-orange-100 text-orange-800' },
   followup:             { label: 'Follow-Up',             pipeline: 'sales',   color: 'bg-amber-100 text-amber-800' },
   final_followup:       { label: 'Final Follow-Up',       pipeline: 'sales',   color: 'bg-rose-100 text-rose-800' },
-  job_booked:                { label: 'Job Booked',                pipeline: 'sales',   color: 'bg-green-100 text-green-800' },
+  in_conversation:      { label: 'In Conversation',       pipeline: 'sales',   color: 'bg-teal-100 text-teal-800' },
+  job_booked:           { label: 'Job Booked',            pipeline: 'sales',   color: 'bg-green-100 text-green-800' },
   doors_windows_ordered:     { label: 'Doors & Windows Ordered',   pipeline: 'project', color: 'bg-cyan-100 text-cyan-800' },
   final_designs_confirmed:   { label: 'Final Designs Confirmed',   pipeline: 'project', color: 'bg-violet-100 text-violet-800' },
   design_book_created:       { label: 'Design Book Created',       pipeline: 'project', color: 'bg-indigo-100 text-indigo-700' },
@@ -214,12 +218,13 @@ export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; c
   in_build:                  { label: 'In Build',                  pipeline: 'project', color: 'bg-sky-100 text-sky-800' },
   paid_closed:               { label: 'Paid / Closed',             pipeline: 'project', color: 'bg-emerald-100 text-emerald-800' },
   snagging:                  { label: 'Snagging',                  pipeline: 'project', color: 'bg-orange-100 text-orange-800' },
+  out_of_area:          { label: 'Out Of Area',            pipeline: 'lost',    color: 'bg-gray-100 text-gray-600' },
   lost:                 { label: 'Lost',                  pipeline: 'lost',    color: 'bg-red-100 text-red-700' },
 }
 
 export const SALES_STAGES: SalesStage[] = [
   'new_lead', 'sent_sms', 'sent_brochures', 'site_survey_booked',
-  'quoting', 'quote_sent', 'followup', 'final_followup', 'job_booked',
+  'quoting', 'quote_sent', 'followup', 'final_followup', 'in_conversation', 'job_booked',
 ]
 
 export const PROJECT_STAGES: ProjectStage[] = [
