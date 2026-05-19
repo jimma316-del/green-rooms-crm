@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   const phone = fields['Phone'] || fields.phone || null
   const postcode = fields['Post Code'] || fields['Postcode'] || fields.postcode || null
   const address = fields['Address Line 1'] || fields['Address 1'] || fields['Address'] || fields['First Line of Address'] || fields['Street Address'] || null
-  const city = fields['City'] || fields['Town'] || fields['city'] || fields['town'] || null
+  const city = fields['City Or Town'] || fields['City'] || fields['Town'] || fields['city'] || fields['town'] || null
   const marketingRaw = fields['Keep Me Updated'] ?? fields['I would like to receive marketing emails'] ?? null
   const marketing_consent = marketingRaw === true || String(marketingRaw).toLowerCase() === 'yes' || String(marketingRaw).toLowerCase() === 'true'
 
