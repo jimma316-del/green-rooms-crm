@@ -35,6 +35,7 @@ export function LeadContact({ lead }: { lead: Lead }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [sendingSms, setSendingSms] = useState(false)
+  const [brochuresSent, setBrochuresSent] = useState(lead.brochures_sent)
 
   async function sendSms() {
     setSendingSms(true)
@@ -292,16 +293,17 @@ export function LeadContact({ lead }: { lead: Lead }) {
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
-            checked={lead.brochures_sent}
+            checked={brochuresSent}
             onChange={async (e) => {
+              const val = e.target.checked
+              setBrochuresSent(val)
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await (supabase.from('leads') as any).update({ brochures_sent: e.target.checked }).eq('id', lead.id)
-              router.refresh()
+              await (supabase.from('leads') as any).update({ brochures_sent: val }).eq('id', lead.id)
             }}
             className="w-4 h-4 rounded accent-[var(--primary)]"
           />
           <span className="text-xs text-gray-500">
-            {lead.brochures_sent ? 'Brochures sent' : 'Brochures not sent'}
+            {brochuresSent ? 'Brochures sent' : 'Brochures not sent'}
           </span>
         </label>
 
