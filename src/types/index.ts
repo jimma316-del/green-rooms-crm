@@ -224,7 +224,7 @@ export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; c
 
 export const SALES_STAGES: SalesStage[] = [
   'new_lead', 'sent_sms', 'sent_brochures', 'site_survey_booked',
-  'quoting', 'quote_sent', 'followup', 'final_followup', 'in_conversation', 'job_booked',
+  'quoting', 'quote_sent', 'in_conversation', 'followup', 'final_followup', 'job_booked',
 ]
 
 export const PROJECT_STAGES: ProjectStage[] = [
