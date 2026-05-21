@@ -15,11 +15,11 @@ type UsersUpdate = Partial<UsersInsert>
 
 type LeadsRow = {
   id: string; created_at: string; updated_at: string; name: string; mobile: string | null; email: string | null
-  address: string | null; postcode: string | null; project_type: string | null; budget_min: number | null
+  address: string | null; city: string | null; postcode: string | null; project_type: string | null; budget_min: number | null
   budget_max: number | null; approx_size_sqm: number | null; notes: string | null; stage: string; pipeline: string
   lost_reason: string | null; lost_notes: string | null; lead_source: string | null; source_referrer: string | null
   utm_source: string | null; utm_medium: string | null; utm_campaign: string | null; assigned_to: string | null
-  calculator_data: Json | null; is_hot: boolean; tags: string[]; marketing_consent: boolean
+  calculator_data: Json | null; is_hot: boolean; tags: string[]; marketing_consent: boolean; brochures_sent: boolean
   site_visit_date: string | null; job_date: string | null; job_end_date: string | null
   first_contact_at: string | null; is_newsletter: boolean
   xero_quote_url: string | null; xero_invoice_url: string | null
@@ -28,7 +28,7 @@ type LeadsRow = {
 }
 type LeadsInsert = {
   id?: string; created_at?: string; updated_at?: string; name: string; mobile?: string | null; email?: string | null
-  address?: string | null; postcode?: string | null; project_type?: string | null; budget_min?: number | null
+  address?: string | null; city?: string | null; postcode?: string | null; project_type?: string | null; budget_min?: number | null
   budget_max?: number | null; approx_size_sqm?: number | null; notes?: string | null; stage?: string; pipeline?: string
   lost_reason?: string | null; lost_notes?: string | null; lead_source?: string | null; source_referrer?: string | null
   utm_source?: string | null; utm_medium?: string | null; utm_campaign?: string | null; assigned_to?: string | null
