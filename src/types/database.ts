@@ -15,7 +15,7 @@ type UsersUpdate = Partial<UsersInsert>
 
 type LeadsRow = {
   id: string; created_at: string; updated_at: string; name: string; mobile: string | null; email: string | null
-  address: string | null; city: string | null; postcode: string | null; project_type: string | null; budget_min: number | null
+  address: string | null; address_line_2: string | null; city: string | null; postcode: string | null; project_type: string | null; budget_min: number | null
   budget_max: number | null; approx_size_sqm: number | null; notes: string | null; stage: string; pipeline: string
   lost_reason: string | null; lost_notes: string | null; lead_source: string | null; source_referrer: string | null
   utm_source: string | null; utm_medium: string | null; utm_campaign: string | null; assigned_to: string | null
@@ -28,7 +28,7 @@ type LeadsRow = {
 }
 type LeadsInsert = {
   id?: string; created_at?: string; updated_at?: string; name: string; mobile?: string | null; email?: string | null
-  address?: string | null; city?: string | null; postcode?: string | null; project_type?: string | null; budget_min?: number | null
+  address?: string | null; address_line_2?: string | null; city?: string | null; postcode?: string | null; project_type?: string | null; budget_min?: number | null
   budget_max?: number | null; approx_size_sqm?: number | null; notes?: string | null; stage?: string; pipeline?: string
   lost_reason?: string | null; lost_notes?: string | null; lead_source?: string | null; source_referrer?: string | null
   utm_source?: string | null; utm_medium?: string | null; utm_campaign?: string | null; assigned_to?: string | null
