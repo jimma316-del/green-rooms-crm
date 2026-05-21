@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: leads } = await (admin as any)
     .from('leads')
-    .select('id, postcode, distance_miles, city, address_line_2, calculator_data')
+    .select('id, postcode, distance_miles, address, city, address_line_2, calculator_data')
 
   if (!leads?.length) return NextResponse.json({ updated: 0 })
 
@@ -27,19 +27,33 @@ export async function POST(req: NextRequest) {
     const needsDistance = lead.distance_miles === null && lead.postcode
     const needsCity = !lead.city && lead.postcode
     const needsLine2 = !lead.address_line_2 && lead.calculator_data
+    const needsAddress = !lead.address && lead.calculator_data
 
-    if (!needsDistance && !needsCity && !needsLine2) continue
+    if (!needsDistance && !needsCity && !needsLine2 && !needsAddress) continue
 
     try {
       const updateData: Record<string, unknown> = {}
 
-      if (needsLine2) {
+      if (needsLine2 || needsAddress || needsCity) {
         const fields = lead.calculator_data?.fields ?? lead.calculator_data ?? {}
-        const line2 = fields['Address Line 2'] || fields['Adress Line 2'] || fields['Address 2'] || null
-        if (line2) updateData.address_line_2 = line2
+
+        if (needsAddress) {
+          const address = fields['Address Line 1'] || fields['Address 1'] || fields['Address'] || fields['First Line of Address'] || fields['Street Address'] || null
+          if (address) updateData.address = address
+        }
+
+        if (needsLine2) {
+          const line2 = fields['Address Line 2'] || fields['Adress Line 2'] || fields['Address 2'] || null
+          if (line2) updateData.address_line_2 = line2
+        }
+
+        if (needsCity) {
+          const cityFromForm = fields['City Or Town'] || fields['City'] || fields['Town'] || fields['city'] || fields['town'] || null
+          if (cityFromForm) updateData.city = cityFromForm
+        }
       }
 
-      if ((needsDistance || needsCity) && lead.postcode) {
+      if ((needsDistance || (needsCity && !updateData.city)) && lead.postcode) {
         const clean = lead.postcode.replace(/\s+/g, '').toUpperCase()
         const res = await fetch(`https://api.postcodes.io/postcodes/${clean}`)
         if (res.ok) {
@@ -50,7 +64,7 @@ export async function POST(req: NextRequest) {
               const miles = await distanceFromHQ(lead.postcode)
               if (miles !== null) updateData.distance_miles = parseFloat(miles.toFixed(1))
             }
-            if (needsCity) {
+            if (needsCity && !updateData.city) {
               const city = result.admin_district || null
               if (city) updateData.city = city
             }
