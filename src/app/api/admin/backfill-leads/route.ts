@@ -12,10 +12,10 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
 
-  const { data: leads } = await admin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: leads } = await (admin as any)
     .from('leads')
-    .select('id, postcode, distance_miles, city')
-    .not('postcode', 'is', null)
+    .select('id, postcode, distance_miles, city, address_line_2, calculator_data')
 
   if (!leads?.length) return NextResponse.json({ updated: 0 })
 
@@ -24,28 +24,38 @@ export async function POST(req: NextRequest) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const lead of leads as any[]) {
-    const needsDistance = lead.distance_miles === null
-    const needsCity = !lead.city
-    if (!needsDistance && !needsCity) continue
+    const needsDistance = lead.distance_miles === null && lead.postcode
+    const needsCity = !lead.city && lead.postcode
+    const needsLine2 = !lead.address_line_2 && lead.calculator_data
+
+    if (!needsDistance && !needsCity && !needsLine2) continue
 
     try {
-      const clean = lead.postcode!.replace(/\s+/g, '').toUpperCase()
-      const res = await fetch(`https://api.postcodes.io/postcodes/${clean}`)
-      if (!res.ok) { failed++; continue }
-      const json = await res.json()
-      const result = json.result
-      if (!result) { failed++; continue }
-
       const updateData: Record<string, unknown> = {}
 
-      if (needsDistance) {
-        const miles = await distanceFromHQ(lead.postcode!)
-        if (miles !== null) updateData.distance_miles = parseFloat(miles.toFixed(1))
+      if (needsLine2) {
+        const fields = lead.calculator_data?.fields ?? lead.calculator_data ?? {}
+        const line2 = fields['Address Line 2'] || fields['Adress Line 2'] || fields['Address 2'] || null
+        if (line2) updateData.address_line_2 = line2
       }
 
-      if (needsCity) {
-        const city = result.admin_district || null
-        if (city) updateData.city = city
+      if ((needsDistance || needsCity) && lead.postcode) {
+        const clean = lead.postcode.replace(/\s+/g, '').toUpperCase()
+        const res = await fetch(`https://api.postcodes.io/postcodes/${clean}`)
+        if (res.ok) {
+          const json = await res.json()
+          const result = json.result
+          if (result) {
+            if (needsDistance) {
+              const miles = await distanceFromHQ(lead.postcode)
+              if (miles !== null) updateData.distance_miles = parseFloat(miles.toFixed(1))
+            }
+            if (needsCity) {
+              const city = result.admin_district || null
+              if (city) updateData.city = city
+            }
+          }
+        }
       }
 
       if (Object.keys(updateData).length > 0) {
