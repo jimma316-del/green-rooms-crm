@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const lead of leads as any[]) {
     const needsDistance = lead.distance_miles === null && lead.postcode
-    const needsCity = !lead.city && lead.postcode
+    const needsCity = lead.calculator_data  // always try to get city from form
     const needsLine2 = !lead.address_line_2 && lead.calculator_data
     const needsAddress = !lead.address && lead.calculator_data
 
@@ -35,7 +35,8 @@ export async function POST(req: NextRequest) {
       const updateData: Record<string, unknown> = {}
 
       if (needsLine2 || needsAddress || needsCity) {
-        const fields = lead.calculator_data?.fields ?? lead.calculator_data ?? {}
+        // Webflow stores fields under payload.data; fall back to root if not nested
+        const fields = lead.calculator_data?.payload?.data ?? lead.calculator_data?.fields ?? lead.calculator_data ?? {}
 
         if (needsAddress) {
           const address = fields['Address Line 1'] || fields['Address 1'] || fields['Address'] || fields['First Line of Address'] || fields['Street Address'] || null
@@ -47,13 +48,12 @@ export async function POST(req: NextRequest) {
           if (line2) updateData.address_line_2 = line2
         }
 
-        if (needsCity) {
-          const cityFromForm = fields['City Or Town'] || fields['City'] || fields['Town'] || fields['city'] || fields['town'] || null
-          if (cityFromForm) updateData.city = cityFromForm
-        }
+        // Prefer the form-submitted city over postcodes.io
+        const cityFromForm = fields['City Or Town'] || fields['City'] || fields['Town'] || fields['city'] || fields['town'] || null
+        if (cityFromForm) updateData.city = cityFromForm
       }
 
-      if ((needsDistance || (needsCity && !updateData.city)) && lead.postcode) {
+      if ((needsDistance || (!updateData.city && !lead.city)) && lead.postcode) {
         const clean = lead.postcode.replace(/\s+/g, '').toUpperCase()
         const res = await fetch(`https://api.postcodes.io/postcodes/${clean}`)
         if (res.ok) {
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
               const miles = await distanceFromHQ(lead.postcode)
               if (miles !== null) updateData.distance_miles = parseFloat(miles.toFixed(1))
             }
-            if (needsCity && !updateData.city) {
+            if (!updateData.city && !lead.city) {
               const city = result.admin_district || null
               if (city) updateData.city = city
             }
