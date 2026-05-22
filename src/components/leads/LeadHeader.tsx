@@ -84,6 +84,12 @@ export function LeadHeader({ lead }: { lead: Lead }) {
           .is('completed_at', null),
       ])
       toast.success('Stage updated — follow-up task set for 48hrs')
+    } else if (newStage === 'lost' || newStage === 'out_of_area') {
+      await supabase.from('tasks')
+        .update({ completed_at: new Date().toISOString(), completed_by: user!.id })
+        .eq('lead_id', lead.id)
+        .is('completed_at', null)
+      toast.success('Stage updated — open tasks marked complete')
     } else {
       toast.success('Stage updated')
     }
