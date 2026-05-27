@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { SettingsActions } from '@/components/settings/SettingsActions'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -29,6 +30,8 @@ export default async function SettingsPage() {
           Add header: <code className="font-mono">x-webhook-secret: [your secret]</code>
         </p>
       </div>
+
+      <SettingsActions />
     </div>
   )
 }
