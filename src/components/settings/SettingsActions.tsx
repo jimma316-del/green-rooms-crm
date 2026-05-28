@@ -14,7 +14,7 @@ export function SettingsActions() {
       const res = await fetch('/api/admin/trigger-sms', { method: 'POST' })
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error ?? 'Failed to run SMS job')
+        toast.error(data.detail ?? data.error ?? 'Failed to run SMS job')
       } else {
         setLastResult(data)
         if (data.sent > 0) {

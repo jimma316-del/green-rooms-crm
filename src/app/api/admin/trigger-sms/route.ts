@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     .lte('created_at', cutoff)
     .neq('pipeline', 'lost')
 
-  if (error) return NextResponse.json({ error: 'Query failed' }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Query failed', detail: error.message }, { status: 500 })
 
   const results = { sent: 0, skipped: 0, failed: 0, leads: [] as string[] }
 
