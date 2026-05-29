@@ -173,7 +173,7 @@ export function SignOffForm({ leadId, customerName, address, customerEmail }: Pr
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 pb-32">
+    <div className="max-w-2xl mx-auto px-4 py-6 pb-48">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => router.back()} className="text-gray-400 hover:text-gray-600">
@@ -299,7 +299,7 @@ export function SignOffForm({ leadId, customerName, address, customerEmail }: Pr
       </div>
 
       {/* Sticky submit */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-10">
+      <div className="fixed bottom-14 md:bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
         <Button
           onClick={handleSubmit}
           disabled={submitting}
