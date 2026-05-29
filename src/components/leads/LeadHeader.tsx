@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { STAGE_CONFIG, SALES_STAGES, PROJECT_STAGES } from '@/types'
 import type { Stage } from '@/types'
-import { ChevronLeft, Flame, Phone, MessageCircle, Mail, Trash2 } from 'lucide-react'
+import { ChevronLeft, Flame, Phone, MessageCircle, Mail, Trash2, ClipboardCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger,
@@ -212,6 +212,11 @@ export function LeadHeader({ lead }: { lead: Lead }) {
             </Button>
           </a>
         )}
+        <Link href={`/leads/${lead.id}/sign-off`}>
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs text-green-700 border-green-200 hover:bg-green-50">
+            <ClipboardCheck className="w-3.5 h-3.5" /> Sign-off
+          </Button>
+        </Link>
       </div>
     </div>
   )
