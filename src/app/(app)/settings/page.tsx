@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { SettingsActions } from '@/components/settings/SettingsActions'
+import { InviteSiteUser } from '@/components/settings/InviteSiteUser'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -30,6 +31,14 @@ export default async function SettingsPage() {
           Add header: <code className="font-mono">x-webhook-secret: [your secret]</code>
         </p>
       </div>
+
+      {profile?.role === 'admin' && (
+        <div className="bg-white rounded-xl border border-gray-100 p-6 mt-4">
+          <h2 className="text-sm font-semibold text-gray-700 mb-1">Site Team Access</h2>
+          <p className="text-xs text-gray-400 mb-4">Invite site team members — they can only log in and complete sign-off sheets.</p>
+          <InviteSiteUser />
+        </div>
+      )}
 
       <SettingsActions />
     </div>

@@ -65,6 +65,7 @@ interface Props {
   customerName: string
   address: string
   customerEmail: string | null
+  backHref?: string
 }
 
 function YesNoToggle({
@@ -106,7 +107,7 @@ function YesNoToggle({
   )
 }
 
-export function SignOffForm({ leadId, customerName, address, customerEmail }: Props) {
+export function SignOffForm({ leadId, customerName, address, customerEmail, backHref }: Props) {
   const router = useRouter()
   const customerSigRef = useRef<SignaturePadHandle>(null)
   const pmSigRef = useRef<SignaturePadHandle>(null)
@@ -164,7 +165,7 @@ export function SignOffForm({ leadId, customerName, address, customerEmail }: Pr
       if (!res.ok) throw new Error(data.error ?? 'Failed')
 
       toast.success(customerEmail ? 'Sign-off complete — email sent to customer' : 'Sign-off complete')
-      router.push(`/leads/${leadId}`)
+      router.push(backHref ?? `/leads/${leadId}`)
       router.refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Something went wrong')
@@ -176,7 +177,7 @@ export function SignOffForm({ leadId, customerName, address, customerEmail }: Pr
     <div className="max-w-2xl mx-auto px-4 py-6 pb-48">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => router.back()} className="text-gray-400 hover:text-gray-600">
+        <button onClick={() => backHref ? router.push(backHref) : router.back()} className="text-gray-400 hover:text-gray-600">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">

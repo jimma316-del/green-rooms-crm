@@ -27,20 +27,46 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
-  const isApiRoute = request.nextUrl.pathname.startsWith('/api')
-  const isPublicRoute = isAuthRoute || isApiRoute
+  const path = request.nextUrl.pathname
+  const isAuthRoute = path.startsWith('/login')
+  const isApiRoute = path.startsWith('/api')
+  const isSiteRoute = path.startsWith('/jobs')
 
-  if (!user && !isPublicRoute) {
+  if (!user && !isAuthRoute && !isApiRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && isAuthRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
+  if (user) {
+    // Fetch role (fast indexed PK lookup)
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const role = profile?.role
+
+    if (isAuthRoute) {
+      const url = request.nextUrl.clone()
+      url.pathname = role === 'site' ? '/jobs' : '/dashboard'
+      return NextResponse.redirect(url)
+    }
+
+    // Site team can only access /jobs/** and API routes
+    if (role === 'site' && !isSiteRoute && !isApiRoute) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/jobs'
+      return NextResponse.redirect(url)
+    }
+
+    // Non-site team cannot access /jobs (their sign-off is at /leads/[id]/sign-off)
+    if (role !== 'site' && isSiteRoute) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse

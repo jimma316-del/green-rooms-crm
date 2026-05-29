@@ -21,7 +21,7 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       toast.error(error.message)
@@ -29,7 +29,8 @@ export default function LoginPage() {
       return
     }
 
-    window.location.href = '/dashboard'
+    const { data: profile } = await supabase.from('users').select('role').eq('id', data.user.id).single()
+    window.location.href = profile?.role === 'site' ? '/jobs' : '/dashboard'
   }
 
   async function handleMagicLink(e: React.FormEvent) {
