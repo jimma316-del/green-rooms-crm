@@ -68,11 +68,17 @@ export async function autoAdvanceOnJobDates(supabase: Client) {
   try {
     const today = new Date().toISOString().slice(0, 10)
 
-    // Fetch all leads not yet in the project pipeline that have a job start date
+    // Stages managed manually by the team — don't auto-overwrite them
+    const LOCKED_STAGES = new Set([
+      'doors_windows_ordered', 'final_designs_confirmed', 'design_book_created',
+      'schedule_sent_to_client', 'in_build', 'awaiting_payment', 'paid_closed', 'snagging',
+    ])
+
+    // Fetch all non-lost leads with a job date (includes those already in project
+    // pipeline but stuck at a wrong stage from a previous bug)
     const { data: leads, error: fetchError } = await supabase
       .from('leads')
-      .select('id, stage, job_date, job_end_date')
-      .neq('pipeline', 'project')
+      .select('id, stage, pipeline, job_date, job_end_date')
       .neq('pipeline', 'lost')
       .not('job_date', 'is', null)
 
@@ -83,6 +89,9 @@ export async function autoAdvanceOnJobDates(supabase: Client) {
     if (!leads?.length) return
 
     for (const lead of leads) {
+      // Skip leads already at a user-managed project stage
+      if (LOCKED_STAGES.has(lead.stage)) continue
+
       const fromStage = lead.stage
       const jobDate = lead.job_date as string
       const jobEndDate = lead.job_end_date as string | null
