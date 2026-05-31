@@ -16,13 +16,31 @@ export async function POST(req: NextRequest) {
 
   // Invite user via Supabase auth (sends invite email)
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://green-rooms-crm.vercel.app'
+  const redirectTo = `${siteUrl}/auth/callback`
+
   const { data: invited, error } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { full_name: name || email.split('@')[0] },
-    redirectTo: `${siteUrl}/auth/callback`,
+    redirectTo,
   })
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
-  // Set their role to 'site' in the users table
+  if (error) {
+    // User already exists — send a password reset so they can set one
+    if (error.message.toLowerCase().includes('already registered') || error.code === 'email_exists') {
+      const { error: resetError } = await admin.auth.resetPasswordForEmail(email, { redirectTo })
+      if (resetError) return NextResponse.json({ error: resetError.message }, { status: 400 })
+
+      // Make sure their role is correct
+      const { data: existing } = await admin.from('users').select('id').eq('email', email).single()
+      if (existing) {
+        await admin.from('users').update({ role: 'site', full_name: name || email.split('@')[0] }).eq('id', existing.id)
+      }
+
+      return NextResponse.json({ ok: true, resent: true })
+    }
+    return NextResponse.json({ error: error.message }, { status: 400 })
+  }
+
+  // New user — set their role
   await admin.from('users').upsert({
     id: invited.user.id,
     email,
