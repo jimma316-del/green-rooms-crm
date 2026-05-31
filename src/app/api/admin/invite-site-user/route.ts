@@ -15,8 +15,10 @@ export async function POST(req: NextRequest) {
   if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
 
   // Invite user via Supabase auth (sends invite email)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://green-rooms-crm.vercel.app'
   const { data: invited, error } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { full_name: name || email.split('@')[0] },
+    redirectTo: `${siteUrl}/auth/callback`,
   })
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
