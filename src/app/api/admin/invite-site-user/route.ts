@@ -32,20 +32,39 @@ export async function POST(req: NextRequest) {
   let userId: string
 
   if (existingProfile) {
-    // Update their password directly
+    // Known user — just reset their password
     const { error } = await admin.auth.admin.updateUserById(existingProfile.id, { password: tempPassword })
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
     userId = existingProfile.id
   } else {
-    // Create new user
+    // Try to create; if they already exist in Auth but not our users table, find and update them
     const { data: created, error } = await admin.auth.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
       user_metadata: { full_name: displayName },
     })
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-    userId = created.user.id
+
+    if (error) {
+      if (!error.message.toLowerCase().includes('already')) {
+        return NextResponse.json({ error: error.message }, { status: 400 })
+      }
+      // User is in Auth but missing from users table — find by listing
+      let found: { id: string } | undefined
+      let page = 1
+      while (!found) {
+        const { data: page_data } = await admin.auth.admin.listUsers({ page, perPage: 50 })
+        if (!page_data?.users.length) break
+        found = page_data.users.find(u => u.email?.toLowerCase() === email.toLowerCase())
+        if (page_data.users.length < 50) break
+        page++
+      }
+      if (!found) return NextResponse.json({ error: 'Could not locate user account' }, { status: 400 })
+      await admin.auth.admin.updateUserById(found.id, { password: tempPassword })
+      userId = found.id
+    } else {
+      userId = created.user.id
+    }
   }
 
   // Ensure role is set
