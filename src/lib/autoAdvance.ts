@@ -63,3 +63,47 @@ export async function autoAdvanceSiteVisits(supabase: Client) {
     console.error('[autoAdvance] unexpected error:', err)
   }
 }
+
+export async function autoAdvanceToAwaitingPayment(supabase: Client) {
+  try {
+    const today = new Date().toISOString().slice(0, 10)
+
+    const { data: leads } = await supabase
+      .from('leads')
+      .select('id')
+      .eq('stage', 'in_build')
+      .not('job_end_date', 'is', null)
+      .lte('job_end_date', today)
+
+    if (!leads?.length) return
+
+    for (const lead of leads) {
+      const { error } = await supabase
+        .from('leads')
+        .update({ stage: 'awaiting_payment' })
+        .eq('id', lead.id)
+
+      if (error) {
+        console.error(`[autoAdvance] awaiting_payment update failed for ${lead.id}:`, error.message)
+        continue
+      }
+
+      await supabase.from('stage_history').insert({
+        lead_id: lead.id,
+        from_stage: 'in_build',
+        to_stage: 'awaiting_payment',
+        changed_by: null,
+        note: 'Auto-advanced — build end date passed',
+      })
+
+      await supabase.from('activities').insert({
+        lead_id: lead.id,
+        created_by: null,
+        type: 'stage_change',
+        body: 'Auto-advanced to Awaiting Payment — build end date passed',
+      })
+    }
+  } catch (err) {
+    console.error('[autoAdvance] awaiting_payment error:', err)
+  }
+}

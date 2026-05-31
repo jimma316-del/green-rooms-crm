@@ -22,6 +22,7 @@ export type ProjectStage =
   | 'design_book_created'
   | 'schedule_sent_to_client'
   | 'in_build'
+  | 'awaiting_payment'
   | 'paid_closed'
   | 'snagging'
 
@@ -216,6 +217,7 @@ export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; c
   design_book_created:       { label: 'Design Book Created',       pipeline: 'project', color: 'bg-indigo-100 text-indigo-700' },
   schedule_sent_to_client:   { label: 'Schedule Sent To Client',   pipeline: 'project', color: 'bg-teal-100 text-teal-800' },
   in_build:                  { label: 'In Build',                  pipeline: 'project', color: 'bg-sky-100 text-sky-800' },
+  awaiting_payment:          { label: 'Awaiting Payment',          pipeline: 'project', color: 'bg-amber-100 text-amber-800' },
   paid_closed:               { label: 'Paid / Closed',             pipeline: 'project', color: 'bg-emerald-100 text-emerald-800' },
   snagging:                  { label: 'Snagging',                  pipeline: 'project', color: 'bg-orange-100 text-orange-800' },
   out_of_area:          { label: 'Out Of Area',            pipeline: 'lost',    color: 'bg-gray-100 text-gray-600' },
@@ -229,7 +231,7 @@ export const SALES_STAGES: SalesStage[] = [
 
 export const PROJECT_STAGES: ProjectStage[] = [
   'doors_windows_ordered', 'final_designs_confirmed', 'design_book_created',
-  'schedule_sent_to_client', 'in_build', 'paid_closed', 'snagging',
+  'schedule_sent_to_client', 'in_build', 'awaiting_payment', 'paid_closed', 'snagging',
 ]
 
 export const LOST_REASON_LABELS: Record<LostReason, string> = {
