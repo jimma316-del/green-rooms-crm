@@ -61,13 +61,7 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // Non-site team cannot access /jobs (their sign-off is at /leads/[id]/sign-off)
-    if (role !== 'site' && isSiteRoute) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/dashboard'
-      return NextResponse.redirect(url)
-    }
-  }
+}
 
   return supabaseResponse
 }

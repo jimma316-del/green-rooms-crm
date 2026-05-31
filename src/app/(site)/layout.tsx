@@ -9,7 +9,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase.from('users').select('role, full_name').eq('id', user.id).single()
-  if (profile?.role !== 'site') redirect('/dashboard')
+  if (profile?.role === undefined) redirect('/dashboard')
 
   return <SiteShell userName={profile?.full_name ?? ''}>{children}</SiteShell>
 }
