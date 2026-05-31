@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { createClient } from '@/lib/supabase/server'
 import { SettingsActions } from '@/components/settings/SettingsActions'
 import { InviteSiteUser } from '@/components/settings/InviteSiteUser'

@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { LeadsTable } from '@/components/leads/LeadsTable'
 
+export const dynamic = 'force-dynamic'
+
 interface Props {
   searchParams: Promise<{
     q?: string
