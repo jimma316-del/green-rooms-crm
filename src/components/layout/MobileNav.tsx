@@ -14,7 +14,7 @@ const navItems = [
   { href: '/leads', label: 'Leads', icon: Users },
   { href: '/newsletter', label: 'Newsletter', icon: Mail },
   { href: '/tasks', label: 'Tasks', icon: CheckSquare },
-  { href: '/jobs', label: 'Site Jobs', icon: HardHat },
+  { href: '/jobs', label: 'Jobs', icon: HardHat },
   { href: '/reports', label: 'Reports', icon: BarChart3 },
 ]
 

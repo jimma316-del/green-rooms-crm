@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { SiteShell } from '@/components/site/SiteShell'
+import { AppShell } from '@/components/layout/AppShell'
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -9,7 +10,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase.from('users').select('role, full_name').eq('id', user.id).single()
-  if (profile?.role === undefined) redirect('/dashboard')
 
-  return <SiteShell userName={profile?.full_name ?? ''}>{children}</SiteShell>
+  // Site team get the minimal layout; everyone else gets the full CRM sidebar
+  if (profile?.role === 'site') {
+    return <SiteShell userName={profile?.full_name ?? ''}>{children}</SiteShell>
+  }
+
+  return <AppShell>{children}</AppShell>
 }
