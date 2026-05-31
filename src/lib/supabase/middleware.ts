@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // API routes site team are allowed to call
-const SITE_ALLOWED_API = /^\/api\/leads\/[^/]+\/sign-off$/
+const SITE_ALLOWED_API = /^\/api\/leads\/[^/]+\/(sign-off|snagging-sign-off)$/
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })

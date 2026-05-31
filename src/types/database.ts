@@ -26,6 +26,7 @@ type LeadsRow = {
   sms_sent_at: string | null
   distance_miles: number | null
   signed_off_at: string | null
+  snagging_signed_off_at: string | null
 }
 type LeadsInsert = {
   id?: string; created_at?: string; updated_at?: string; name: string; mobile?: string | null; email?: string | null
@@ -40,6 +41,7 @@ type LeadsInsert = {
   sms_sent_at?: string | null
   distance_miles?: number | null
   signed_off_at?: string | null
+  snagging_signed_off_at?: string | null
 }
 type LeadsUpdate = Partial<LeadsInsert>
 

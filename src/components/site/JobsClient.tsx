@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ClipboardCheck, MapPin, List, CalendarDays, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react'
+import { ClipboardCheck, MapPin, List, CalendarDays, ChevronLeft, ChevronRight, CheckCircle2, Archive, Wrench } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Job {
@@ -17,10 +17,31 @@ interface Job {
   signedOffAt: string | null
 }
 
-// ── Calendar helpers ─────────────────────────────────────────────
+interface SnaggingJob {
+  id: string
+  name: string
+  address: string
+  jobDate: string | null
+  jobEndDate: string | null
+}
+
+interface ArchivedJob {
+  id: string
+  name: string
+  address: string
+  jobDate: string | null
+  signedOffAt: string | null
+}
+
+interface Props {
+  jobs: Job[]
+  snagging: SnaggingJob[]
+  archive: ArchivedJob[]
+}
+
+// ── Date helpers ──────────────────────────────────────────────────
 
 function parseDate(s: string) {
-  // job_date is stored as 'YYYY-MM-DD'
   const [y, m, d] = s.split('-').map(Number)
   return new Date(y, m - 1, d)
 }
@@ -31,6 +52,17 @@ function sameDay(a: Date, b: Date) {
     a.getDate() === b.getDate()
 }
 
+function formatDateRange(start: string, end: string | null) {
+  const s = parseDate(start)
+  const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  if (!end || end === start) return fmt(s)
+  return `${fmt(s)} – ${fmt(parseDate(end))}`
+}
+
+function formatDate(s: string) {
+  return parseDate(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 function jobsOnDay(jobs: Job[], day: Date): Job[] {
   return jobs.filter(j => {
     if (!j.jobDate) return false
@@ -38,6 +70,13 @@ function jobsOnDay(jobs: Job[], day: Date): Job[] {
     const end = j.jobEndDate ? parseDate(j.jobEndDate) : start
     return day >= start && day <= end
   })
+}
+
+const byDate = (a: { jobDate: string | null }, b: { jobDate: string | null }) => {
+  if (!a.jobDate && !b.jobDate) return 0
+  if (!a.jobDate) return 1
+  if (!b.jobDate) return -1
+  return a.jobDate < b.jobDate ? -1 : 1
 }
 
 // ── Calendar view ────────────────────────────────────────────────
@@ -58,9 +97,7 @@ function CalendarView({ jobs }: { jobs: Job[] }) {
 
   const firstDay = new Date(year, month, 1)
   const daysInMonth = new Date(year, month + 1, 0).getDate()
-  // Monday-first: 0=Mon … 6=Sun
   const startOffset = (firstDay.getDay() + 6) % 7
-
   const monthName = firstDay.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
   const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -68,12 +105,10 @@ function CalendarView({ jobs }: { jobs: Job[] }) {
     ...Array(startOffset).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => new Date(year, month, i + 1)),
   ]
-  // Pad to full weeks
   while (cells.length % 7 !== 0) cells.push(null)
 
   return (
     <div>
-      {/* Month nav */}
       <div className="flex items-center justify-between mb-4">
         <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-gray-100">
           <ChevronLeft className="w-5 h-5 text-gray-600" />
@@ -83,28 +118,18 @@ function CalendarView({ jobs }: { jobs: Job[] }) {
           <ChevronRight className="w-5 h-5 text-gray-600" />
         </button>
       </div>
-
-      {/* Day labels */}
       <div className="grid grid-cols-7 mb-1">
         {DAY_LABELS.map(d => (
           <div key={d} className="text-center text-[10px] font-semibold text-gray-400 py-1">{d}</div>
         ))}
       </div>
-
-      {/* Grid */}
       <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-xl overflow-hidden">
         {cells.map((day, i) => {
           if (!day) return <div key={i} className="bg-gray-50 min-h-[72px]" />
           const isToday = sameDay(day, today)
           const dayJobs = jobsOnDay(jobs, day)
           return (
-            <div
-              key={i}
-              className={cn(
-                'bg-white min-h-[72px] p-1',
-                isToday && 'bg-green-50'
-              )}
-            >
+            <div key={i} className={cn('bg-white min-h-[72px] p-1', isToday && 'bg-green-50')}>
               <p className={cn(
                 'text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full mb-1',
                 isToday ? 'bg-green-700 text-white' : 'text-gray-500'
@@ -118,9 +143,7 @@ function CalendarView({ jobs }: { jobs: Job[] }) {
                     href={`/jobs/${job.id}/sign-off`}
                     className={cn(
                       'block text-[10px] leading-tight rounded px-1 py-0.5 truncate',
-                      job.signedOffAt
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-green-700 text-white hover:bg-green-800'
+                      job.signedOffAt ? 'bg-green-100 text-green-700' : 'bg-green-700 text-white hover:bg-green-800'
                     )}
                     title={job.name}
                   >
@@ -132,48 +155,20 @@ function CalendarView({ jobs }: { jobs: Job[] }) {
           )
         })}
       </div>
-
-      {/* Legend - jobs with no date */}
-      {jobs.filter(j => !j.jobDate).length > 0 && (
-        <div className="mt-4">
-          <p className="text-xs text-gray-400 mb-2">Not yet scheduled:</p>
-          <div className="space-y-1">
-            {jobs.filter(j => !j.jobDate).map(job => (
-              <Link
-                key={job.id}
-                href={`/jobs/${job.id}/sign-off`}
-                className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-3 py-2 hover:border-green-400 transition-colors"
-              >
-                <span className="text-sm font-medium text-gray-700">{job.name}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${job.stageColor}`}>{job.stageLabel}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
 
 // ── Job card ─────────────────────────────────────────────────────
 
-function JobCard({ job, formatDateRange, dashed }: {
-  job: Job
-  formatDateRange: (start: string, end: string | null) => string
-  dashed?: boolean
-}) {
+function JobCard({ job }: { job: Job }) {
   const signedOff = !!job.signedOffAt
-
   return (
     <Link
       href={`/jobs/${job.id}/sign-off`}
       className={cn(
         'block bg-white rounded-xl border p-4 transition-all active:scale-[0.99]',
-        signedOff
-          ? 'border-green-200 opacity-60'
-          : dashed
-            ? 'border-dashed border-gray-200 hover:border-green-400'
-            : 'border-gray-200 hover:border-green-400 hover:shadow-sm'
+        signedOff ? 'border-green-200 opacity-60' : 'border-gray-200 hover:border-green-400 hover:shadow-sm'
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -186,29 +181,80 @@ function JobCard({ job, formatDateRange, dashed }: {
             </div>
           )}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${job.stageColor}`}>
-              {job.stageLabel}
-            </span>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${job.stageColor}`}>{job.stageLabel}</span>
             {job.jobDate && (
-              <span className="text-xs text-gray-500">
-                {formatDateRange(job.jobDate, job.jobEndDate)}
-              </span>
+              <span className="text-xs text-gray-500">{formatDateRange(job.jobDate, job.jobEndDate)}</span>
             )}
           </div>
         </div>
         {signedOff ? (
           <div className="shrink-0 flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-medium px-3 py-2 rounded-lg">
-            <CheckCircle2 className="w-4 h-4" />
-            Signed off
+            <CheckCircle2 className="w-4 h-4" /> Signed off
           </div>
         ) : (
           <div className="shrink-0 flex items-center gap-1.5 bg-green-700 text-white text-xs font-medium px-3 py-2 rounded-lg">
-            <ClipboardCheck className="w-4 h-4" />
-            Sign off
+            <ClipboardCheck className="w-4 h-4" /> Sign off
           </div>
         )}
       </div>
     </Link>
+  )
+}
+
+// ── Snagging card ────────────────────────────────────────────────
+
+function SnaggingCard({ job }: { job: SnaggingJob }) {
+  return (
+    <Link
+      href={`/jobs/${job.id}/snagging`}
+      className="block bg-white rounded-xl border border-orange-200 p-4 hover:border-orange-400 hover:shadow-sm transition-all active:scale-[0.99]"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-gray-900">{job.name}</p>
+          {job.address && (
+            <div className="flex items-center gap-1 mt-0.5">
+              <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
+              <p className="text-xs text-gray-500 truncate">{job.address}</p>
+            </div>
+          )}
+          {job.jobDate && (
+            <p className="text-xs text-gray-500 mt-1.5">{formatDateRange(job.jobDate, job.jobEndDate)}</p>
+          )}
+        </div>
+        <div className="shrink-0 flex items-center gap-1.5 bg-orange-500 text-white text-xs font-medium px-3 py-2 rounded-lg">
+          <Wrench className="w-4 h-4" /> Sign off
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+// ── Archive card ──────────────────────────────────────────────────
+
+function ArchiveCard({ job }: { job: ArchivedJob }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 p-4 opacity-70">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-gray-700">{job.name}</p>
+          {job.address && (
+            <div className="flex items-center gap-1 mt-0.5">
+              <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
+              <p className="text-xs text-gray-400 truncate">{job.address}</p>
+            </div>
+          )}
+          {job.signedOffAt && (
+            <p className="text-xs text-gray-400 mt-1.5">
+              Completed {formatDate(job.signedOffAt.slice(0, 10))}
+            </p>
+          )}
+        </div>
+        <div className="shrink-0 flex items-center gap-1.5 bg-gray-100 text-gray-500 text-xs font-medium px-3 py-2 rounded-lg">
+          <CheckCircle2 className="w-4 h-4" /> Done
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -219,36 +265,56 @@ function ListView({ jobs }: { jobs: Job[] }) {
     return <div className="text-center py-16 text-gray-400 text-sm">No active jobs at the moment</div>
   }
 
-  const byDate = (a: Job, b: Job) => {
-    if (!a.jobDate && !b.jobDate) return 0
-    if (!a.jobDate) return 1
-    if (!b.jobDate) return -1
-    return a.jobDate < b.jobDate ? -1 : 1
-  }
+  return (
+    <div className="space-y-2">
+      {[...jobs].sort(byDate).map(job => <JobCard key={job.id} job={job} />)}
+    </div>
+  )
+}
 
-  const main = jobs.filter(j => j.stage !== 'snagging').sort(byDate)
-  const snagging = jobs.filter(j => j.stage === 'snagging').sort(byDate)
+// ── Snagging view ────────────────────────────────────────────────
 
-  function formatDateRange(start: string, end: string | null) {
-    const s = parseDate(start)
-    const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-    if (!end || end === start) return fmt(s)
-    return `${fmt(s)} – ${fmt(parseDate(end))}`
+function SnaggingView({ snagging, archive }: { snagging: SnaggingJob[]; archive: ArchivedJob[] }) {
+  const [showArchive, setShowArchive] = useState(false)
+
+  if (showArchive) {
+    return (
+      <div>
+        <button
+          onClick={() => setShowArchive(false)}
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4"
+        >
+          <ChevronLeft className="w-4 h-4" /> Back to Snagging
+        </button>
+        <h2 className="font-semibold text-gray-900 mb-3">Archive</h2>
+        {archive.length === 0 ? (
+          <div className="text-center py-16 text-gray-400 text-sm">No archived jobs yet</div>
+        ) : (
+          <div className="space-y-2">
+            {archive.map(job => <ArchiveCard key={job.id} job={job} />)}
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-2">
-      {main.map(job => <JobCard key={job.id} job={job} formatDateRange={formatDateRange} />)}
-
-      {snagging.length > 0 && (
-        <>
-          <div className="flex items-center gap-2 pt-4 pb-1">
-            <div className="flex-1 h-px bg-gray-200" />
-            <p className="text-xs font-medium text-gray-400 shrink-0">Snagging</p>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
-          {snagging.map(job => <JobCard key={job.id} job={job} formatDateRange={formatDateRange} />)}
-        </>
+    <div>
+      {snagging.length === 0 ? (
+        <div className="text-center py-16 text-gray-400 text-sm">No jobs in snagging</div>
+      ) : (
+        <div className="space-y-2">
+          {[...snagging].sort(byDate).map(job => <SnaggingCard key={job.id} job={job} />)}
+        </div>
+      )}
+      {archive.length > 0 && (
+        <button
+          onClick={() => setShowArchive(true)}
+          className="mt-6 w-full flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 transition-colors"
+        >
+          <Archive className="w-4 h-4" />
+          View Archive ({archive.length})
+        </button>
       )}
     </div>
   )
@@ -256,39 +322,75 @@ function ListView({ jobs }: { jobs: Job[] }) {
 
 // ── Main export ──────────────────────────────────────────────────
 
-export function JobsClient({ jobs }: { jobs: Job[] }) {
+export function JobsClient({ jobs, snagging, archive }: Props) {
+  const [tab, setTab] = useState<'jobs' | 'snagging'>('jobs')
   const [view, setView] = useState<'list' | 'calendar'>('list')
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Jobs</h1>
-          <p className="text-sm text-gray-500">{jobs.length} in project pipeline</p>
-        </div>
-        <div className="flex bg-gray-100 rounded-lg p-1 gap-1">
-          <button
-            onClick={() => setView('list')}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all',
-              view === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
-            )}
-          >
-            <List className="w-3.5 h-3.5" /> List
-          </button>
-          <button
-            onClick={() => setView('calendar')}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all',
-              view === 'calendar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
-            )}
-          >
-            <CalendarDays className="w-3.5 h-3.5" /> Calendar
-          </button>
-        </div>
+        <h1 className="text-xl font-bold text-gray-900">Jobs</h1>
+        {tab === 'jobs' && (
+          <div className="flex bg-gray-100 rounded-lg p-1 gap-1">
+            <button
+              onClick={() => setView('list')}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all',
+                view === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+              )}
+            >
+              <List className="w-3.5 h-3.5" /> List
+            </button>
+            <button
+              onClick={() => setView('calendar')}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all',
+                view === 'calendar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+              )}
+            >
+              <CalendarDays className="w-3.5 h-3.5" /> Calendar
+            </button>
+          </div>
+        )}
       </div>
 
-      {view === 'list' ? <ListView jobs={jobs} /> : <CalendarView jobs={jobs} />}
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 mb-4">
+        <button
+          onClick={() => setTab('jobs')}
+          className={cn(
+            'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
+            tab === 'jobs'
+              ? 'border-green-700 text-green-700'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          )}
+        >
+          Active Jobs
+          <span className="ml-1.5 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">{jobs.length}</span>
+        </button>
+        <button
+          onClick={() => setTab('snagging')}
+          className={cn(
+            'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
+            tab === 'snagging'
+              ? 'border-orange-500 text-orange-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          )}
+        >
+          Snagging
+          {snagging.length > 0 && (
+            <span className="ml-1.5 text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full">{snagging.length}</span>
+          )}
+        </button>
+      </div>
+
+      {tab === 'jobs'
+        ? view === 'list'
+          ? <ListView jobs={jobs} />
+          : <CalendarView jobs={jobs} />
+        : <SnaggingView snagging={snagging} archive={archive} />
+      }
     </div>
   )
 }
