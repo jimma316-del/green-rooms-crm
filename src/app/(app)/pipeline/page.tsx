@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { PipelineBoard } from '@/components/pipeline/PipelineBoard'
 import type { Pipeline } from '@/types'
 
+export const dynamic = 'force-dynamic'
+
 interface Props {
   searchParams: Promise<{ view?: string }>
 }
