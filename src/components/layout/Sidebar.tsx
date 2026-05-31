@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, KanbanSquare, CheckSquare,
-  Settings, LogOut, TreePine, BarChart3, Mail, HardHat
+  Settings, LogOut, BarChart3, Mail, HardHat
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -35,9 +36,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-5 py-5 border-b border-[var(--sidebar-border)]">
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--sidebar-accent)]">
-            <TreePine className="w-4 h-4 text-[var(--sidebar-primary)]" />
-          </div>
+          <Image src="/logo.png" alt="The Green Rooms" width={32} height={32} className="rounded-lg" />
           <div>
             <p className="text-sm font-semibold leading-tight">The Green Rooms</p>
             <p className="text-[10px] text-[var(--sidebar-foreground)]/50 leading-tight">CRM</p>

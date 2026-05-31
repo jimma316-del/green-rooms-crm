@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, KanbanSquare, CheckSquare, Menu, X, TreePine, BarChart3, Settings, LogOut, Mail, HardHat } from 'lucide-react'
+import { LayoutDashboard, Users, KanbanSquare, CheckSquare, Menu, X, BarChart3, Settings, LogOut, Mail, HardHat } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -34,7 +35,7 @@ export function MobileNav() {
       {/* Top bar */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[var(--sidebar)] text-white">
         <div className="flex items-center gap-2">
-          <TreePine className="w-5 h-5 text-[var(--sidebar-primary)]" />
+          <Image src="/logo.png" alt="The Green Rooms" width={24} height={24} className="rounded" />
           <span className="font-semibold text-sm">Green Rooms CRM</span>
         </div>
         <button onClick={() => setOpen(true)} className="p-1.5 rounded-lg hover:bg-white/10">
@@ -49,7 +50,7 @@ export function MobileNav() {
           <div className="relative w-64 bg-[var(--sidebar)] flex flex-col h-full shadow-xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--sidebar-border)]">
               <div className="flex items-center gap-2">
-                <TreePine className="w-5 h-5 text-[var(--sidebar-primary)]" />
+                <Image src="/logo.png" alt="The Green Rooms" width={24} height={24} className="rounded" />
                 <span className="font-semibold text-[var(--sidebar-foreground)]">The Green Rooms</span>
               </div>
               <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg hover:bg-white/10 text-[var(--sidebar-foreground)]">

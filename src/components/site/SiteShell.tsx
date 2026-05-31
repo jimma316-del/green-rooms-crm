@@ -1,8 +1,9 @@
 'use client'
 
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { TreePine, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 
 interface Props {
   children: React.ReactNode
@@ -22,7 +23,7 @@ export function SiteShell({ children, userName }: Props) {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#1a4731] text-white px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <TreePine className="w-5 h-5 text-green-300" />
+          <Image src="/logo.png" alt="The Green Rooms" width={24} height={24} className="rounded" />
           <span className="font-semibold text-sm">The Green Rooms</span>
         </div>
         <div className="flex items-center gap-3">
