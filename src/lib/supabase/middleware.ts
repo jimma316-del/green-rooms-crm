@@ -32,10 +32,11 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname
   const isAuthRoute = path.startsWith('/login')
+  const isAuthFlowRoute = path.startsWith('/auth/')   // /auth/callback, /auth/set-password
   const isApiRoute = path.startsWith('/api')
   const isSiteRoute = path.startsWith('/jobs')
 
-  if (!user && !isAuthRoute && !isApiRoute) {
+  if (!user && !isAuthRoute && !isAuthFlowRoute && !isApiRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
@@ -49,6 +50,11 @@ export async function updateSession(request: NextRequest) {
       .single()
 
     const role = profile?.role
+
+    // Let logged-in users reach /auth/set-password to complete account setup
+    if (isAuthFlowRoute) {
+      return supabaseResponse
+    }
 
     if (isAuthRoute) {
       const url = request.nextUrl.clone()
