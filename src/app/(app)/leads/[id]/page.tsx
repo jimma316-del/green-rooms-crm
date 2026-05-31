@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { autoAdvanceSiteVisits, autoAdvanceToAwaitingPayment, autoAdvanceOnJobDates } from '@/lib/autoAdvance'
 import { LeadHeader } from '@/components/leads/LeadHeader'
 import { LeadContact } from '@/components/leads/LeadContact'
@@ -18,10 +19,11 @@ export default async function LeadPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
 
+  const admin = createAdminClient()
   await Promise.all([
     autoAdvanceSiteVisits(supabase),
-    autoAdvanceToAwaitingPayment(supabase),
-    autoAdvanceOnJobDates(supabase),
+    autoAdvanceToAwaitingPayment(admin),
+    autoAdvanceOnJobDates(admin),
   ])
 
   const [

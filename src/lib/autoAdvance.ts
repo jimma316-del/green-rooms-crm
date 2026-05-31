@@ -68,22 +68,29 @@ export async function autoAdvanceOnJobDates(supabase: Client) {
   try {
     const today = new Date().toISOString().slice(0, 10)
 
-    // Leads in the sales pipeline that have job dates set
-    const { data: leads } = await supabase
+    // Fetch all leads not yet in the project pipeline that have a job start date
+    const { data: leads, error: fetchError } = await supabase
       .from('leads')
       .select('id, stage, job_date, job_end_date')
-      .eq('pipeline', 'sales')
+      .neq('pipeline', 'project')
+      .neq('pipeline', 'lost')
       .not('job_date', 'is', null)
 
+    if (fetchError) {
+      console.error('[autoAdvance] job dates fetch error:', fetchError.message)
+      return
+    }
     if (!leads?.length) return
 
     for (const lead of leads) {
       const fromStage = lead.stage
+      const jobDate = lead.job_date as string
+      const jobEndDate = lead.job_end_date as string | null
 
       let toStage: string
-      if (lead.job_end_date && lead.job_end_date <= today) {
+      if (jobEndDate && jobEndDate <= today) {
         toStage = 'awaiting_payment'
-      } else if (lead.job_date! <= today) {
+      } else if (jobDate <= today) {
         toStage = 'in_build'
       } else {
         toStage = 'schedule_sent_to_client'
