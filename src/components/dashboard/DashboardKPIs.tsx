@@ -44,7 +44,7 @@ const cards = [
   },
   {
     key: 'jobsInProgress' as const,
-    label: 'Jobs In Progress',
+    label: 'Jobs Booked',
     sublabel: 'booked & in build',
     icon: HardHat,
     href: '/pipeline?view=project',
