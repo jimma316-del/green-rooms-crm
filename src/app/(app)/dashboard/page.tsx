@@ -41,11 +41,9 @@ export default async function DashboardPage() {
     supabase.from('leads').select('id', { count: 'exact' })
       .eq('stage', 'quoting'),
 
-    // Site visits booked (future only)
+    // Site surveys booked
     supabase.from('leads').select('id', { count: 'exact' })
-      .eq('is_newsletter', false)
-      .not('site_visit_date', 'is', null)
-      .gt('site_visit_date', new Date().toISOString()),
+      .eq('stage', 'site_survey_booked'),
 
     // Jobs in progress
     supabase.from('leads').select('id', { count: 'exact' })
