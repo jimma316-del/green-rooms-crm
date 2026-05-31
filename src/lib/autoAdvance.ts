@@ -93,7 +93,7 @@ export async function autoAdvanceOnJobDates(supabase: Client) {
       } else if (jobDate <= today) {
         toStage = 'in_build'
       } else {
-        toStage = 'schedule_sent_to_client'
+        toStage = 'job_booked'
       }
 
       const { error } = await supabase

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { STAGE_CONFIG, SALES_STAGES, PROJECT_STAGES } from '@/types'
+import { STAGE_CONFIG, SALES_STAGES } from '@/types'
 import type { Pipeline, Stage } from '@/types'
 import { Flame, MapPin, Building2 } from 'lucide-react'
 import { formatDistanceToNow } from '@/utils/date'
@@ -23,10 +23,57 @@ interface Lead {
   users: { full_name: string; avatar_url: string | null } | null
 }
 
+interface ColumnConfig {
+  id: string
+  label: string
+  stages: string[]
+  dropStage: string
+  color: string
+}
+
 interface Props {
   leads: Lead[]
   pipeline: Pipeline
 }
+
+// Job Booked column aggregates all pre-build stages so cards show sub-stage labels
+const PROJECT_COLUMNS: ColumnConfig[] = [
+  {
+    id: 'job_booked_group',
+    label: 'Job Booked',
+    stages: ['job_booked', 'doors_windows_ordered', 'final_designs_confirmed', 'design_book_created', 'schedule_sent_to_client'],
+    dropStage: 'job_booked',
+    color: STAGE_CONFIG.job_booked.color,
+  },
+  {
+    id: 'in_build',
+    label: 'In Build',
+    stages: ['in_build'],
+    dropStage: 'in_build',
+    color: STAGE_CONFIG.in_build.color,
+  },
+  {
+    id: 'awaiting_payment',
+    label: 'Awaiting Payment',
+    stages: ['awaiting_payment'],
+    dropStage: 'awaiting_payment',
+    color: STAGE_CONFIG.awaiting_payment.color,
+  },
+  {
+    id: 'paid_closed',
+    label: 'Paid / Closed',
+    stages: ['paid_closed'],
+    dropStage: 'paid_closed',
+    color: STAGE_CONFIG.paid_closed.color,
+  },
+  {
+    id: 'snagging',
+    label: 'Snagging',
+    stages: ['snagging'],
+    dropStage: 'snagging',
+    color: STAGE_CONFIG.snagging.color,
+  },
+]
 
 export function PipelineBoard({ leads: initialLeads, pipeline }: Props) {
   const [leads, setLeads] = useState(initialLeads)
@@ -35,10 +82,18 @@ export function PipelineBoard({ leads: initialLeads, pipeline }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
-  const stages = pipeline === 'sales' ? SALES_STAGES : PROJECT_STAGES
+  const columns: ColumnConfig[] = pipeline === 'sales'
+    ? SALES_STAGES.map(stage => ({
+        id: stage,
+        label: STAGE_CONFIG[stage as Stage].label,
+        stages: [stage],
+        dropStage: stage,
+        color: STAGE_CONFIG[stage as Stage].color,
+      }))
+    : PROJECT_COLUMNS
 
-  function leadsByStage(stage: string) {
-    return leads.filter(l => l.stage === stage)
+  function leadsByColumn(col: ColumnConfig) {
+    return leads.filter(l => col.stages.includes(l.stage))
   }
 
   function handleDragStart(e: React.DragEvent, leadId: string) {
@@ -46,14 +101,15 @@ export function PipelineBoard({ leads: initialLeads, pipeline }: Props) {
     e.dataTransfer.effectAllowed = 'move'
   }
 
-  async function handleDrop(e: React.DragEvent, toStage: string) {
+  async function handleDrop(e: React.DragEvent, col: ColumnConfig) {
     e.preventDefault()
-    if (!dragging || dragging === toStage) { setDragging(null); setDragOver(null); return }
+    if (!dragging) { setDragging(null); setDragOver(null); return }
 
     const lead = leads.find(l => l.id === dragging)
-    if (!lead || lead.stage === toStage) { setDragging(null); setDragOver(null); return }
+    if (!lead || col.stages.includes(lead.stage)) { setDragging(null); setDragOver(null); return }
 
-    // Optimistic update
+    const toStage = col.dropStage
+
     setLeads(prev => prev.map(l => l.id === dragging ? { ...l, stage: toStage } : l))
     setDragging(null)
     setDragOver(null)
@@ -67,7 +123,6 @@ export function PipelineBoard({ leads: initialLeads, pipeline }: Props) {
       return
     }
 
-    // Log stage change
     await Promise.all([
       supabase.from('stage_history').insert({
         lead_id: dragging,
@@ -114,7 +169,6 @@ export function PipelineBoard({ leads: initialLeads, pipeline }: Props) {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
@@ -148,48 +202,45 @@ export function PipelineBoard({ leads: initialLeads, pipeline }: Props) {
         </div>
       </div>
 
-      {/* Board */}
       <div className="pipeline-board">
-        {stages.map(stage => {
-          const cfg = STAGE_CONFIG[stage as Stage]
-          const stageLeads = leadsByStage(stage)
-          const isOver = dragOver === stage
+        {columns.map(col => {
+          const colLeads = leadsByColumn(col)
+          const isOver = dragOver === col.id
 
           return (
             <div
-              key={stage}
+              key={col.id}
               className="pipeline-column"
-              onDragOver={e => { e.preventDefault(); setDragOver(stage) }}
+              onDragOver={e => { e.preventDefault(); setDragOver(col.id) }}
               onDragLeave={() => setDragOver(null)}
-              onDrop={e => handleDrop(e, stage)}
+              onDrop={e => handleDrop(e, col)}
             >
-              {/* Column header */}
               <div className={cn(
                 'flex items-center justify-between px-3 py-2.5 rounded-t-xl border-b',
                 isOver ? 'bg-[var(--primary)]/5 border-[var(--primary)]/20' : 'bg-gray-50 border-gray-100'
               )}>
                 <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${cfg.color}`}>
-                    {cfg.label}
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${col.color}`}>
+                    {col.label}
                   </span>
                 </div>
-                <span className="text-xs font-semibold text-gray-500">{stageLeads.length}</span>
+                <span className="text-xs font-semibold text-gray-500">{colLeads.length}</span>
               </div>
 
-              {/* Cards */}
               <div className={cn(
                 'bg-gray-50/50 border border-gray-100 border-t-0 rounded-b-xl min-h-[400px] p-2 space-y-2',
                 isOver && 'bg-[var(--primary)]/3 border-[var(--primary)]/20'
               )}>
-                {stageLeads.map(lead => (
+                {colLeads.map(lead => (
                   <LeadCard
                     key={lead.id}
                     lead={lead}
                     isDragging={dragging === lead.id}
                     onDragStart={handleDragStart}
+                    showSubStage={col.stages.length > 1 && lead.stage !== col.dropStage}
                   />
                 ))}
-                {stageLeads.length === 0 && (
+                {colLeads.length === 0 && (
                   <div className={cn(
                     'flex items-center justify-center h-20 rounded-lg border-2 border-dashed text-xs text-gray-400',
                     isOver ? 'border-[var(--primary)]/40 text-[var(--primary)]' : 'border-gray-200'
@@ -210,11 +261,15 @@ function LeadCard({
   lead,
   isDragging,
   onDragStart,
+  showSubStage,
 }: {
   lead: Lead
   isDragging: boolean
   onDragStart: (e: React.DragEvent, id: string) => void
+  showSubStage?: boolean
 }) {
+  const subStageCfg = showSubStage ? STAGE_CONFIG[lead.stage as Stage] : null
+
   return (
     <div
       draggable
@@ -224,7 +279,7 @@ function LeadCard({
         isDragging && 'opacity-50 scale-95'
       )}
     >
-      <div className="flex items-start justify-between gap-1 mb-2">
+      <div className="flex items-start justify-between gap-1 mb-1.5">
         <Link
           href={`/leads/${lead.id}`}
           className="text-sm font-semibold text-gray-900 hover:text-[var(--primary)] leading-snug line-clamp-1"
@@ -234,6 +289,14 @@ function LeadCard({
         </Link>
         {lead.is_hot && <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0 mt-0.5" />}
       </div>
+
+      {subStageCfg && (
+        <div className="mb-1.5">
+          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${subStageCfg.color}`}>
+            {subStageCfg.label}
+          </span>
+        </div>
+      )}
 
       <div className="space-y-1">
         {lead.project_type && (
