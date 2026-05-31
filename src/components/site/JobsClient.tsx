@@ -219,9 +219,15 @@ function ListView({ jobs }: { jobs: Job[] }) {
     return <div className="text-center py-16 text-gray-400 text-sm">No active jobs at the moment</div>
   }
 
-  // Server delivers jobs sorted by job_date ascending; split out snagging
-  const main = jobs.filter(j => j.stage !== 'snagging')
-  const snagging = jobs.filter(j => j.stage === 'snagging')
+  const byDate = (a: Job, b: Job) => {
+    if (!a.jobDate && !b.jobDate) return 0
+    if (!a.jobDate) return 1
+    if (!b.jobDate) return -1
+    return a.jobDate < b.jobDate ? -1 : 1
+  }
+
+  const main = jobs.filter(j => j.stage !== 'snagging').sort(byDate)
+  const snagging = jobs.filter(j => j.stage === 'snagging').sort(byDate)
 
   function formatDateRange(start: string, end: string | null) {
     const s = parseDate(start)
