@@ -9,7 +9,8 @@ export default async function JobsPage() {
     .from('leads')
     .select('id, name, address, postcode, stage, job_date, job_end_date, signed_off_at')
     .in('stage', PROJECT_STAGES)
-    .order('job_date', { ascending: true, nullsFirst: false })
+    .neq('stage', 'paid_closed')
+    .order('job_date', { ascending: false, nullsFirst: false })
 
   const jobs = (leads ?? []).map(l => ({
     id: l.id,
