@@ -230,6 +230,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     ],
   })
 
+  // Mark lead as signed off
+  await admin.from('leads').update({ signed_off_at: new Date().toISOString() }).eq('id', id)
+
   // Log activity regardless of email success
   await admin.from('activities').insert({
     lead_id: id,

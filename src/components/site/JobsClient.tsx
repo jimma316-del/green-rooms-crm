@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ClipboardCheck, MapPin, List, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ClipboardCheck, MapPin, List, CalendarDays, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Job {
@@ -14,6 +14,7 @@ interface Job {
   stageColor: string
   jobDate: string | null
   jobEndDate: string | null
+  signedOffAt: string | null
 }
 
 // ── Calendar helpers ─────────────────────────────────────────────
@@ -115,10 +116,15 @@ function CalendarView({ jobs }: { jobs: Job[] }) {
                   <Link
                     key={job.id}
                     href={`/jobs/${job.id}/sign-off`}
-                    className="block text-[10px] leading-tight bg-green-700 text-white rounded px-1 py-0.5 truncate hover:bg-green-800"
+                    className={cn(
+                      'block text-[10px] leading-tight rounded px-1 py-0.5 truncate',
+                      job.signedOffAt
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-green-700 text-white hover:bg-green-800'
+                    )}
                     title={job.name}
                   >
-                    {job.name}
+                    {job.signedOffAt ? '✓ ' : ''}{job.name}
                   </Link>
                 ))}
               </div>
@@ -149,6 +155,63 @@ function CalendarView({ jobs }: { jobs: Job[] }) {
   )
 }
 
+// ── Job card ─────────────────────────────────────────────────────
+
+function JobCard({ job, formatDateRange, dashed }: {
+  job: Job
+  formatDateRange: (start: string, end: string | null) => string
+  dashed?: boolean
+}) {
+  const signedOff = !!job.signedOffAt
+
+  return (
+    <Link
+      href={`/jobs/${job.id}/sign-off`}
+      className={cn(
+        'block bg-white rounded-xl border p-4 transition-all active:scale-[0.99]',
+        signedOff
+          ? 'border-green-200 opacity-60'
+          : dashed
+            ? 'border-dashed border-gray-200 hover:border-green-400'
+            : 'border-gray-200 hover:border-green-400 hover:shadow-sm'
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-gray-900">{job.name}</p>
+          {job.address && (
+            <div className="flex items-center gap-1 mt-0.5">
+              <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
+              <p className="text-xs text-gray-500 truncate">{job.address}</p>
+            </div>
+          )}
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${job.stageColor}`}>
+              {job.stageLabel}
+            </span>
+            {job.jobDate && (
+              <span className="text-xs text-gray-500">
+                {formatDateRange(job.jobDate, job.jobEndDate)}
+              </span>
+            )}
+          </div>
+        </div>
+        {signedOff ? (
+          <div className="shrink-0 flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-medium px-3 py-2 rounded-lg">
+            <CheckCircle2 className="w-4 h-4" />
+            Signed off
+          </div>
+        ) : (
+          <div className="shrink-0 flex items-center gap-1.5 bg-green-700 text-white text-xs font-medium px-3 py-2 rounded-lg">
+            <ClipboardCheck className="w-4 h-4" />
+            Sign off
+          </div>
+        )}
+      </div>
+    </Link>
+  )
+}
+
 // ── List view ────────────────────────────────────────────────────
 
 function ListView({ jobs }: { jobs: Job[] }) {
@@ -169,69 +232,12 @@ function ListView({ jobs }: { jobs: Job[] }) {
 
   return (
     <div className="space-y-2">
-      {scheduled.map(job => (
-        <Link
-          key={job.id}
-          href={`/jobs/${job.id}/sign-off`}
-          className="block bg-white rounded-xl border border-gray-200 p-4 hover:border-green-400 hover:shadow-sm transition-all active:scale-[0.99]"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900">{job.name}</p>
-              {job.address && (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
-                  <p className="text-xs text-gray-500 truncate">{job.address}</p>
-                </div>
-              )}
-              <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${job.stageColor}`}>
-                  {job.stageLabel}
-                </span>
-                {job.jobDate && (
-                  <span className="text-xs text-gray-500">
-                    {formatDateRange(job.jobDate, job.jobEndDate)}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="shrink-0 flex items-center gap-1.5 bg-green-700 text-white text-xs font-medium px-3 py-2 rounded-lg">
-              <ClipboardCheck className="w-4 h-4" />
-              Sign off
-            </div>
-          </div>
-        </Link>
-      ))}
+      {scheduled.map(job => <JobCard key={job.id} job={job} formatDateRange={formatDateRange} />)}
 
       {unscheduled.length > 0 && (
         <>
           <p className="text-xs text-gray-400 pt-2 pb-1">Not yet scheduled</p>
-          {unscheduled.map(job => (
-            <Link
-              key={job.id}
-              href={`/jobs/${job.id}/sign-off`}
-              className="block bg-white rounded-xl border border-dashed border-gray-200 p-4 hover:border-green-400 transition-all"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900">{job.name}</p>
-                  {job.address && (
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
-                      <p className="text-xs text-gray-500 truncate">{job.address}</p>
-                    </div>
-                  )}
-                  <span className={`inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full ${job.stageColor}`}>
-                    {job.stageLabel}
-                  </span>
-                </div>
-                <div className="shrink-0 flex items-center gap-1.5 bg-green-700 text-white text-xs font-medium px-3 py-2 rounded-lg">
-                  <ClipboardCheck className="w-4 h-4" />
-                  Sign off
-                </div>
-              </div>
-            </Link>
-          ))}
+          {unscheduled.map(job => <JobCard key={job.id} job={job} formatDateRange={formatDateRange} dashed />)}
         </>
       )}
     </div>

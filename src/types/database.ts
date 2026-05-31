@@ -25,6 +25,7 @@ type LeadsRow = {
   xero_quote_url: string | null; xero_invoice_url: string | null
   sms_sent_at: string | null
   distance_miles: number | null
+  signed_off_at: string | null
 }
 type LeadsInsert = {
   id?: string; created_at?: string; updated_at?: string; name: string; mobile?: string | null; email?: string | null
@@ -38,6 +39,7 @@ type LeadsInsert = {
   xero_quote_url?: string | null; xero_invoice_url?: string | null
   sms_sent_at?: string | null
   distance_miles?: number | null
+  signed_off_at?: string | null
 }
 type LeadsUpdate = Partial<LeadsInsert>
 
