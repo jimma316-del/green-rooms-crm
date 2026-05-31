@@ -64,6 +64,61 @@ export async function autoAdvanceSiteVisits(supabase: Client) {
   }
 }
 
+export async function autoAdvanceOnJobDates(supabase: Client) {
+  try {
+    const today = new Date().toISOString().slice(0, 10)
+
+    // Leads in the sales pipeline that have job dates set
+    const { data: leads } = await supabase
+      .from('leads')
+      .select('id, stage, job_date, job_end_date')
+      .eq('pipeline', 'sales')
+      .not('job_date', 'is', null)
+
+    if (!leads?.length) return
+
+    for (const lead of leads) {
+      const fromStage = lead.stage
+
+      let toStage: string
+      if (lead.job_end_date && lead.job_end_date <= today) {
+        toStage = 'awaiting_payment'
+      } else if (lead.job_date! <= today) {
+        toStage = 'in_build'
+      } else {
+        toStage = 'schedule_sent_to_client'
+      }
+
+      const { error } = await supabase
+        .from('leads')
+        .update({ stage: toStage, pipeline: 'project' })
+        .eq('id', lead.id)
+
+      if (error) {
+        console.error(`[autoAdvance] job dates update failed for ${lead.id}:`, error.message)
+        continue
+      }
+
+      await supabase.from('stage_history').insert({
+        lead_id: lead.id,
+        from_stage: fromStage,
+        to_stage: toStage,
+        changed_by: null,
+        note: 'Auto-moved to project pipeline — job dates set',
+      })
+
+      await supabase.from('activities').insert({
+        lead_id: lead.id,
+        created_by: null,
+        type: 'stage_change',
+        body: `Auto-moved to project pipeline (${toStage.replace(/_/g, ' ')}) — job dates set`,
+      })
+    }
+  } catch (err) {
+    console.error('[autoAdvance] job dates error:', err)
+  }
+}
+
 export async function autoAdvanceToAwaitingPayment(supabase: Client) {
   try {
     const today = new Date().toISOString().slice(0, 10)

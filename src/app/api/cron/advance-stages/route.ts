@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { autoAdvanceSiteVisits, autoAdvanceToAwaitingPayment } from '@/lib/autoAdvance'
+import { autoAdvanceSiteVisits, autoAdvanceToAwaitingPayment, autoAdvanceOnJobDates } from '@/lib/autoAdvance'
 
 export async function GET(req: NextRequest) {
   const secret = req.headers.get('authorization')?.replace('Bearer ', '')
@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
   await Promise.all([
     autoAdvanceSiteVisits(supabase),
     autoAdvanceToAwaitingPayment(supabase),
+    autoAdvanceOnJobDates(supabase),
   ])
 
   return NextResponse.json({ ok: true })

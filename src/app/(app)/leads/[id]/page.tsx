@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { autoAdvanceSiteVisits, autoAdvanceToAwaitingPayment } from '@/lib/autoAdvance'
+import { autoAdvanceSiteVisits, autoAdvanceToAwaitingPayment, autoAdvanceOnJobDates } from '@/lib/autoAdvance'
 import { LeadHeader } from '@/components/leads/LeadHeader'
 import { LeadContact } from '@/components/leads/LeadContact'
 import { LeadProject } from '@/components/leads/LeadProject'
@@ -21,6 +21,7 @@ export default async function LeadPage({ params }: Props) {
   await Promise.all([
     autoAdvanceSiteVisits(supabase),
     autoAdvanceToAwaitingPayment(supabase),
+    autoAdvanceOnJobDates(supabase),
   ])
 
   const [
