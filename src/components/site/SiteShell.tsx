@@ -1,9 +1,10 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { LogOut } from 'lucide-react'
+import { LogOut, KeyRound } from 'lucide-react'
 
 interface Props {
   children: React.ReactNode
@@ -28,6 +29,13 @@ export function SiteShell({ children, userName }: Props) {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-white/60">{userName}</span>
+          <Link
+            href="/auth/set-password"
+            className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors"
+          >
+            <KeyRound className="w-4 h-4" />
+            Change password
+          </Link>
           <button
             onClick={signOut}
             className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors"
