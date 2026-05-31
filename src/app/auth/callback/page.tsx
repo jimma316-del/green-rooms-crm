@@ -10,28 +10,38 @@ function CallbackHandler() {
   const supabase = createClient()
 
   useEffect(() => {
-    async function handle() {
-      const code = searchParams.get('code')
-
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) {
-          router.replace('/auth/set-password')
-          return
-        }
-      }
-
-      // Implicit flow: Supabase JS client picks up hash tokens automatically
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
+    // Listen for auth state — Supabase client auto-processes hash tokens
+    // and fires PASSWORD_RECOVERY or SIGNED_IN
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+        subscription.unsubscribe()
         router.replace('/auth/set-password')
-        return
       }
+    })
 
-      router.replace('/login?error=Invalid+or+expired+link')
+    // Also handle PKCE ?code= flow
+    const code = searchParams.get('code')
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          subscription.unsubscribe()
+          router.replace('/login?error=Invalid+or+expired+link')
+        }
+        // success handled by onAuthStateChange above
+      })
     }
 
-    handle()
+    // Fallback: if nothing fires in 4s, check for an existing session
+    const timeout = setTimeout(async () => {
+      subscription.unsubscribe()
+      const { data: { session } } = await supabase.auth.getSession()
+      router.replace(session ? '/auth/set-password' : '/login?error=Invalid+or+expired+link')
+    }, 4000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
