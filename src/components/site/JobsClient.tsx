@@ -219,9 +219,9 @@ function ListView({ jobs }: { jobs: Job[] }) {
     return <div className="text-center py-16 text-gray-400 text-sm">No active jobs at the moment</div>
   }
 
-  // Split: scheduled vs unscheduled
-  const scheduled = jobs.filter(j => j.jobDate).sort((a, b) => a.jobDate!.localeCompare(b.jobDate!))
-  const unscheduled = jobs.filter(j => !j.jobDate)
+  // Server delivers jobs sorted by job_date ascending; split out snagging
+  const main = jobs.filter(j => j.stage !== 'snagging')
+  const snagging = jobs.filter(j => j.stage === 'snagging')
 
   function formatDateRange(start: string, end: string | null) {
     const s = parseDate(start)
@@ -232,12 +232,16 @@ function ListView({ jobs }: { jobs: Job[] }) {
 
   return (
     <div className="space-y-2">
-      {scheduled.map(job => <JobCard key={job.id} job={job} formatDateRange={formatDateRange} />)}
+      {main.map(job => <JobCard key={job.id} job={job} formatDateRange={formatDateRange} />)}
 
-      {unscheduled.length > 0 && (
+      {snagging.length > 0 && (
         <>
-          <p className="text-xs text-gray-400 pt-2 pb-1">Not yet scheduled</p>
-          {unscheduled.map(job => <JobCard key={job.id} job={job} formatDateRange={formatDateRange} dashed />)}
+          <div className="flex items-center gap-2 pt-4 pb-1">
+            <div className="flex-1 h-px bg-gray-200" />
+            <p className="text-xs font-medium text-gray-400 shrink-0">Snagging</p>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+          {snagging.map(job => <JobCard key={job.id} job={job} formatDateRange={formatDateRange} />)}
         </>
       )}
     </div>
