@@ -1,6 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// API routes site team are allowed to call
+const SITE_ALLOWED_API = /^\/api\/leads\/[^/]+\/sign-off$/
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -39,7 +42,6 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
-    // Fetch role (fast indexed PK lookup)
     const { data: profile } = await supabase
       .from('users')
       .select('role')
@@ -54,14 +56,19 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // Site team can only access /jobs/** and API routes
-    if (role === 'site' && !isSiteRoute && !isApiRoute) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/jobs'
-      return NextResponse.redirect(url)
+    if (role === 'site') {
+      // Block any API route except sign-off submission
+      if (isApiRoute && !SITE_ALLOWED_API.test(path)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      // Block any page route outside /jobs
+      if (!isSiteRoute && !isApiRoute) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/jobs'
+        return NextResponse.redirect(url)
+      }
     }
-
-}
+  }
 
   return supabaseResponse
 }
