@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
   const { data: profile } = await admin.from('users').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') return NextResponse.json({ error: 'Admin only' }, { status: 403 })
+  if (!['admin', 'sales'].includes(profile?.role ?? '')) return NextResponse.json({ error: 'Not authorised' }, { status: 403 })
 
   const { email, name } = await req.json() as { email: string; name: string }
   if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
