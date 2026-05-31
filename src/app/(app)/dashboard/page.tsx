@@ -45,10 +45,10 @@ export default async function DashboardPage() {
     supabase.from('leads').select('id', { count: 'exact' })
       .eq('stage', 'site_survey_booked'),
 
-    // Jobs in progress
+    // Jobs booked (all pre-build and in-build project stages)
     supabase.from('leads').select('id', { count: 'exact' })
       .eq('pipeline', 'project')
-      .in('stage', ['job_booked', 'in_build']),
+      .in('stage', ['job_booked', 'doors_windows_ordered', 'final_designs_confirmed', 'design_book_created', 'schedule_sent_to_client', 'in_build']),
 
     // Hot leads: manually flagged with the flame icon
     supabase.from('leads')
