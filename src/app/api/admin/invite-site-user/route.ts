@@ -26,17 +26,16 @@ export async function POST(req: NextRequest) {
   const displayName = name || email.split('@')[0]
   const tempPassword = generateTempPassword()
 
-  // Check if user already exists
-  const { data: existingUsers } = await admin.auth.admin.listUsers()
-  const existingUser = existingUsers?.users.find(u => u.email === email)
+  // Check if user already exists via our users table
+  const { data: existingProfile } = await admin.from('users').select('id').eq('email', email).maybeSingle()
 
   let userId: string
 
-  if (existingUser) {
+  if (existingProfile) {
     // Update their password directly
-    const { error } = await admin.auth.admin.updateUserById(existingUser.id, { password: tempPassword })
+    const { error } = await admin.auth.admin.updateUserById(existingProfile.id, { password: tempPassword })
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-    userId = existingUser.id
+    userId = existingProfile.id
   } else {
     // Create new user
     const { data: created, error } = await admin.auth.admin.createUser({
