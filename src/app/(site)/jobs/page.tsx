@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { STAGE_CONFIG, PROJECT_STAGES } from '@/types'
+import { STAGE_CONFIG } from '@/types'
 import { JobsClient } from '@/components/site/JobsClient'
 
 export default async function JobsPage() {
@@ -8,8 +8,9 @@ export default async function JobsPage() {
   const { data: leads } = await supabase
     .from('leads')
     .select('id, name, address, postcode, stage, job_date, job_end_date, signed_off_at')
-    .in('stage', PROJECT_STAGES)
+    .eq('pipeline', 'project')
     .neq('stage', 'paid_closed')
+    .not('job_date', 'is', null)
     .order('job_date', { ascending: false, nullsFirst: false })
 
   const jobs = (leads ?? []).map(l => ({
