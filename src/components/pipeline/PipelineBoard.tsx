@@ -20,6 +20,7 @@ interface Lead {
   postcode: string | null
   is_hot: boolean
   updated_at: string
+  job_date: string | null
   users: { full_name: string; avatar_url: string | null } | null
 }
 
@@ -93,7 +94,15 @@ export function PipelineBoard({ leads: initialLeads, pipeline }: Props) {
     : PROJECT_COLUMNS
 
   function leadsByColumn(col: ColumnConfig) {
-    return leads.filter(l => col.stages.includes(l.stage))
+    const filtered = leads.filter(l => col.stages.includes(l.stage))
+    if (col.id === 'job_booked_group') {
+      return filtered.sort((a, b) => {
+        if (!a.job_date) return 1
+        if (!b.job_date) return -1
+        return a.job_date < b.job_date ? -1 : 1
+      })
+    }
+    return filtered
   }
 
   function handleDragStart(e: React.DragEvent, leadId: string) {
