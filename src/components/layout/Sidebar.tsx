@@ -35,13 +35,13 @@ export function Sidebar() {
     <aside className="hidden md:flex flex-col w-56 bg-[var(--sidebar)] text-[var(--sidebar-foreground)] shrink-0">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-[var(--sidebar-border)]">
-        <div className="flex items-center gap-2.5">
+        <Link href="/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <Image src="/logo.png" alt="The Green Rooms" width={32} height={32} className="rounded-lg" />
           <div>
             <p className="text-sm font-semibold leading-tight">The Green Rooms</p>
             <p className="text-[10px] text-[var(--sidebar-foreground)]/50 leading-tight">CRM</p>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Nav */}
