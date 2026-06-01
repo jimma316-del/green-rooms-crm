@@ -21,16 +21,19 @@ export async function sendSms(to: string, body: string): Promise<boolean> {
 
 export function formatUkMobile(raw: string): string | null {
   const digits = raw.replace(/\D/g, '')
-  // 07xxx → +447xxx
-  if (digits.startsWith('07') && digits.length === 11) {
-    return '+44' + digits.slice(1)
+  // Normalise to 10-digit subscriber number (starts with 7)
+  // Handles: 07xxx (11), 447xxx (12), 7xxx (10 - missing leading 0),
+  //          440 7xxx (13 - +44(0)7 format), and similar variants
+  let subscriber: string | null = null
+  if (digits.startsWith('4407') && digits.length === 13) {
+    subscriber = digits.slice(3)   // strip 440
+  } else if (digits.startsWith('447') && digits.length === 12) {
+    subscriber = digits.slice(2)   // strip 44
+  } else if (digits.startsWith('07') && digits.length === 11) {
+    subscriber = digits.slice(1)   // strip 0
+  } else if (digits.startsWith('7') && digits.length === 10) {
+    subscriber = digits             // already subscriber
   }
-  // Already international
-  if (digits.startsWith('44') && digits.length === 12) {
-    return '+' + digits
-  }
-  if (digits.startsWith('447') && digits.length === 12) {
-    return '+' + digits
-  }
+  if (subscriber) return '+44' + subscriber
   return null
 }
