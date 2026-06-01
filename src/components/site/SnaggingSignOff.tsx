@@ -2,13 +2,20 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, MapPin, ArrowLeft, Camera, X, Loader2, Play } from 'lucide-react'
+import { CheckCircle2, MapPin, ArrowLeft, Camera, X, Loader2, Play, Pencil, Check } from 'lucide-react'
+
+interface SnaggingTask {
+  id: string
+  title: string
+  notes: string | null
+}
 
 interface Props {
   leadId: string
   name: string
   address: string
   existingPhotos: string[]
+  task: SnaggingTask | null
 }
 
 function isVideo(url: string) {
@@ -48,7 +55,7 @@ function Lightbox({ url, onClose }: { url: string; onClose: () => void }) {
   )
 }
 
-export function SnaggingSignOff({ leadId, name, address, existingPhotos }: Props) {
+export function SnaggingSignOff({ leadId, name, address, existingPhotos, task }: Props) {
   const [confirmed, setConfirmed] = useState(false)
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
@@ -57,8 +64,23 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos }: Props
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+  const [editingTask, setEditingTask] = useState(false)
+  const [taskNotes, setTaskNotes] = useState(task?.notes ?? '')
+  const [savingTask, setSavingTask] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+
+  async function saveTaskNotes() {
+    if (!task) return
+    setSavingTask(true)
+    await fetch(`/api/leads/${leadId}/snagging-task`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ taskId: task.id, notes: taskNotes }),
+    })
+    setSavingTask(false)
+    setEditingTask(false)
+  }
 
   async function handleFiles(files: FileList | null) {
     if (!files || !files.length) return
@@ -154,6 +176,57 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos }: Props
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Snagging task */}
+            {task && (
+              <div className="bg-white rounded-xl border border-orange-200 p-5">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-semibold text-gray-800">Snagging items</p>
+                  {!editingTask && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingTask(true)}
+                      className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600"
+                    >
+                      <Pencil className="w-3 h-3" /> Edit
+                    </button>
+                  )}
+                </div>
+                {editingTask ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={taskNotes}
+                      onChange={e => setTaskNotes(e.target.value)}
+                      rows={4}
+                      autoFocus
+                      placeholder="Describe the snagging items…"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-400 resize-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={saveTaskNotes}
+                        disabled={savingTask}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white text-xs font-medium rounded-lg disabled:opacity-50"
+                      >
+                        <Check className="w-3 h-3" /> {savingTask ? 'Saving…' : 'Save'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setTaskNotes(task.notes ?? ''); setEditingTask(false) }}
+                        className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                    {taskNotes || <span className="text-gray-400 italic">No description — tap Edit to add one</span>}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Photos / videos */}
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <div className="flex items-center justify-between mb-3">
