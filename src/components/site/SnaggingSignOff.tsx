@@ -2,51 +2,74 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, MapPin, ArrowLeft, Camera, X, Upload } from 'lucide-react'
+import { CheckCircle2, MapPin, ArrowLeft, Camera, X, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface Props {
   leadId: string
   name: string
   address: string
+  existingPhotos: string[]
 }
 
-interface MediaFile {
-  file: File
-  preview: string
-  type: 'image' | 'video'
-}
-
-export function SnaggingSignOff({ leadId, name, address }: Props) {
+export function SnaggingSignOff({ leadId, name, address, existingPhotos }: Props) {
   const [confirmed, setConfirmed] = useState(false)
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
-  const [media, setMedia] = useState<MediaFile[]>([])
-  const [uploadStatus, setUploadStatus] = useState('')
+  const [photos, setPhotos] = useState<string[]>(existingPhotos)
+  const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createClient()
 
-  function handleFiles(files: FileList | null) {
-    if (!files) return
-    const newMedia: MediaFile[] = []
+  async function handleFiles(files: FileList | null) {
+    if (!files || !files.length) return
+    setUploading(true)
+
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) continue
-      newMedia.push({
-        file,
-        preview: URL.createObjectURL(file),
-        type: file.type.startsWith('video/') ? 'video' : 'image',
-      })
+
+      const ext = file.name.split('.').pop() ?? 'jpg'
+      const path = `${leadId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+      const { data, error } = await supabase.storage
+        .from('snagging-media')
+        .upload(path, file, { upsert: false })
+
+      if (!error && data) {
+        const { data: urlData } = supabase.storage.from('snagging-media').getPublicUrl(data.path)
+        const url = urlData.publicUrl
+
+        // Save to activities so it persists
+        await supabase.from('activities').insert({
+          lead_id: leadId,
+          created_by: null,
+          type: 'snagging_photo',
+          body: null,
+          metadata: { url },
+        })
+
+        setPhotos(prev => [...prev, url])
+      }
     }
-    setMedia(prev => [...prev, ...newMedia])
+
+    setUploading(false)
   }
 
-  function removeMedia(index: number) {
-    setMedia(prev => {
-      URL.revokeObjectURL(prev[index].preview)
-      return prev.filter((_, i) => i !== index)
-    })
+  async function removePhoto(url: string) {
+    // Delete from storage
+    const path = url.split('/snagging-media/')[1]
+    if (path) await supabase.storage.from('snagging-media').remove([path])
+
+    // Delete activity record
+    await supabase.from('activities')
+      .delete()
+      .eq('lead_id', leadId)
+      .eq('type', 'snagging_photo')
+      .contains('metadata', { url })
+
+    setPhotos(prev => prev.filter(u => u !== url))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -54,35 +77,13 @@ export function SnaggingSignOff({ leadId, name, address }: Props) {
     if (!confirmed) return
     setLoading(true)
 
-    // Upload media files to Supabase Storage
-    const mediaUrls: string[] = []
-    if (media.length > 0) {
-      setUploadStatus(`Uploading media (0/${media.length})…`)
-      for (let i = 0; i < media.length; i++) {
-        const { file } = media[i]
-        const ext = file.name.split('.').pop()
-        const path = `${leadId}/${Date.now()}-${i}.${ext}`
-        const { data, error } = await supabase.storage
-          .from('snagging-media')
-          .upload(path, file, { upsert: false })
-        if (!error && data) {
-          const { data: urlData } = supabase.storage.from('snagging-media').getPublicUrl(data.path)
-          mediaUrls.push(urlData.publicUrl)
-        }
-        setUploadStatus(`Uploading media (${i + 1}/${media.length})…`)
-      }
-    }
-
-    setUploadStatus('')
     const res = await fetch(`/api/leads/${leadId}/snagging-sign-off`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notes, mediaUrls }),
+      body: JSON.stringify({ notes, mediaUrls: photos }),
     })
 
-    if (res.ok) {
-      setDone(true)
-    }
+    if (res.ok) setDone(true)
     setLoading(false)
   }
 
@@ -125,6 +126,65 @@ export function SnaggingSignOff({ leadId, name, address }: Props) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Photos / videos */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-gray-700">Photos & videos</p>
+              <span className="text-xs text-gray-400">{photos.length} uploaded</span>
+            </div>
+
+            {photos.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {photos.map((url, i) => {
+                  const isVideo = url.match(/\.(mp4|mov|webm|avi)(\?|$)/i)
+                  return (
+                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
+                      {isVideo ? (
+                        <video src={url} className="w-full h-full object-cover" />
+                      ) : (
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(url)}
+                        className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center"
+                      >
+                        <X className="w-3 h-3 text-white" />
+                      </button>
+                    </div>
+                  )
+                })}
+                {uploading && (
+                  <div className="aspect-square rounded-lg bg-gray-100 flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              capture="environment"
+              className="hidden"
+              onChange={e => handleFiles(e.target.files)}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex items-center gap-2 w-full justify-center py-2.5 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 transition-colors disabled:opacity-50"
+            >
+              {uploading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</>
+              ) : (
+                <><Camera className="w-4 h-4" /> Add photos or videos</>
+              )}
+            </button>
+          </div>
+
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <label className="flex items-start gap-3 cursor-pointer">
               <input
@@ -152,66 +212,12 @@ export function SnaggingSignOff({ leadId, name, address }: Props) {
             />
           </div>
 
-          {/* Photo / video upload */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-sm font-medium text-gray-700 mb-3">
-              Photos / videos <span className="text-gray-400 font-normal">(optional)</span>
-            </p>
-
-            {/* Previews */}
-            {media.length > 0 && (
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                {media.map((m, i) => (
-                  <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
-                    {m.type === 'image' ? (
-                      <img src={m.preview} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <video src={m.preview} className="w-full h-full object-cover" />
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removeMedia(i)}
-                      className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center"
-                    >
-                      <X className="w-3 h-3 text-white" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*"
-              multiple
-              className="hidden"
-              onChange={e => handleFiles(e.target.files)}
-            />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = 'image/*'; fileInputRef.current.click() } }}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                <Camera className="w-4 h-4" /> Add photo
-              </button>
-              <button
-                type="button"
-                onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = 'image/*,video/*'; fileInputRef.current.click() } }}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                <Upload className="w-4 h-4" /> Add video
-              </button>
-            </div>
-          </div>
-
           <button
             type="submit"
-            disabled={!confirmed || loading}
+            disabled={!confirmed || loading || uploading}
             className="w-full py-3 bg-[#1a4731] text-white rounded-xl text-sm font-semibold disabled:opacity-40 transition-opacity"
           >
-            {loading ? (uploadStatus || 'Saving…') : 'Confirm Snagging Complete'}
+            {loading ? 'Saving…' : 'Confirm Snagging Complete'}
           </button>
         </form>
       </div>
