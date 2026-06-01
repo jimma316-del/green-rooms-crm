@@ -12,7 +12,11 @@ export default async function SnaggingPage({ params }: Props) {
   const supabase = await createClient()
   const admin = createAdminClient()
 
-  const [{ data: lead }, { data: photos }, { data: tasks }] = await Promise.all([
+  const [
+    { data: lead },
+    { data: photos },
+    { data: adminTasks, error: adminTasksError },
+  ] = await Promise.all([
     supabase
       .from('leads')
       .select('id, name, address, postcode, snagging_signed_off_at')
@@ -38,10 +42,11 @@ export default async function SnaggingPage({ params }: Props) {
     .map(a => (a.metadata as { url?: string } | null)?.url)
     .filter((u): u is string => Boolean(u))
 
-  // Prefer an open snagging task; fall back to any snagging task; fall back to any task with notes
+  const debugInfo = `tasks=${JSON.stringify(adminTasks)} err=${adminTasksError?.message ?? 'none'}`
+
   const snaggingTask =
-    tasks?.find(t => t.type === 'snagging' && !t.completed_at) ??
-    tasks?.find(t => t.type === 'snagging') ??
+    (adminTasks ?? []).find(t => t.type === 'snagging' && !t.completed_at) ??
+    (adminTasks ?? []).find(t => t.type === 'snagging') ??
     null
 
   return (
@@ -51,6 +56,7 @@ export default async function SnaggingPage({ params }: Props) {
       address={[lead.address, lead.postcode].filter(Boolean).join(', ')}
       existingPhotos={existingPhotos}
       task={snaggingTask}
+      debugInfo={debugInfo}
     />
   )
 }
