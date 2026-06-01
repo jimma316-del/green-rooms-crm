@@ -9,7 +9,7 @@ export default async function JobsPage() {
     // Active jobs (not snagging, not paid/closed, has job date)
     supabase
       .from('leads')
-      .select('id, name, address, postcode, stage, job_date, job_end_date, signed_off_at')
+      .select('id, name, address, postcode, mobile, stage, job_date, job_end_date, signed_off_at')
       .not('job_date', 'is', null)
       .neq('stage', 'paid_closed')
       .neq('stage', 'snagging')
@@ -36,6 +36,7 @@ export default async function JobsPage() {
       id: l.id,
       name: l.name,
       address: [l.address, l.postcode].filter(Boolean).join(', '),
+      mobile: (l as { mobile?: string | null }).mobile ?? null,
       stage: l.stage as string,
       stageLabel: STAGE_CONFIG[l.stage]?.label ?? l.stage,
       stageColor: STAGE_CONFIG[l.stage]?.color ?? 'bg-gray-100 text-gray-600',

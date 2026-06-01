@@ -9,6 +9,7 @@ interface Job {
   id: string
   name: string
   address: string
+  mobile: string | null
   stage: string
   stageLabel: string
   stageColor: string
@@ -165,17 +166,21 @@ function CalendarView({ jobs }: { jobs: Job[] }) {
 
 function JobCard({ job }: { job: Job }) {
   const signedOff = !!job.signedOffAt
+  const waNumber = job.mobile?.replace(/\D/g, '')
+  const waFormatted = waNumber
+    ? (waNumber.startsWith('44') ? waNumber : `44${waNumber.replace(/^0/, '')}`)
+    : null
+
   return (
-    <Link
-      href={`/jobs/${job.id}/sign-off`}
-      className={cn(
-        'block bg-white rounded-xl border p-4 transition-all active:scale-[0.99]',
-        signedOff ? 'border-green-200 opacity-60' : 'border-gray-200 hover:border-green-400 hover:shadow-sm'
-      )}
-    >
+    <div className={cn(
+      'bg-white rounded-xl border p-4 transition-all',
+      signedOff ? 'border-green-200 opacity-60' : 'border-gray-200'
+    )}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900">{job.name}</p>
+          <Link href={`/leads/${job.id}`} className="font-semibold text-gray-900 hover:text-green-700 transition-colors">
+            {job.name}
+          </Link>
           {job.address && (
             <div className="flex items-center gap-1 mt-0.5">
               <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
@@ -189,17 +194,32 @@ function JobCard({ job }: { job: Job }) {
             )}
           </div>
         </div>
-        {signedOff ? (
-          <div className="shrink-0 flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-medium px-3 py-2 rounded-lg">
-            <CheckCircle2 className="w-4 h-4" /> Signed off
-          </div>
-        ) : (
-          <div className="shrink-0 flex items-center gap-1.5 bg-green-700 text-white text-xs font-medium px-3 py-2 rounded-lg">
-            <ClipboardCheck className="w-4 h-4" /> Sign off
-          </div>
-        )}
+        <div className="shrink-0 flex flex-col gap-2 items-end">
+          {signedOff ? (
+            <div className="flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-medium px-3 py-2 rounded-lg">
+              <CheckCircle2 className="w-4 h-4" /> Signed off
+            </div>
+          ) : (
+            <Link
+              href={`/jobs/${job.id}/sign-off`}
+              className="flex items-center gap-1.5 bg-green-700 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-green-800 transition-colors"
+            >
+              <ClipboardCheck className="w-4 h-4" /> Sign off
+            </Link>
+          )}
+          {waFormatted && (
+            <a
+              href={`https://wa.me/${waFormatted}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 bg-green-500 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-green-600 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" /> WhatsApp
+            </a>
+          )}
+        </div>
       </div>
-    </Link>
+    </div>
   )
 }
 
