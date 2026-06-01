@@ -22,7 +22,7 @@ export default async function PipelinePage({ searchParams }: Props) {
 
   return (
     <div className="px-4 md:px-6 py-6">
-      <PipelineBoard leads={leads ?? []} pipeline={pipeline} />
+      <PipelineBoard leads={leads ?? []} pipeline={pipeline} key={pipeline} />
     </div>
   )
 }

@@ -46,7 +46,7 @@ export default async function LeadsPage({ searchParams }: Props) {
   if (params.source) query = query.eq('lead_source', params.source)
   if (params.hot === 'true') query = query.eq('is_hot', true)
   if (params.marketing === 'true') query = query.eq('marketing_consent', true)
-  query = query.or('is_newsletter.is.null,is_newsletter.eq.false')
+  query = query.not('is_newsletter', 'is', true)
 
   const { data: leads, count } = await query
     .order(sortCol, { ascending, nullsFirst: false })
