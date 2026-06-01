@@ -4,8 +4,6 @@ export type Pipeline = 'sales' | 'project' | 'lost'
 
 export type SalesStage =
   | 'new_lead'
-  | 'sent_sms'
-  | 'sent_brochures'
   | 'site_survey_booked'
   | 'quoting'
   | 'quote_sent'
@@ -204,8 +202,6 @@ export interface StageHistory {
 // Stage config for labels, pipeline grouping, colours
 export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; color: string }> = {
   new_lead:             { label: 'New Lead',              pipeline: 'sales',   color: 'bg-slate-100 text-slate-700' },
-  sent_sms:             { label: 'Sent SMS',              pipeline: 'sales',   color: 'bg-yellow-100 text-yellow-800' },
-  sent_brochures:       { label: 'Sent Brochures',        pipeline: 'sales',   color: 'bg-blue-100 text-blue-800' },
   site_survey_booked:   { label: 'Site Survey Booked',    pipeline: 'sales',   color: 'bg-purple-100 text-purple-800' },
   quoting:              { label: 'Quoting',               pipeline: 'sales',   color: 'bg-indigo-100 text-indigo-800' },
   quote_sent:           { label: 'Quote Sent',            pipeline: 'sales',   color: 'bg-orange-100 text-orange-800' },
@@ -226,7 +222,7 @@ export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; c
 }
 
 export const SALES_STAGES: SalesStage[] = [
-  'new_lead', 'sent_sms', 'sent_brochures', 'site_survey_booked',
+  'new_lead', 'site_survey_booked',
   'quoting', 'quote_sent', 'in_conversation', 'followup', 'final_followup', 'job_booked',
 ]
 

@@ -343,15 +343,23 @@ export function LeadContact({ lead }: { lead: Lead }) {
         </label>
 
         {lead.mobile && (
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={!!lead.sms_sent_at}
+              readOnly
+              className="w-4 h-4 rounded accent-[var(--primary)] pointer-events-none"
+            />
+            <span className="text-xs text-gray-500">
+              {lead.sms_sent_at ? `SMS sent ${formatDateTime(lead.sms_sent_at)}` : 'SMS not sent'}
+            </span>
+          </div>
+        )}
+
+        {lead.mobile && (
           <div className="pt-2 border-t border-gray-50 space-y-2">
             <div className="flex items-center justify-between">
-              {lead.sms_sent_at ? (
-                <span className="text-[10px] text-green-600 flex items-center gap-1">
-                  <MessageSquare className="w-3 h-3" /> Auto SMS sent {formatDateTime(lead.sms_sent_at)}
-                </span>
-              ) : (
-                <span className="text-[10px] text-gray-400">No automated SMS sent yet</span>
-              )}
+              <span className="text-[10px] text-gray-400">Send SMS</span>
               <div className="flex items-center gap-1.5">
                 {lead.sms_sent_at ? (
                   <span className="flex items-center gap-1 text-xs px-2.5 py-1 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed" title="Automated SMS already sent">
