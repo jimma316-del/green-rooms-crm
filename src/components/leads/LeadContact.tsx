@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Phone, Mail, MapPin, User, Tag, Pencil, Check, X, MessageSquare, MessageCircle } from 'lucide-react'
+import { Phone, Mail, MapPin, User, Tag, Pencil, Check, X, MessageSquare } from 'lucide-react'
 import { LEAD_SOURCE_LABELS } from '@/types'
 import type { LeadSource } from '@/types'
 import { Input } from '@/components/ui/input'
@@ -333,37 +333,21 @@ export function LeadContact({ lead }: { lead: Lead }) {
 
         {lead.mobile && (
           <div className="pt-2 border-t border-gray-50 flex items-center justify-between">
-            <span className="text-[10px] text-gray-400">Actions</span>
-            <div className="flex items-center gap-1.5">
-              {lead.sms_sent_at ? (
-                <span className="flex items-center gap-1 text-xs px-2.5 py-1 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed" title="Automated SMS already sent">
-                  <MessageSquare className="w-3 h-3" /> SMS Sent
-                </span>
-              ) : (
-                <button
-                  onClick={sendAutomatedSms}
-                  disabled={sendingSms}
-                  className="flex items-center gap-1 text-xs px-2.5 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                >
-                  <MessageSquare className="w-3 h-3" />
-                  {sendingSms ? 'Sending…' : 'Send SMS'}
-                </button>
-              )}
-              {(() => {
-                const digits = lead.mobile.replace(/\D/g, '')
-                const wa = digits.startsWith('44') ? digits : `44${digits.replace(/^0/, '')}`
-                return (
-                  <a
-                    href={`https://wa.me/${wa}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs px-2.5 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                  >
-                    <MessageCircle className="w-3 h-3" /> WhatsApp
-                  </a>
-                )
-              })()}
-            </div>
+            <span className="text-[10px] text-gray-400">Automated SMS</span>
+            {lead.sms_sent_at ? (
+              <span className="flex items-center gap-1 text-xs px-2.5 py-1 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed" title="Automated SMS already sent">
+                <MessageSquare className="w-3 h-3" /> SMS Sent
+              </span>
+            ) : (
+              <button
+                onClick={sendAutomatedSms}
+                disabled={sendingSms}
+                className="flex items-center gap-1 text-xs px-2.5 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              >
+                <MessageSquare className="w-3 h-3" />
+                {sendingSms ? 'Sending…' : 'Send SMS'}
+              </button>
+            )}
           </div>
         )}
       </div>
