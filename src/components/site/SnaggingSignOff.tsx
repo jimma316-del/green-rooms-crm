@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, MapPin, ArrowLeft, Camera, X, Loader2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 
 interface Props {
   leadId: string
@@ -21,7 +20,6 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos }: Props
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
-  const supabase = createClient()
 
   async function handleFiles(files: FileList | null) {
     if (!files || !files.length) return
@@ -30,26 +28,12 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos }: Props
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) continue
 
-      const ext = file.name.split('.').pop() ?? 'jpg'
-      const path = `${leadId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const body = new FormData()
+      body.append('file', file)
 
-      const { data, error } = await supabase.storage
-        .from('snagging-media')
-        .upload(path, file, { upsert: false })
-
-      if (!error && data) {
-        const { data: urlData } = supabase.storage.from('snagging-media').getPublicUrl(data.path)
-        const url = urlData.publicUrl
-
-        // Save to activities so it persists
-        await supabase.from('activities').insert({
-          lead_id: leadId,
-          created_by: null,
-          type: 'snagging_photo',
-          body: null,
-          metadata: { url },
-        })
-
+      const res = await fetch(`/api/leads/${leadId}/snagging-upload`, { method: 'POST', body })
+      if (res.ok) {
+        const { url } = await res.json()
         setPhotos(prev => [...prev, url])
       }
     }
@@ -58,17 +42,11 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos }: Props
   }
 
   async function removePhoto(url: string) {
-    // Delete from storage
-    const path = url.split('/snagging-media/')[1]
-    if (path) await supabase.storage.from('snagging-media').remove([path])
-
-    // Delete activity record
-    await supabase.from('activities')
-      .delete()
-      .eq('lead_id', leadId)
-      .eq('type', 'snagging_photo')
-      .contains('metadata', { url })
-
+    await fetch(`/api/leads/${leadId}/snagging-upload`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    })
     setPhotos(prev => prev.filter(u => u !== url))
   }
 
