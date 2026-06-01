@@ -36,9 +36,11 @@ export function LeadContact({ lead }: { lead: Lead }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [sendingSms, setSendingSms] = useState(false)
+  const [showCustomSms, setShowCustomSms] = useState(false)
+  const [customMsg, setCustomMsg] = useState('')
   const [brochuresSent, setBrochuresSent] = useState(lead.brochures_sent)
 
-  async function sendSms() {
+  async function sendAutomatedSms() {
     setSendingSms(true)
     try {
       const res = await fetch(`/api/leads/${lead.id}/sms`, { method: 'POST' })
@@ -46,7 +48,31 @@ export function LeadContact({ lead }: { lead: Lead }) {
       if (!res.ok) {
         toast.error(data.error ?? 'Failed to send SMS')
       } else {
-        toast.success(`SMS sent (${data.miles} miles)`)
+        toast.success(`Automated SMS sent (${data.miles} miles)`)
+        router.refresh()
+      }
+    } catch {
+      toast.error('Failed to send SMS')
+    }
+    setSendingSms(false)
+  }
+
+  async function sendCustomSms() {
+    if (!customMsg.trim()) return
+    setSendingSms(true)
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/sms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: customMsg.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error ?? 'Failed to send SMS')
+      } else {
+        toast.success('Custom SMS sent')
+        setCustomMsg('')
+        setShowCustomSms(false)
         router.refresh()
       }
     } catch {
@@ -317,22 +343,64 @@ export function LeadContact({ lead }: { lead: Lead }) {
         </label>
 
         {lead.mobile && (
-          <div className="pt-2 border-t border-gray-50 flex items-center justify-between">
-            {lead.sms_sent_at ? (
-              <span className="text-[10px] text-green-600 flex items-center gap-1">
-                <MessageSquare className="w-3 h-3" /> SMS sent {formatDateTime(lead.sms_sent_at)}
-              </span>
-            ) : (
-              <span className="text-[10px] text-gray-400">No SMS sent yet</span>
+          <div className="pt-2 border-t border-gray-50 space-y-2">
+            <div className="flex items-center justify-between">
+              {lead.sms_sent_at ? (
+                <span className="text-[10px] text-green-600 flex items-center gap-1">
+                  <MessageSquare className="w-3 h-3" /> Auto SMS sent {formatDateTime(lead.sms_sent_at)}
+                </span>
+              ) : (
+                <span className="text-[10px] text-gray-400">No automated SMS sent yet</span>
+              )}
+              <div className="flex items-center gap-1.5">
+                {lead.sms_sent_at ? (
+                  <span className="flex items-center gap-1 text-xs px-2.5 py-1 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed" title="Automated SMS already sent">
+                    <MessageSquare className="w-3 h-3" /> Sent
+                  </span>
+                ) : (
+                  <button
+                    onClick={sendAutomatedSms}
+                    disabled={sendingSms}
+                    className="flex items-center gap-1 text-xs px-2.5 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  >
+                    <MessageSquare className="w-3 h-3" />
+                    {sendingSms ? 'Sending…' : 'Send SMS'}
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowCustomSms(v => !v)}
+                  className="flex items-center gap-1 text-xs px-2.5 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <MessageSquare className="w-3 h-3" /> Custom
+                </button>
+              </div>
+            </div>
+            {showCustomSms && (
+              <div className="space-y-1.5">
+                <textarea
+                  value={customMsg}
+                  onChange={e => setCustomMsg(e.target.value)}
+                  rows={3}
+                  placeholder="Type a custom message…"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 resize-none"
+                />
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={sendCustomSms}
+                    disabled={sendingSms || !customMsg.trim()}
+                    className="flex items-center gap-1 text-xs px-2.5 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {sendingSms ? 'Sending…' : 'Send'}
+                  </button>
+                  <button
+                    onClick={() => { setShowCustomSms(false); setCustomMsg('') }}
+                    className="text-xs px-2.5 py-1 border border-gray-200 rounded-lg text-gray-500 hover:text-gray-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             )}
-            <button
-              onClick={sendSms}
-              disabled={sendingSms}
-              className="flex items-center gap-1 text-xs px-2.5 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-            >
-              <MessageSquare className="w-3 h-3" />
-              {sendingSms ? 'Sending…' : lead.sms_sent_at ? 'Resend' : 'Send SMS'}
-            </button>
           </div>
         )}
       </div>

@@ -51,9 +51,35 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const phone = formatUkMobile(lead.mobile)
   if (!phone) return NextResponse.json({ error: 'Invalid mobile number' }, { status: 400 })
 
-  if (!lead.postcode) return NextResponse.json({ error: 'No postcode — cannot calculate distance' }, { status: 400 })
+  // Check for custom message in body
+  let customMessage: string | null = null
+  try {
+    const body = await req.json()
+    customMessage = body?.message?.trim() || null
+  } catch { /* no body */ }
 
-  const miles = await distanceFromBase(lead.postcode)
+  if (customMessage) {
+    // Custom message — always allowed, doesn't update sms_sent_at
+    const ok = await sendSms(phone, customMessage)
+    if (!ok) return NextResponse.json({ error: 'SMS failed to send' }, { status: 500 })
+    await admin.from('activities').insert({
+      lead_id: id,
+      created_by: user.id,
+      type: 'sms_sent',
+      body: `Custom SMS sent`,
+    })
+    return NextResponse.json({ ok: true, custom: true })
+  }
+
+  // Automated template — block if already sent
+  const { data: currentLead } = await admin.from('leads').select('sms_sent_at, postcode').eq('id', id).single()
+  if (currentLead?.sms_sent_at) {
+    return NextResponse.json({ error: 'Automated SMS already sent to this customer' }, { status: 409 })
+  }
+
+  if (!currentLead?.postcode) return NextResponse.json({ error: 'No postcode — cannot calculate distance' }, { status: 400 })
+
+  const miles = await distanceFromBase(currentLead.postcode)
   if (miles === null) return NextResponse.json({ error: 'Could not look up postcode' }, { status: 400 })
   if (miles > 20) return NextResponse.json({ error: `Too far (${miles.toFixed(1)} miles)` }, { status: 400 })
 
@@ -68,7 +94,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     lead_id: id,
     created_by: user.id,
     type: 'sms_sent',
-    body: `Manual SMS sent (${miles.toFixed(1)} miles — ${miles <= 12 ? 'site visit' : 'showroom'} template)`,
+    body: `Automated SMS sent (${miles.toFixed(1)} miles — ${miles <= 12 ? 'site visit' : 'showroom'} template)`,
   })
 
   return NextResponse.json({ ok: true, miles: miles.toFixed(1) })
