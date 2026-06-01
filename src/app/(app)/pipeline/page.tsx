@@ -16,7 +16,7 @@ export default async function PipelinePage({ searchParams }: Props) {
 
   const { data: leads } = await supabase
     .from('leads')
-    .select('id, name, stage, pipeline, project_type, postcode, budget_min, budget_max, is_hot, tags, updated_at, assigned_to, job_date, users(full_name, avatar_url)')
+    .select('id, name, stage, pipeline, project_type, postcode, budget_min, budget_max, is_hot, tags, updated_at, assigned_to, job_date, sms_sent_at, brochures_sent, users(full_name, avatar_url)')
     .eq('pipeline', pipeline)
     .order('updated_at', { ascending: false })
 

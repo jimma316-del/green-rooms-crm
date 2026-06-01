@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { STAGE_CONFIG, SALES_STAGES } from '@/types'
 import type { Pipeline, Stage } from '@/types'
-import { Flame, MapPin, Building2 } from 'lucide-react'
+import { Flame, MapPin, Building2, MessageSquare, BookOpen } from 'lucide-react'
 import { formatDistanceToNow } from '@/utils/date'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -21,6 +21,8 @@ interface Lead {
   is_hot: boolean
   updated_at: string
   job_date: string | null
+  sms_sent_at: string | null
+  brochures_sent: boolean
   users: { full_name: string; avatar_url: string | null } | null
 }
 
@@ -321,6 +323,21 @@ function LeadCard({
           </div>
         )}
       </div>
+
+      {(lead.sms_sent_at || lead.brochures_sent) && (
+        <div className="flex items-center gap-2 mt-2">
+          {lead.sms_sent_at && (
+            <span title="SMS sent" className="flex items-center gap-1 text-[10px] text-blue-500">
+              <MessageSquare className="w-3 h-3" /> SMS
+            </span>
+          )}
+          {lead.brochures_sent && (
+            <span title="Brochures sent" className="flex items-center gap-1 text-[10px] text-purple-500">
+              <BookOpen className="w-3 h-3" /> Brochures
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-gray-50">
         {lead.users ? (
