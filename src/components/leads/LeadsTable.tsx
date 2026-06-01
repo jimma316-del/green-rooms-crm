@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition, useEffect, type MouseEvent } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { STAGE_CONFIG, SALES_STAGES, PROJECT_STAGES } from '@/types'
@@ -126,7 +126,7 @@ function BrochuresCell({ lead }: { lead: Lead }) {
   const supabase = createClient()
   const [sent, setSent] = useState(lead.brochures_sent)
 
-  async function toggle(e: React.MouseEvent) {
+  async function toggle(e: MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
     const next = !sent
