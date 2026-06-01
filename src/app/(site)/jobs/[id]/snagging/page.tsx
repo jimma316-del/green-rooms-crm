@@ -26,12 +26,9 @@ export default async function SnaggingPage({ params }: Props) {
       .order('created_at', { ascending: true }),
     admin
       .from('tasks')
-      .select('id, title, notes')
+      .select('id, title, notes, type, completed_at')
       .eq('lead_id', id)
-      .eq('type', 'snagging')
-      .is('completed_at', null)
-      .order('created_at', { ascending: false })
-      .limit(1),
+      .order('created_at', { ascending: false }),
   ])
 
   if (!lead) notFound()
@@ -41,15 +38,26 @@ export default async function SnaggingPage({ params }: Props) {
     .map(a => (a.metadata as { url?: string } | null)?.url)
     .filter((u): u is string => Boolean(u))
 
-  const snaggingTask = tasks?.[0] ?? null
+  // Prefer an open snagging task; fall back to any snagging task; fall back to any task with notes
+  const snaggingTask =
+    tasks?.find(t => t.type === 'snagging' && !t.completed_at) ??
+    tasks?.find(t => t.type === 'snagging') ??
+    null
 
   return (
-    <SnaggingSignOff
-      leadId={id}
-      name={lead.name}
-      address={[lead.address, lead.postcode].filter(Boolean).join(', ')}
-      existingPhotos={existingPhotos}
-      task={snaggingTask}
-    />
+    <>
+      {process.env.NODE_ENV !== 'production' || true ? (
+        <pre className="text-[10px] bg-gray-100 p-2 overflow-auto max-h-32 text-gray-500">
+          tasks: {JSON.stringify(tasks?.map(t => ({ id: t.id, type: t.type, notes: t.notes, completed: !!t.completed_at })), null, 2)}
+        </pre>
+      ) : null}
+      <SnaggingSignOff
+        leadId={id}
+        name={lead.name}
+        address={[lead.address, lead.postcode].filter(Boolean).join(', ')}
+        existingPhotos={existingPhotos}
+        task={snaggingTask}
+      />
+    </>
   )
 }
