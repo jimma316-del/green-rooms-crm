@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { notes } = await req.json() as { notes?: string }
+  const { notes, mediaUrls } = await req.json() as { notes?: string; mediaUrls?: string[] }
 
   const admin = createAdminClient()
 
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     body: notes
       ? `Snagging confirmed complete — client happy. Notes: ${notes}`
       : 'Snagging confirmed complete — client happy.',
+    metadata: mediaUrls?.length ? { mediaUrls } : null,
   })
 
   return NextResponse.json({ ok: true })
