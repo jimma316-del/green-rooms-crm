@@ -98,5 +98,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     body: `Automated SMS sent (${distanceNote} — ${(miles !== null && miles > 12) ? 'showroom' : 'site visit'} template)`,
   })
 
-  return NextResponse.json({ ok: true, miles: miles.toFixed(1) })
+  return NextResponse.json({ ok: true, miles: miles !== null ? miles.toFixed(1) : null })
 }

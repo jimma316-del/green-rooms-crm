@@ -46,7 +46,7 @@ export function LeadContact({ lead }: { lead: Lead }) {
       if (!res.ok) {
         toast.error(data.error ?? 'Failed to send SMS')
       } else {
-        toast.success(`Automated SMS sent (${data.miles} miles)`)
+        toast.success(data.miles != null ? `Automated SMS sent (${data.miles} miles)` : 'Automated SMS sent')
         router.refresh()
       }
     } catch {
