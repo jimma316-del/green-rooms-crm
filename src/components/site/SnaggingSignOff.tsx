@@ -64,7 +64,7 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos, task }:
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
-  const [editingTask, setEditingTask] = useState(!task)
+  const [editingTask, setEditingTask] = useState(false)
   const [taskNotes, setTaskNotes] = useState(task?.notes ?? '')
   const [taskId, setTaskId] = useState(task?.id ?? null)
   const [savingTask, setSavingTask] = useState(false)
@@ -211,15 +211,13 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos, task }:
                     >
                       <Check className="w-3 h-3" /> {savingTask ? 'Saving…' : 'Save'}
                     </button>
-                    {taskId && (
-                      <button
-                        type="button"
-                        onClick={() => { setTaskNotes(task?.notes ?? ''); setEditingTask(false) }}
-                        className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg"
-                      >
-                        Cancel
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => { setTaskNotes(task?.notes ?? ''); setEditingTask(false) }}
+                      className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
               ) : (
