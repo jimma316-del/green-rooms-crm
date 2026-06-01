@@ -16,7 +16,6 @@ interface Props {
   address: string
   existingPhotos: string[]
   task: SnaggingTask | null
-  debugInfo?: string
 }
 
 function isVideo(url: string) {
@@ -56,7 +55,7 @@ function Lightbox({ url, onClose }: { url: string; onClose: () => void }) {
   )
 }
 
-export function SnaggingSignOff({ leadId, name, address, existingPhotos, task, debugInfo }: Props) {
+export function SnaggingSignOff({ leadId, name, address, existingPhotos, task }: Props) {
   const [confirmed, setConfirmed] = useState(false)
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
@@ -160,9 +159,6 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos, task, d
       {lightboxUrl && <Lightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
 
       <div className="min-h-screen bg-gray-50">
-        {debugInfo && (
-          <div className="bg-yellow-100 text-yellow-900 text-xs px-3 py-2 break-all">{debugInfo}</div>
-        )}
         <header className="bg-[#1a4731] text-white px-4 py-3 flex items-center gap-3">
           <button onClick={() => router.back()} className="p-1 hover:opacity-70">
             <ArrowLeft className="w-5 h-5" />

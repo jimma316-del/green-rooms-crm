@@ -211,7 +211,9 @@ function SnaggingCard({ job }: { job: SnaggingJob }) {
     <div className="bg-white rounded-xl border border-orange-200 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900">{job.name}</p>
+          <Link href={`/jobs/${job.id}/snagging`} className="font-semibold text-gray-900 hover:text-orange-600 transition-colors">
+            {job.name}
+          </Link>
           {job.address && (
             <div className="flex items-center gap-1 mt-0.5">
               <MapPin className="w-3 h-3 text-gray-400 shrink-0" />

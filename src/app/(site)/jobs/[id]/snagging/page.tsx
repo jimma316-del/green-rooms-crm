@@ -41,8 +41,6 @@ export default async function SnaggingPage({ params }: Props) {
     .map(a => (a.metadata as { url?: string } | null)?.url)
     .filter((u): u is string => Boolean(u))
 
-  const debugInfo = `tasks=${JSON.stringify(adminTasks)} err=${adminTasksError?.message ?? 'none'}`
-
   const snaggingTask =
     (adminTasks ?? []).find(t => t.type === 'snagging' && !t.completed_at) ??
     (adminTasks ?? []).find(t => t.type === 'snagging') ??
@@ -55,7 +53,6 @@ export default async function SnaggingPage({ params }: Props) {
       address={[lead.address, lead.postcode].filter(Boolean).join(', ')}
       existingPhotos={existingPhotos}
       task={snaggingTask}
-      debugInfo={debugInfo}
     />
   )
 }
