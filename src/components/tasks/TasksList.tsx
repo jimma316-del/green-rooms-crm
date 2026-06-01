@@ -60,7 +60,7 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
     }).select('*, users!tasks_assigned_to_fkey(full_name)').single()
 
     if (error) {
-      toast.error('Failed to create task')
+      toast.error(error.message || 'Failed to create task')
     } else {
       await supabase.from('activities').insert({
         lead_id: leadId,
