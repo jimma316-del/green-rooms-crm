@@ -45,19 +45,12 @@ export default async function SnaggingPage({ params }: Props) {
     null
 
   return (
-    <>
-      {process.env.NODE_ENV !== 'production' || true ? (
-        <pre className="text-[10px] bg-gray-100 p-2 overflow-auto max-h-32 text-gray-500">
-          tasks: {JSON.stringify(tasks?.map(t => ({ id: t.id, type: t.type, notes: t.notes, completed: !!t.completed_at })), null, 2)}
-        </pre>
-      ) : null}
-      <SnaggingSignOff
-        leadId={id}
-        name={lead.name}
-        address={[lead.address, lead.postcode].filter(Boolean).join(', ')}
-        existingPhotos={existingPhotos}
-        task={snaggingTask}
-      />
-    </>
+    <SnaggingSignOff
+      leadId={id}
+      name={lead.name}
+      address={[lead.address, lead.postcode].filter(Boolean).join(', ')}
+      existingPhotos={existingPhotos}
+      task={snaggingTask}
+    />
   )
 }
