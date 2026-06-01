@@ -46,7 +46,7 @@ export default async function LeadsPage({ searchParams }: Props) {
   if (params.source) query = query.eq('lead_source', params.source)
   if (params.hot === 'true') query = query.eq('is_hot', true)
   if (params.marketing === 'true') query = query.eq('marketing_consent', true)
-  const { data: leads, count, error: leadsError } = await query
+  const { data: leads, count } = await query
     .order(sortCol, { ascending, nullsFirst: false })
     .order('created_at', { ascending: false })
     .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
@@ -60,11 +60,6 @@ export default async function LeadsPage({ searchParams }: Props) {
 
   return (
     <div className="px-4 md:px-6 py-6">
-      {leadsError && (
-        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
-          Query error: {leadsError.message}
-        </div>
-      )}
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">All Leads</h1>
