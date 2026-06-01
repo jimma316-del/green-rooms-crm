@@ -36,6 +36,7 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
   const [adding, setAdding] = useState(false)
   const [taskType, setTaskType] = useState<TaskType>('whatsapp')
   const [dueDate, setDueDate] = useState('')
+  const [dateTbc, setDateTbc] = useState(false)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -44,7 +45,7 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
   const supabase = createClient()
 
   async function createTask() {
-    if (!dueDate) { toast.error('Due date is required'); return }
+    if (!dueDate && !dateTbc) { toast.error('Set a due date or check Date TBC'); return }
     setSaving(true)
 
     const { data: { user } } = await supabase.auth.getUser()
@@ -56,7 +57,7 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
       type: taskType,
       notes: notes.trim() || null,
       priority: 'normal',
-      due_date: new Date(dueDate).toISOString(),
+      due_date: dateTbc ? null : new Date(dueDate).toISOString(),
     }).select('*, users!tasks_assigned_to_fkey(full_name)').single()
 
     if (error) {
@@ -85,6 +86,7 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
       setTasks(prev => [...prev, task])
       setTaskType('whatsapp')
       setDueDate('')
+      setDateTbc(false)
       setNotes('')
       setAdding(false)
       router.refresh()
@@ -180,12 +182,24 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
                 <SelectItem value="snagging">Snagging</SelectItem>
               </SelectContent>
             </Select>
-            <Input
-              type="date"
-              value={dueDate}
-              onChange={e => setDueDate(e.target.value)}
-              className="flex-1 text-xs"
-            />
+            <div className="flex-1 flex flex-col gap-1">
+              <Input
+                type="date"
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+                disabled={dateTbc}
+                className="text-xs disabled:opacity-40"
+              />
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={dateTbc}
+                  onChange={e => { setDateTbc(e.target.checked); if (e.target.checked) setDueDate('') }}
+                  className="w-3.5 h-3.5 rounded accent-[var(--primary)]"
+                />
+                <span className="text-[11px] text-gray-500">Date TBC</span>
+              </label>
+            </div>
           </div>
           <Textarea
             placeholder="Notes (optional)"
@@ -195,7 +209,7 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
             className="text-xs"
           />
           <div className="flex gap-2">
-            <Button size="sm" onClick={createTask} disabled={!dueDate || saving} className="bg-[var(--primary)] hover:bg-[var(--primary)]/90">
+            <Button size="sm" onClick={createTask} disabled={(!dueDate && !dateTbc) || saving} className="bg-[var(--primary)] hover:bg-[var(--primary)]/90">
               {saving ? 'Saving…' : 'Create'}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>Cancel</Button>
@@ -251,7 +265,7 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
                     <p className="text-xs text-gray-500 mt-0.5">{task.notes}</p>
                   )}
                   <div className="flex items-center gap-2 mt-0.5">
-                    {task.due_date && (
+                    {task.due_date ? (
                       <span className={cn(
                         'text-[10px] flex items-center gap-0.5',
                         overdue ? 'text-red-500 font-medium' : 'text-gray-400'
@@ -259,6 +273,8 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
                         {overdue && <AlertCircle className="w-3 h-3" />}
                         {formatDate(task.due_date)}
                       </span>
+                    ) : (
+                      <span className="text-[10px] text-gray-300">Date TBC</span>
                     )}
                   </div>
                 </div>
