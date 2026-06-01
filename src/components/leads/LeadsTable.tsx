@@ -122,6 +122,30 @@ function StageCell({ lead }: { lead: Lead }) {
   )
 }
 
+function BrochuresCell({ lead }: { lead: Lead }) {
+  const supabase = createClient()
+  const [sent, setSent] = useState(lead.brochures_sent)
+
+  async function toggle(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    const next = !sent
+    setSent(next)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from('leads') as any).update({ brochures_sent: next }).eq('id', lead.id)
+  }
+
+  return (
+    <button
+      onClick={toggle}
+      title={sent ? 'Brochures sent — click to unmark' : 'Mark brochures as sent'}
+      className="flex items-center justify-center w-full"
+    >
+      <BookOpen className={cn('w-3.5 h-3.5', sent ? 'text-purple-500' : 'text-gray-200 hover:text-gray-400')} />
+    </button>
+  )
+}
+
 function getPageNumbers(current: number, total: number): (number | '...')[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
   const pages: (number | '...')[] = [1]
@@ -451,10 +475,7 @@ export function LeadsTable({ leads, total, page, pageSize, duplicateEmails }: Pr
                       }
                     </td>
                     <td className="px-4 py-3 w-8">
-                      {lead.brochures_sent
-                        ? <BookOpen className="w-3.5 h-3.5 text-purple-500" />
-                        : <span className="text-gray-200">—</span>
-                      }
+                      <BrochuresCell lead={lead} />
                     </td>
                     <td className="px-4 py-3 text-xs max-w-[160px]">
                       {(() => {
