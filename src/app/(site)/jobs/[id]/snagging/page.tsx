@@ -31,8 +31,7 @@ export default async function SnaggingPage({ params }: Props) {
     admin
       .from('tasks')
       .select('id, title, notes, type, completed_at')
-      .eq('lead_id', id)
-      .order('created_at', { ascending: false }),
+      .eq('lead_id', id),
   ])
 
   if (!lead) notFound()
