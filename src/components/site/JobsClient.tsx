@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ClipboardCheck, MapPin, List, CalendarDays, ChevronLeft, ChevronRight, CheckCircle2, Archive, Wrench } from 'lucide-react'
+import { ClipboardCheck, MapPin, List, CalendarDays, ChevronLeft, ChevronRight, CheckCircle2, Archive, Wrench, MessageCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Job {
@@ -21,6 +21,7 @@ interface SnaggingJob {
   id: string
   name: string
   address: string
+  mobile: string | null
   jobDate: string | null
   jobEndDate: string | null
   taskDescription: string | null
@@ -205,11 +206,9 @@ function JobCard({ job }: { job: Job }) {
 // ── Snagging card ────────────────────────────────────────────────
 
 function SnaggingCard({ job }: { job: SnaggingJob }) {
+  const waNumber = job.mobile?.replace(/\D/g, '')
   return (
-    <Link
-      href={`/jobs/${job.id}/snagging`}
-      className="block bg-white rounded-xl border border-orange-200 p-4 hover:border-orange-400 hover:shadow-sm transition-all active:scale-[0.99]"
-    >
+    <div className="bg-white rounded-xl border border-orange-200 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-900">{job.name}</p>
@@ -226,11 +225,27 @@ function SnaggingCard({ job }: { job: SnaggingJob }) {
             <p className="text-xs text-gray-500 mt-1">{formatDateRange(job.jobDate, job.jobEndDate)}</p>
           )}
         </div>
-        <div className="shrink-0 flex items-center gap-1.5 bg-orange-500 text-white text-xs font-medium px-3 py-2 rounded-lg">
-          <Wrench className="w-4 h-4" /> Sign off
+        <div className="shrink-0 flex flex-col gap-2 items-end">
+          <Link
+            href={`/jobs/${job.id}/snagging`}
+            className="flex items-center gap-1.5 bg-orange-500 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            <Wrench className="w-4 h-4" /> Sign off
+          </Link>
+          {waNumber && (
+            <a
+              href={`https://wa.me/${waNumber.startsWith('44') ? waNumber : `44${waNumber.replace(/^0/, '')}`}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              className="flex items-center gap-1.5 bg-green-500 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-green-600 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" /> WhatsApp
+            </a>
+          )}
         </div>
       </div>
-    </Link>
+    </div>
   )
 }
 
