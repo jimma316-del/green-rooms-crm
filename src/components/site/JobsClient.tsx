@@ -23,6 +23,7 @@ interface SnaggingJob {
   address: string
   jobDate: string | null
   jobEndDate: string | null
+  taskDescription: string | null
 }
 
 interface ArchivedJob {
@@ -218,8 +219,11 @@ function SnaggingCard({ job }: { job: SnaggingJob }) {
               <p className="text-xs text-gray-500 truncate">{job.address}</p>
             </div>
           )}
+          {job.taskDescription && (
+            <p className="text-xs text-gray-600 mt-1.5 leading-snug">{job.taskDescription}</p>
+          )}
           {job.jobDate && (
-            <p className="text-xs text-gray-500 mt-1.5">{formatDateRange(job.jobDate, job.jobEndDate)}</p>
+            <p className="text-xs text-gray-500 mt-1">{formatDateRange(job.jobDate, job.jobEndDate)}</p>
           )}
         </div>
         <div className="shrink-0 flex items-center gap-1.5 bg-orange-500 text-white text-xs font-medium px-3 py-2 rounded-lg">
