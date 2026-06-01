@@ -68,12 +68,25 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
         type: 'task_created',
         body: notes.trim() || TASK_TYPE_LABELS[taskType],
       })
+
+      if (taskType === 'snagging') {
+        await supabase.from('leads').update({ stage: 'snagging', pipeline: 'project' }).eq('id', leadId)
+        await supabase.from('activities').insert({
+          lead_id: leadId,
+          created_by: user!.id,
+          type: 'stage_change',
+          body: 'Moved to Snagging',
+        })
+        toast.success('Task created — lead moved to Snagging')
+      } else {
+        toast.success('Task created')
+      }
+
       setTasks(prev => [...prev, task])
       setTaskType('whatsapp')
       setDueDate('')
       setNotes('')
       setAdding(false)
-      toast.success('Task created')
       router.refresh()
     }
     setSaving(false)
@@ -164,6 +177,7 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
                 <SelectItem value="send_info">Send Info</SelectItem>
                 <SelectItem value="whatsapp">WhatsApp</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
+                <SelectItem value="snagging">Snagging</SelectItem>
               </SelectContent>
             </Select>
             <Input
@@ -209,6 +223,7 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
                         <SelectItem value="send_info">Send Info</SelectItem>
                         <SelectItem value="whatsapp">WhatsApp</SelectItem>
                         <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="snagging">Snagging</SelectItem>
                       </SelectContent>
                     </Select>
                     <Input type="date" value={editForm.due_date} onChange={e => setEditForm(f => ({ ...f, due_date: e.target.value }))} className="flex-1 text-xs" />

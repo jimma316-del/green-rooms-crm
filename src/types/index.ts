@@ -76,7 +76,7 @@ export type ActivityType =
   | 'payment_recorded'
   | 'lead_created'
 
-export type TaskType = 'quote' | 'amend_quote' | 'amend_design' | 'in_person_meeting' | 'send_info' | 'whatsapp' | 'email'
+export type TaskType = 'quote' | 'amend_quote' | 'amend_design' | 'in_person_meeting' | 'send_info' | 'whatsapp' | 'email' | 'snagging'
 
 export const TASK_TYPE_LABELS: Record<TaskType, string> = {
   quote:             'Prepare Quote',
@@ -86,6 +86,7 @@ export const TASK_TYPE_LABELS: Record<TaskType, string> = {
   send_info:         'Send Info',
   whatsapp:          'WhatsApp',
   email:             'Email',
+  snagging:          'Snagging',
 }
 export type TaskPriority = 'low' | 'normal' | 'high'
 
