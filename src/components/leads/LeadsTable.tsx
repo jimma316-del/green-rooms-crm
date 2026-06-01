@@ -8,7 +8,7 @@ import type { Stage } from '@/types'
 import {
   Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger,
 } from '@/components/ui/select'
-import { Flame, Phone, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Search, X, Trash2, Download, Mail, MailCheck, MessageSquare } from 'lucide-react'
+import { Flame, Phone, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Search, X, Trash2, Download, Mail, MailCheck, MessageSquare, BookOpen } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { formatDistanceToNow, formatShortDate } from '@/utils/date'
 import { cn } from '@/lib/utils'
@@ -32,6 +32,7 @@ interface Lead {
   marketing_consent: boolean
   distance_miles: number | null
   sms_sent_at: string | null
+  brochures_sent: boolean
   tasks: Array<{ id: string; title: string; due_date: string | null; completed_at: string | null }> | null
 }
 
@@ -379,6 +380,12 @@ export function LeadsTable({ leads, total, page, pageSize, duplicateEmails }: Pr
                     Stage <SortIcon field="stage" />
                   </button>
                 </th>
+                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide" title="SMS sent">
+                  <MessageSquare className="w-3.5 h-3.5 text-gray-400" />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide" title="Brochures sent">
+                  <BookOpen className="w-3.5 h-3.5 text-gray-400" />
+                </th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Task</th>
                 <th className="text-left px-4 py-3">
                   <button
@@ -399,16 +406,13 @@ export function LeadsTable({ leads, total, page, pageSize, duplicateEmails }: Pr
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide" title="Marketing opt-in">
                   <MailCheck className="w-3.5 h-3.5 text-gray-400" />
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide" title="SMS sent">
-                  <MessageSquare className="w-3.5 h-3.5 text-gray-400" />
-                </th>
                 <th className="w-8" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {leads.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="px-4 py-10 text-center text-gray-400 text-sm">No leads found</td>
+                  <td colSpan={13} className="px-4 py-10 text-center text-gray-400 text-sm">No leads found</td>
                 </tr>
               ) : leads.map(lead => {
                 const cfg = STAGE_CONFIG[lead.stage as Stage]
@@ -440,6 +444,18 @@ export function LeadsTable({ leads, total, page, pageSize, duplicateEmails }: Pr
                     <td className="px-4 py-3">
                       <StageCell lead={lead} />
                     </td>
+                    <td className="px-4 py-3 w-8">
+                      {lead.sms_sent_at
+                        ? <span title={`SMS sent ${new Date(lead.sms_sent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}><MessageSquare className="w-3.5 h-3.5 text-blue-500" /></span>
+                        : <span className="text-gray-200">—</span>
+                      }
+                    </td>
+                    <td className="px-4 py-3 w-8">
+                      {lead.brochures_sent
+                        ? <BookOpen className="w-3.5 h-3.5 text-purple-500" />
+                        : <span className="text-gray-200">—</span>
+                      }
+                    </td>
                     <td className="px-4 py-3 text-xs max-w-[160px]">
                       {(() => {
                         const open = (lead.tasks ?? [])
@@ -468,12 +484,6 @@ export function LeadsTable({ leads, total, page, pageSize, duplicateEmails }: Pr
                     <td className="px-4 py-3 w-8">
                       {lead.marketing_consent
                         ? <MailCheck className="w-3.5 h-3.5 text-green-500" />
-                        : <span className="text-gray-200">—</span>
-                      }
-                    </td>
-                    <td className="px-4 py-3 w-8">
-                      {lead.sms_sent_at
-                        ? <span title={`SMS sent ${new Date(lead.sms_sent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}><MessageSquare className="w-3.5 h-3.5 text-blue-500" /></span>
                         : <span className="text-gray-200">—</span>
                       }
                     </td>
