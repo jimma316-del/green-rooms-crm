@@ -23,7 +23,7 @@ const SORT_COLUMN_MAP: Record<string, string> = {
   name:             'name',
   address:          'address',
   first_contact_at: 'created_at',
-  stage:            'stage',
+  stage:            'stage_order',
   distance_miles:   'distance_miles',
 }
 
