@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { SnaggingSignOff } from '@/components/site/SnaggingSignOff'
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 export default async function SnaggingPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
+  const admin = createAdminClient()
 
   const [{ data: lead }, { data: photos }, { data: tasks }] = await Promise.all([
     supabase
@@ -16,13 +18,13 @@ export default async function SnaggingPage({ params }: Props) {
       .select('id, name, address, postcode, snagging_signed_off_at')
       .eq('id', id)
       .single(),
-    supabase
+    admin
       .from('activities')
       .select('id, metadata')
       .eq('lead_id', id)
       .eq('type', 'snagging_photo')
       .order('created_at', { ascending: true }),
-    supabase
+    admin
       .from('tasks')
       .select('id, title, notes')
       .eq('lead_id', id)
