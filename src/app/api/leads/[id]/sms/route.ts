@@ -77,14 +77,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Automated SMS already sent to this customer' }, { status: 409 })
   }
 
-  if (!currentLead?.postcode) return NextResponse.json({ error: 'No postcode — cannot calculate distance' }, { status: 400 })
-
-  const miles = await distanceFromBase(currentLead.postcode)
-  if (miles === null) return NextResponse.json({ error: 'Could not look up postcode' }, { status: 400 })
-  if (miles > 20) return NextResponse.json({ error: `Too far (${miles.toFixed(1)} miles)` }, { status: 400 })
-
+  // Try distance lookup — fall back gracefully if postcode missing or lookup fails
   const firstName = (lead.name ?? 'there').split(' ')[0]
-  const message = miles <= 12 ? MESSAGE_CLOSE(firstName) : MESSAGE_FAR(firstName)
+  let miles: number | null = null
+  if (currentLead?.postcode) {
+    miles = await distanceFromBase(currentLead.postcode)
+  }
+  // Use close template as default when distance unknown; far template for 12–20 miles
+  const message = (miles !== null && miles > 12) ? MESSAGE_FAR(firstName) : MESSAGE_CLOSE(firstName)
+  const distanceNote = miles !== null ? `${miles.toFixed(1)} miles` : 'distance unknown'
 
   const ok = await sendSms(phone, message)
   if (!ok) return NextResponse.json({ error: 'SMS failed to send' }, { status: 500 })
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     lead_id: id,
     created_by: user.id,
     type: 'sms_sent',
-    body: `Automated SMS sent (${miles.toFixed(1)} miles — ${miles <= 12 ? 'site visit' : 'showroom'} template)`,
+    body: `Automated SMS sent (${distanceNote} — ${(miles !== null && miles > 12) ? 'showroom' : 'site visit'} template)`,
   })
 
   return NextResponse.json({ ok: true, miles: miles.toFixed(1) })
