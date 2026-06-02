@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, MapPin, ArrowLeft, Camera, X, Loader2, Play, Pencil, Check } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 interface SnaggingTask {
   id: string
@@ -88,21 +89,33 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos, task }:
     if (!files || !files.length) return
     setUploading(true)
     setUploadError(null)
+    const supabase = createClient()
 
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) continue
 
-      const body = new FormData()
-      body.append('file', file)
-
       try {
-        const res = await fetch(`/api/leads/${leadId}/snagging-upload`, { method: 'POST', body })
-        const data = await res.json()
-        if (res.ok) {
-          setPhotos(prev => [...prev, data.url])
-        } else {
-          setUploadError(data.error ?? `Upload failed (${res.status})`)
-        }
+        // 1. Get a signed upload URL (small request — no file through Vercel)
+        const urlRes = await fetch(`/api/leads/${leadId}/snagging-upload?filename=${encodeURIComponent(file.name)}`)
+        const urlData = await urlRes.json()
+        if (!urlRes.ok) { setUploadError(urlData.error ?? 'Failed to get upload URL'); continue }
+
+        // 2. Upload directly to Supabase — bypasses Vercel's 4.5 MB limit entirely
+        const { error: uploadErr } = await supabase.storage
+          .from('snagging-media')
+          .uploadToSignedUrl(urlData.path, urlData.token, file, { contentType: file.type })
+        if (uploadErr) { setUploadError(uploadErr.message); continue }
+
+        // 3. Record the activity (tiny JSON, no file)
+        const actRes = await fetch(`/api/leads/${leadId}/snagging-upload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: urlData.publicUrl }),
+        })
+        const actData = await actRes.json()
+        if (!actRes.ok) { setUploadError(actData.error ?? 'Failed to record upload'); continue }
+
+        setPhotos(prev => [...prev, urlData.publicUrl])
       } catch (err) {
         setUploadError(err instanceof Error ? err.message : 'Upload failed')
       }
