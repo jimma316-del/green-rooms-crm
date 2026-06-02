@@ -159,7 +159,7 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos, task }:
         <p className="text-sm text-gray-500 mb-6">{name} has been archived.</p>
         <button
           onClick={() => router.push('/jobs')}
-          className="px-6 py-2.5 bg-[#1a4731] text-white rounded-lg text-sm font-semibold"
+          className="px-6 py-2.5 bg-[var(--brand-header)] text-white rounded-lg text-sm font-semibold"
         >
           Back to Jobs
         </button>
@@ -172,7 +172,7 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos, task }:
       {lightboxUrl && <Lightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
 
       <div className="min-h-screen bg-gray-50">
-        <header className="bg-[#1a4731] text-white px-4 py-3 flex items-center gap-3">
+        <header className="bg-[var(--brand-header)] text-white px-4 py-3 flex items-center gap-3">
           <button onClick={() => router.back()} className="p-1 hover:opacity-70">
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -213,7 +213,7 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos, task }:
                     rows={4}
                     autoFocus
                     placeholder="Describe the snagging items…"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-400 resize-none"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600/30 focus:border-green-600 resize-none"
                   />
                   <div className="flex gap-2">
                     <button
@@ -340,7 +340,7 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos, task }:
             <button
               type="submit"
               disabled={!confirmed || loading || uploading}
-              className="w-full py-3 bg-[#1a4731] text-white rounded-xl text-sm font-semibold disabled:opacity-40 transition-opacity"
+              className="w-full py-3 bg-[var(--brand-header)] text-white rounded-xl text-sm font-semibold disabled:opacity-40 transition-opacity"
             >
               {loading ? 'Saving…' : 'Confirm Snagging Complete'}
             </button>

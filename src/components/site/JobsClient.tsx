@@ -292,7 +292,7 @@ function SnaggingCard({ job }: { job: SnaggingJob }) {
         <div className="shrink-0 flex flex-col gap-2 items-end">
           <Link
             href={`/jobs/${job.id}/snagging`}
-            className="flex items-center gap-1.5 bg-gray-100 text-gray-700 text-xs font-medium px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+            className="flex items-center gap-1.5 bg-orange-50 text-orange-600 text-xs font-medium px-3 py-2 rounded-lg hover:bg-orange-100 transition-colors"
           >
             <Wrench className="w-4 h-4" /> Snagging Details
           </Link>

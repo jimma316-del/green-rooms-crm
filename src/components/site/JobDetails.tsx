@@ -159,7 +159,7 @@ export function JobDetails({ leadId, name, address, canUpload, jobFiles: initial
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#1a4731] text-white px-4 py-3 flex items-center gap-3">
+      <header className="bg-[var(--brand-header)] text-white px-4 py-3 flex items-center gap-3">
         <button onClick={() => router.back()} className="p-1 hover:opacity-70">
           <ArrowLeft className="w-5 h-5" />
         </button>

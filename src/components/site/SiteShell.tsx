@@ -22,7 +22,7 @@ export function SiteShell({ children, userName }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#1a4731] text-white px-4 py-3 flex items-center justify-between">
+      <header className="bg-[var(--brand-header)] text-white px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Image src="/logo.png" alt="The Green Rooms" width={24} height={24} className="rounded" />
           <span className="font-semibold text-sm">The Green Rooms</span>

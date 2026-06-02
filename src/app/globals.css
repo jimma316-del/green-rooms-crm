@@ -50,6 +50,7 @@
 
 :root {
   /* Green Rooms brand theme */
+  --brand-header: #1a4731;
   --background: oklch(0.965 0.018 150);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
