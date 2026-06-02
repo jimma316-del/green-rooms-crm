@@ -234,7 +234,7 @@ function JobCard({ job }: { job: Job }) {
           ) : (
             <Link
               href={`/jobs/${job.id}/sign-off`}
-              className="flex items-center gap-1.5 bg-orange-500 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors"
+              className="flex items-center gap-1.5 bg-green-600 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-green-700 transition-colors"
             >
               <ClipboardCheck className="w-4 h-4" /> Sign off
             </Link>
