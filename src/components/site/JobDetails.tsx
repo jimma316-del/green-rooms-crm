@@ -2,12 +2,24 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload, FileText, Trash2, Loader2, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Upload, FileText, Trash2, Loader2, ExternalLink, Save } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
 type FileEntry = { url: string; name: string; uploaded_at: string }
 type Category = 'job_spec' | 'cut_list' | 'elevation'
+
+type DeliveryKey = 'doors_windows' | 'champion' | 'sips' | 'cladding' | 'rubber_roof' | 'plasterboard'
+type DeliveryInfo = Partial<Record<DeliveryKey, string | null>> & { notes?: string }
+
+const DELIVERY_ITEMS: { key: DeliveryKey; label: string }[] = [
+  { key: 'doors_windows', label: 'Doors & Windows' },
+  { key: 'champion',      label: 'Champion' },
+  { key: 'sips',          label: 'SIPs' },
+  { key: 'cladding',      label: 'Cladding' },
+  { key: 'rubber_roof',   label: 'Rubber Roof' },
+  { key: 'plasterboard',  label: 'Plasterboard' },
+]
 
 interface Props {
   leadId: string
@@ -15,6 +27,7 @@ interface Props {
   address: string
   canUpload: boolean
   jobFiles: Partial<Record<Category, FileEntry[]>>
+  deliveryInfo: DeliveryInfo
 }
 
 const SECTIONS: { key: Category; label: string; description: string }[] = [
@@ -149,7 +162,101 @@ function FileSection({
   )
 }
 
-export function JobDetails({ leadId, name, address, canUpload, jobFiles: initialJobFiles }: Props) {
+function DeliverySection({
+  leadId,
+  canUpload,
+  initialInfo,
+}: {
+  leadId: string
+  canUpload: boolean
+  initialInfo: DeliveryInfo
+}) {
+  const [info, setInfo] = useState<DeliveryInfo>(initialInfo)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  async function save(updated: DeliveryInfo) {
+    setSaving(true)
+    await fetch(`/api/leads/${leadId}/delivery-info`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated),
+    })
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  function setDate(key: DeliveryKey, val: string) {
+    const updated = { ...info, [key]: val || null }
+    setInfo(updated)
+  }
+
+  function setNotes(val: string) {
+    setInfo(prev => ({ ...prev, notes: val }))
+  }
+
+  function formatDisplay(iso: string) {
+    const [y, m, d] = iso.split('-')
+    return `${d}/${m}/${y}`
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <p className="text-sm font-semibold text-gray-900 mb-4">Delivery Dates</p>
+
+      <div className="space-y-3">
+        {DELIVERY_ITEMS.map(item => (
+          <div key={item.key} className="flex items-center justify-between gap-3">
+            <span className="text-sm text-gray-700 min-w-0 flex-1">{item.label}</span>
+            {canUpload ? (
+              <input
+                type="date"
+                value={info[item.key] ?? ''}
+                onChange={e => setDate(item.key, e.target.value)}
+                className="text-sm border border-gray-200 rounded-lg px-2 py-1 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-600/30 focus:border-green-600 shrink-0"
+              />
+            ) : (
+              <span className="text-sm text-gray-500 shrink-0">
+                {info[item.key] ? formatDisplay(info[item.key]!) : <span className="text-gray-300">Not set</span>}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 pt-4 border-t border-gray-100">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+        {canUpload ? (
+          <textarea
+            value={info.notes ?? ''}
+            onChange={e => setNotes(e.target.value)}
+            rows={3}
+            placeholder="Any other delivery notes…"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600/30 focus:border-green-600 resize-none"
+          />
+        ) : (
+          <p className="text-sm text-gray-500 whitespace-pre-wrap">
+            {info.notes || <span className="text-gray-300">No notes</span>}
+          </p>
+        )}
+      </div>
+
+      {canUpload && (
+        <button
+          onClick={() => save(info)}
+          disabled={saving}
+          className="mt-3 flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[var(--brand-header)] text-white rounded-lg hover:opacity-90 disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+          {saved ? 'Saved!' : saving ? 'Saving…' : 'Save'}
+        </button>
+      )}
+    </div>
+  )
+}
+
+export function JobDetails({ leadId, name, address, canUpload, jobFiles: initialJobFiles, deliveryInfo }: Props) {
   const router = useRouter()
   const [jobFiles, setJobFiles] = useState(initialJobFiles)
 
@@ -172,10 +279,12 @@ export function JobDetails({ leadId, name, address, canUpload, jobFiles: initial
           {address && <p className="text-sm text-gray-500 mt-0.5">{address}</p>}
           {!canUpload && (
             <p className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg mt-3">
-              View only — contact admin or sales to upload files
+              View only — contact admin or sales to edit
             </p>
           )}
         </div>
+
+        <DeliverySection leadId={leadId} canUpload={canUpload} initialInfo={deliveryInfo} />
 
         {SECTIONS.map(section => (
           <FileSection

@@ -28,6 +28,7 @@ type LeadsRow = {
   signed_off_at: string | null
   snagging_signed_off_at: string | null
   job_files: Json
+  delivery_info: Json
 }
 type LeadsInsert = {
   id?: string; created_at?: string; updated_at?: string; name: string; mobile?: string | null; email?: string | null
@@ -44,6 +45,7 @@ type LeadsInsert = {
   signed_off_at?: string | null
   snagging_signed_off_at?: string | null
   job_files?: Json
+  delivery_info?: Json
 }
 type LeadsUpdate = Partial<LeadsInsert>
 
