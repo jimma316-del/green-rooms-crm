@@ -33,7 +33,15 @@ interface Lead {
   distance_miles: number | null
   sms_sent_at: string | null
   brochures_sent: boolean
+  approx_size_sqm: number | null
+  tags: string[]
   tasks: Array<{ id: string; title: string; due_date: string | null; completed_at: string | null }> | null
+}
+
+function brochureType(tags: string[], sqm: number | null): 'R' | 'P' {
+  if (tags.includes('canopy') || tags.includes('hidden_storage')) return 'R'
+  if (sqm !== null && sqm > 15) return 'R'
+  return 'P'
 }
 
 interface Props {
@@ -125,6 +133,7 @@ function StageCell({ lead }: { lead: Lead }) {
 function BrochuresCell({ lead }: { lead: Lead }) {
   const supabase = createClient()
   const [sent, setSent] = useState(lead.brochures_sent)
+  const type = brochureType(lead.tags ?? [], lead.approx_size_sqm)
 
   async function toggle(e: MouseEvent) {
     e.preventDefault()
@@ -139,9 +148,13 @@ function BrochuresCell({ lead }: { lead: Lead }) {
     <button
       onClick={toggle}
       title={sent ? 'Brochures sent — click to unmark' : 'Mark brochures as sent'}
-      className="flex items-center justify-center w-full"
+      className="flex flex-col items-center gap-0.5"
     >
       <BookOpen className={cn('w-3.5 h-3.5', sent ? 'text-purple-500' : 'text-gray-200 hover:text-gray-400')} />
+      <span className={cn(
+        'text-[9px] font-bold leading-none',
+        type === 'R' ? 'text-green-600' : 'text-blue-500'
+      )}>{type}</span>
     </button>
   )
 }
