@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ClipboardCheck, MapPin, List, CalendarDays, ChevronLeft, ChevronRight, CheckCircle2, Archive, Wrench, FileText } from 'lucide-react'
 
@@ -401,7 +402,10 @@ function SnaggingView({ snagging, archive }: { snagging: SnaggingJob[]; archive:
 // ── Main export ──────────────────────────────────────────────────
 
 export function JobsClient({ jobs, snagging, archive }: Props) {
-  const [tab, setTab] = useState<'jobs' | 'snagging'>('jobs')
+  const searchParams = useSearchParams()
+  const [tab, setTab] = useState<'jobs' | 'snagging'>(
+    searchParams.get('tab') === 'snagging' ? 'snagging' : 'jobs'
+  )
   const [view, setView] = useState<'list' | 'calendar'>('list')
 
   return (

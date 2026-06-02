@@ -116,7 +116,7 @@ export function SnaggingDetails({ leadId, name, address, existingPhotos, task }:
 
       <div className="min-h-screen bg-gray-50">
         <header className="bg-[var(--brand-header)] text-white px-4 py-3 flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-1 hover:opacity-70">
+          <button onClick={() => router.push('/jobs?tab=snagging')} className="p-1 hover:opacity-70">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <span className="font-semibold text-sm">Snagging Details</span>
