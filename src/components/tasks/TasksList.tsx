@@ -240,7 +240,24 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
                         <SelectItem value="snagging">Snagging</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Input type="date" value={editForm.due_date} onChange={e => setEditForm(f => ({ ...f, due_date: e.target.value }))} className="flex-1 text-xs" />
+                    <div className="flex-1 flex flex-col gap-1">
+                      <Input
+                        type="date"
+                        value={editForm.due_date}
+                        onChange={e => setEditForm(f => ({ ...f, due_date: e.target.value }))}
+                        disabled={editForm.due_date === ''}
+                        className="text-xs disabled:opacity-40"
+                      />
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editForm.due_date === ''}
+                          onChange={e => setEditForm(f => ({ ...f, due_date: e.target.checked ? '' : new Date().toISOString().slice(0, 10) }))}
+                          className="w-3.5 h-3.5 rounded accent-[var(--primary)]"
+                        />
+                        <span className="text-[11px] text-gray-500">Date TBC</span>
+                      </label>
+                    </div>
                   </div>
                   <Textarea placeholder="Notes (optional)" value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="text-xs" />
                   <div className="flex gap-2">
