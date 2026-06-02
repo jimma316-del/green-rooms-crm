@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, MapPin, ArrowLeft, Camera, X, Loader2 } from 'lucide-react'
+import { CheckCircle2, MapPin, ArrowLeft, Camera, ImagePlus, X, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface Props {
@@ -20,6 +20,7 @@ export function SnaggingSignOff({ leadId, name, address }: Props) {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   async function handleFile(file: File) {
@@ -114,24 +115,42 @@ export function SnaggingSignOff({ leadId, name, address }: Props) {
               </div>
             )}
             <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
+            />
+            <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
               className="hidden"
               onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
             />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="flex items-center gap-2 w-full justify-center py-2.5 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 transition-colors disabled:opacity-50"
-            >
-              {uploading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</>
-              ) : (
-                <><Camera className="w-4 h-4" /> {photo ? 'Retake photo' : 'Take a completion photo'}</>
-              )}
-            </button>
+            {uploading ? (
+              <div className="flex items-center justify-center gap-2 py-2.5 text-sm text-gray-400">
+                <Loader2 className="w-4 h-4 animate-spin" /> Uploading…
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 transition-colors"
+                >
+                  <Camera className="w-4 h-4" /> Camera
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 transition-colors"
+                >
+                  <ImagePlus className="w-4 h-4" /> Gallery
+                </button>
+              </div>
+            )}
             {uploadError && (
               <p className="mt-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{uploadError}</p>
             )}
