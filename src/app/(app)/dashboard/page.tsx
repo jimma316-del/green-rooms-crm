@@ -56,7 +56,7 @@ export default async function DashboardPage() {
       .eq('is_hot', true)
       .eq('is_newsletter', false)
       .order('updated_at', { ascending: false })
-      .limit(8),
+      .limit(20),
 
     // All open tasks, soonest due first
     supabase.from('tasks')
