@@ -182,10 +182,15 @@ function JobCard({ job }: { job: Job }) {
             {job.name}
           </Link>
           {job.address && (
-            <div className="flex items-center gap-1 mt-0.5">
+            <a
+              href={`https://maps.google.com/?q=${encodeURIComponent(job.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 mt-0.5 group"
+            >
               <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
-              <p className="text-xs text-gray-500 truncate">{job.address}</p>
-            </div>
+              <p className="text-xs text-gray-500 truncate group-hover:text-green-700 group-hover:underline">{job.address}</p>
+            </a>
           )}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${job.stageColor}`}>{job.stageLabel}</span>
@@ -235,10 +240,15 @@ function SnaggingCard({ job }: { job: SnaggingJob }) {
             {job.name}
           </Link>
           {job.address && (
-            <div className="flex items-center gap-1 mt-0.5">
+            <a
+              href={`https://maps.google.com/?q=${encodeURIComponent(job.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 mt-0.5 group"
+            >
               <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
-              <p className="text-xs text-gray-500 truncate">{job.address}</p>
-            </div>
+              <p className="text-xs text-gray-500 truncate group-hover:text-orange-600 group-hover:underline">{job.address}</p>
+            </a>
           )}
           {job.taskDescription && (
             <p className="text-xs text-gray-600 mt-1.5 leading-snug">{job.taskDescription}</p>
