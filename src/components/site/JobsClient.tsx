@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ClipboardCheck, MapPin, List, CalendarDays, ChevronLeft, ChevronRight, CheckCircle2, Archive, Wrench, MessageCircle } from 'lucide-react'
+import { ClipboardCheck, MapPin, List, CalendarDays, ChevronLeft, ChevronRight, CheckCircle2, Archive, Wrench, MessageCircle, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Job {
@@ -178,9 +178,22 @@ function JobCard({ job }: { job: Job }) {
     )}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <Link href={`/leads/${job.id}`} className="font-semibold text-gray-900 hover:text-green-700 transition-colors">
-            {job.name}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href={`/leads/${job.id}`} className="font-semibold text-gray-900 hover:text-green-700 transition-colors">
+              {job.name}
+            </Link>
+            {waFormatted && (
+              <a
+                href={`https://wa.me/${waFormatted}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-500 hover:text-green-600 shrink-0"
+                title="WhatsApp"
+              >
+                <MessageCircle className="w-4 h-4" />
+              </a>
+            )}
+          </div>
           {job.address && (
             <a
               href={`https://maps.google.com/?q=${encodeURIComponent(job.address)}`}
@@ -200,6 +213,12 @@ function JobCard({ job }: { job: Job }) {
           </div>
         </div>
         <div className="shrink-0 flex flex-col gap-2 items-end">
+          <Link
+            href={`/jobs/${job.id}/details`}
+            className="flex items-center gap-1.5 bg-gray-100 text-gray-700 text-xs font-medium px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <FileText className="w-4 h-4" /> Job Details
+          </Link>
           {signedOff ? (
             <div className="flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-medium px-3 py-2 rounded-lg">
               <CheckCircle2 className="w-4 h-4" /> Signed off
@@ -211,16 +230,6 @@ function JobCard({ job }: { job: Job }) {
             >
               <ClipboardCheck className="w-4 h-4" /> Sign off
             </Link>
-          )}
-          {waFormatted && (
-            <a
-              href={`https://wa.me/${waFormatted}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 bg-green-500 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-green-600 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" /> WhatsApp
-            </a>
           )}
         </div>
       </div>
