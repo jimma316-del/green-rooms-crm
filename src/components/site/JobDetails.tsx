@@ -345,11 +345,6 @@ export function JobDetails({ leadId, name, address, canUpload, jobFiles: initial
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <p className="font-bold text-gray-900 text-lg">{name}</p>
           {address && <p className="text-sm text-gray-500 mt-0.5">{address}</p>}
-          {!canUpload && (
-            <p className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg mt-3">
-              View only — contact admin or sales to edit
-            </p>
-          )}
         </div>
 
         <JobSpecSection leadId={leadId} canUpload={canUpload} initialUrl={jobSpecUrl} />

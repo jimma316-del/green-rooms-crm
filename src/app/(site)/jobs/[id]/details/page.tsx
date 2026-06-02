@@ -28,7 +28,7 @@ export default async function JobDetailsPage({ params }: Props) {
   const [{ data: lead }, { data: profile }] = await Promise.all([
     supabase
       .from('leads')
-      .select('id, name, address, postcode, job_files, delivery_info, xero_quote_url')
+      .select('id, name, address, address_line_2, city, postcode, job_files, delivery_info, xero_quote_url')
       .eq('id', id)
       .single(),
     supabase
@@ -40,7 +40,7 @@ export default async function JobDetailsPage({ params }: Props) {
 
   if (!lead) notFound()
 
-  const address = [lead.address, lead.postcode].filter(Boolean).join(', ')
+  const address = [lead.address, lead.address_line_2, lead.city, lead.postcode].filter(Boolean).join(', ')
   const canUpload = profile?.role !== 'site'
 
   return (
