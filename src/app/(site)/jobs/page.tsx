@@ -19,7 +19,7 @@ export default async function JobsPage() {
     // Active snagging (not yet signed off)
     supabase
       .from('leads')
-      .select('id, name, address, postcode, mobile, stage, job_date, job_end_date, snagging_signed_off_at, tasks(title, notes, type, completed_at)')
+      .select('id, name, address, postcode, mobile, stage, job_date, job_end_date, snagging_signed_off_at, tasks(title, notes, type, due_date, completed_at)')
       .eq('stage', 'snagging')
       .is('snagging_signed_off_at', null),
 
@@ -48,7 +48,7 @@ export default async function JobsPage() {
 
   const jobs = (leads ?? []).map(mapJob)
 
-  type SnaggingRow = { id: string; name: string; address: string | null; postcode: string | null; mobile: string | null; job_date: string | null; job_end_date: string | null; tasks: { title: string; notes: string | null; type: string; completed_at: string | null }[] }
+  type SnaggingRow = { id: string; name: string; address: string | null; postcode: string | null; mobile: string | null; job_date: string | null; job_end_date: string | null; tasks: { title: string; notes: string | null; type: string; due_date: string | null; completed_at: string | null }[] }
   const snagging = ((snaggingLeads ?? []) as unknown as SnaggingRow[]).map(l => {
     const snaggingTask = l.tasks?.find(t => t.type === 'snagging' && !t.completed_at)
     return {
@@ -56,8 +56,8 @@ export default async function JobsPage() {
       name: l.name,
       address: [l.address, l.postcode].filter(Boolean).join(', '),
       mobile: l.mobile ?? null,
-      jobDate: l.job_date ?? null,
-      jobEndDate: l.job_end_date ?? null,
+      jobDate: snaggingTask?.due_date ? snaggingTask.due_date.slice(0, 10) : null,
+      jobEndDate: null,
       taskDescription: snaggingTask?.notes || null,
     }
   })
