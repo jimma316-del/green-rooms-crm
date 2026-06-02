@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ClipboardCheck, MapPin, List, CalendarDays, ChevronLeft, ChevronRight, CheckCircle2, Archive, Wrench, FileText } from 'lucide-react'
 
@@ -402,11 +402,17 @@ function SnaggingView({ snagging, archive }: { snagging: SnaggingJob[]; archive:
 // ── Main export ──────────────────────────────────────────────────
 
 export function JobsClient({ jobs, snagging, archive }: Props) {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [tab, setTab] = useState<'jobs' | 'snagging'>(
     searchParams.get('tab') === 'snagging' ? 'snagging' : 'jobs'
   )
   const [view, setView] = useState<'list' | 'calendar'>('list')
+
+  function switchTab(t: 'jobs' | 'snagging') {
+    setTab(t)
+    router.replace(t === 'snagging' ? '/jobs?tab=snagging' : '/jobs', { scroll: false })
+  }
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
@@ -440,7 +446,7 @@ export function JobsClient({ jobs, snagging, archive }: Props) {
       {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-4">
         <button
-          onClick={() => setTab('jobs')}
+          onClick={() => switchTab('jobs')}
           className={cn(
             'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
             tab === 'jobs'
@@ -452,7 +458,7 @@ export function JobsClient({ jobs, snagging, archive }: Props) {
           <span className="ml-1.5 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">{jobs.length}</span>
         </button>
         <button
-          onClick={() => setTab('snagging')}
+          onClick={() => switchTab('snagging')}
           className={cn(
             'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
             tab === 'snagging'
