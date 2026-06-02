@@ -259,7 +259,7 @@ function SnaggingCard({ job }: { job: SnaggingJob }) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-gray-900">{job.name}</span>
+            <Link href={`/leads/${job.id}`} className="font-semibold text-gray-900 hover:text-orange-600 transition-colors">{job.name}</Link>
             {waFormatted && (
               <a
                 href={`https://wa.me/${waFormatted}`}
