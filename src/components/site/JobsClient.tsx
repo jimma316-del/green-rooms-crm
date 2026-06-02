@@ -241,13 +241,28 @@ function JobCard({ job }: { job: Job }) {
 
 function SnaggingCard({ job }: { job: SnaggingJob }) {
   const waNumber = job.mobile?.replace(/\D/g, '')
+  const waFormatted = waNumber
+    ? (waNumber.startsWith('44') ? waNumber : `44${waNumber.replace(/^0/, '')}`)
+    : null
+
   return (
     <div className="bg-white rounded-xl border border-orange-200 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <Link href={`/jobs/${job.id}/snagging`} className="font-semibold text-gray-900 hover:text-orange-600 transition-colors">
-            {job.name}
-          </Link>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-gray-900">{job.name}</span>
+            {waFormatted && (
+              <a
+                href={`https://wa.me/${waFormatted}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-500 hover:text-green-600 shrink-0"
+                title="WhatsApp"
+              >
+                <MessageCircle className="w-4 h-4" />
+              </a>
+            )}
+          </div>
           {job.address && (
             <a
               href={`https://maps.google.com/?q=${encodeURIComponent(job.address)}`}
@@ -269,21 +284,16 @@ function SnaggingCard({ job }: { job: SnaggingJob }) {
         <div className="shrink-0 flex flex-col gap-2 items-end">
           <Link
             href={`/jobs/${job.id}/snagging`}
+            className="flex items-center gap-1.5 bg-gray-100 text-gray-700 text-xs font-medium px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <Wrench className="w-4 h-4" /> Snagging Details
+          </Link>
+          <Link
+            href={`/jobs/${job.id}/snagging`}
             className="flex items-center gap-1.5 bg-orange-500 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors"
           >
-            <Wrench className="w-4 h-4" /> Sign off
+            <ClipboardCheck className="w-4 h-4" /> Sign off
           </Link>
-          {waNumber && (
-            <a
-              href={`https://wa.me/${waNumber.startsWith('44') ? waNumber : `44${waNumber.replace(/^0/, '')}`}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="flex items-center gap-1.5 bg-green-500 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-green-600 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" /> WhatsApp
-            </a>
-          )}
         </div>
       </div>
     </div>
