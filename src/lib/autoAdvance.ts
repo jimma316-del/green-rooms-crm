@@ -105,6 +105,9 @@ export async function autoAdvanceOnJobDates(supabase: Client) {
         toStage = 'job_booked'
       }
 
+      // Nothing to do if the lead is already at the correct stage
+      if (toStage === fromStage && lead.pipeline === 'project') continue
+
       const { error } = await supabase
         .from('leads')
         .update({ stage: toStage, pipeline: 'project' })
