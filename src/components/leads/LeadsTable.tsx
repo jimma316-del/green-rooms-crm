@@ -38,7 +38,9 @@ interface Lead {
   tasks: Array<{ id: string; title: string; due_date: string | null; completed_at: string | null }> | null
 }
 
-function brochureType(tags: string[], sqm: number | null): 'R' | 'P' {
+function brochureType(tags: string[], sqm: number | null, distance: number | null, pipeline: string): 'R' | 'P' | null {
+  // Only show for leads within SMS range (≤20 miles) and not lost — same criteria as automated SMS
+  if (pipeline === 'lost' || distance === null || distance > 20) return null
   if (tags.includes('canopy') || tags.includes('hidden_storage')) return 'R'
   if (sqm !== null && sqm > 15) return 'R'
   return 'P'
@@ -133,7 +135,7 @@ function StageCell({ lead }: { lead: Lead }) {
 function BrochuresCell({ lead }: { lead: Lead }) {
   const supabase = createClient()
   const [sent, setSent] = useState(lead.brochures_sent)
-  const type = brochureType(lead.tags ?? [], lead.approx_size_sqm)
+  const type = brochureType(lead.tags ?? [], lead.approx_size_sqm, lead.distance_miles, lead.pipeline)
 
   async function toggle(e: MouseEvent) {
     e.preventDefault()
@@ -142,6 +144,10 @@ function BrochuresCell({ lead }: { lead: Lead }) {
     setSent(next)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase.from('leads') as any).update({ brochures_sent: next }).eq('id', lead.id)
+  }
+
+  if (!type) {
+    return <span className="text-gray-200">—</span>
   }
 
   return (
