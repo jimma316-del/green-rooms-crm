@@ -277,7 +277,6 @@ export function SnaggingSignOff({ leadId, name, address, existingPhotos, task }:
                 type="file"
                 accept="image/*,video/*"
                 multiple
-                capture="environment"
                 className="hidden"
                 onChange={e => handleFiles(e.target.files)}
               />
