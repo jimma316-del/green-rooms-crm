@@ -243,9 +243,9 @@ function SnaggingCard({ job }: { job: SnaggingJob }) {
           {job.taskDescription && (
             <p className="text-xs text-gray-600 mt-1.5 leading-snug">{job.taskDescription}</p>
           )}
-          {job.jobDate && (
-            <p className="text-xs text-gray-500 mt-1">{formatDateRange(job.jobDate, job.jobEndDate)}</p>
-          )}
+          <p className="text-xs text-gray-500 mt-1">
+            {job.jobDate ? formatDateRange(job.jobDate, job.jobEndDate) : <span className="text-gray-300">Date TBC</span>}
+          </p>
         </div>
         <div className="shrink-0 flex flex-col gap-2 items-end">
           <Link
