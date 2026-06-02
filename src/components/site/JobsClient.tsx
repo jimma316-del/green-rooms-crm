@@ -297,7 +297,7 @@ function SnaggingCard({ job }: { job: SnaggingJob }) {
             <Wrench className="w-4 h-4" /> Snagging Details
           </Link>
           <Link
-            href={`/jobs/${job.id}/snagging`}
+            href={`/jobs/${job.id}/snagging-sign-off`}
             className="flex items-center gap-1.5 bg-orange-500 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors"
           >
             <ClipboardCheck className="w-4 h-4" /> Sign off

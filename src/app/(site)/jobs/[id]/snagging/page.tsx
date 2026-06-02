@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { SnaggingSignOff } from '@/components/site/SnaggingSignOff'
+import { SnaggingDetails } from '@/components/site/SnaggingDetails'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -47,7 +47,7 @@ export default async function SnaggingPage({ params }: Props) {
     null
 
   return (
-    <SnaggingSignOff
+    <SnaggingDetails
       leadId={id}
       name={lead.name}
       address={[lead.address, lead.postcode].filter(Boolean).join(', ')}
