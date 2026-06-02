@@ -13,22 +13,10 @@ interface Lead {
   address: string | null
   postcode: string | null
   notes: string | null
-  calculator_data: Record<string, unknown> | null
   xero_quote_url: string | null
   xero_invoice_url: string | null
 }
 
-function extractCalcFields(data: Record<string, unknown>): Record<string, string> {
-  // Try to pull the actual form fields from the Webflow payload structure
-  const fields = (data?.payload as Record<string, unknown>)?.data ?? data
-  const result: Record<string, string> = {}
-  for (const [k, v] of Object.entries(fields as Record<string, unknown>)) {
-    if (v !== null && v !== undefined && typeof v !== 'object') {
-      result[k] = String(v)
-    }
-  }
-  return result
-}
 
 export function LeadProject({ lead }: { lead: Lead }) {
   const router = useRouter()
@@ -73,8 +61,7 @@ export function LeadProject({ lead }: { lead: Lead }) {
     setEditing(false)
   }
 
-  const calcFields = lead.calculator_data ? extractCalcFields(lead.calculator_data) : null
-  const hasData = lead.address || lead.postcode || lead.notes || lead.calculator_data || lead.xero_quote_url || lead.xero_invoice_url
+  const hasData = lead.address || lead.postcode || lead.notes || lead.xero_quote_url || lead.xero_invoice_url
 
   if (editing) {
     return (
@@ -175,7 +162,7 @@ export function LeadProject({ lead }: { lead: Lead }) {
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" /> Xero Quote
+                  <ExternalLink className="w-3.5 h-3.5" /> Job Spec
                 </a>
               )}
               {lead.xero_invoice_url && (
@@ -189,23 +176,6 @@ export function LeadProject({ lead }: { lead: Lead }) {
                 </a>
               )}
             </div>
-          )}
-
-          {calcFields && Object.keys(calcFields).length > 0 && (
-            <details className="mt-2 pt-2 border-t border-gray-50 group">
-              <summary className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide cursor-pointer select-none list-none flex items-center gap-1">
-                <span className="transition-transform group-open:rotate-90">▶</span>
-                Calculator Submission
-              </summary>
-              <div className="space-y-1 mt-2">
-                {Object.entries(calcFields).map(([k, v]) => (
-                  <div key={k} className="flex justify-between text-xs">
-                    <span className="text-gray-500 capitalize">{k.replace(/_/g, ' ')}</span>
-                    <span className="text-gray-700 font-medium text-right ml-4">{v}</span>
-                  </div>
-                ))}
-              </div>
-            </details>
           )}
         </div>
       )}

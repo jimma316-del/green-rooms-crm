@@ -28,7 +28,7 @@ export default async function JobDetailsPage({ params }: Props) {
   const [{ data: lead }, { data: profile }] = await Promise.all([
     supabase
       .from('leads')
-      .select('id, name, address, postcode, job_files, delivery_info')
+      .select('id, name, address, postcode, job_files, delivery_info, xero_quote_url')
       .eq('id', id)
       .single(),
     supabase
@@ -51,6 +51,7 @@ export default async function JobDetailsPage({ params }: Props) {
       canUpload={canUpload}
       jobFiles={(lead.job_files ?? {}) as Partial<Record<Category, FileEntry[]>>}
       deliveryInfo={(lead.delivery_info ?? {}) as DeliveryInfo}
+      jobSpecUrl={lead.xero_quote_url ?? null}
     />
   )
 }

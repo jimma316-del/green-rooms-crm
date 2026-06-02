@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
 type FileEntry = { url: string; name: string; uploaded_at: string }
-type Category = 'job_spec' | 'cut_list' | 'elevation'
+type Category = 'cut_list' | 'elevation'
 
 type DeliveryKey = 'doors_windows' | 'champion' | 'sips' | 'cladding' | 'rubber_roof' | 'plasterboard'
 type DeliveryInfo = Partial<Record<DeliveryKey, string | null>> & { notes?: string }
@@ -28,10 +28,10 @@ interface Props {
   canUpload: boolean
   jobFiles: Partial<Record<Category, FileEntry[]>>
   deliveryInfo: DeliveryInfo
+  jobSpecUrl: string | null
 }
 
 const SECTIONS: { key: Category; label: string; description: string }[] = [
-  { key: 'job_spec',  label: 'Job Spec',           description: 'Full project specification document' },
   { key: 'cut_list',  label: 'Cut List',            description: 'Timber and materials cut list' },
   { key: 'elevation', label: 'Elevation Drawings',  description: 'Site elevation and layout drawings' },
 ]
@@ -162,6 +162,74 @@ function FileSection({
   )
 }
 
+function JobSpecSection({
+  leadId,
+  canUpload,
+  initialUrl,
+}: {
+  leadId: string
+  canUpload: boolean
+  initialUrl: string | null
+}) {
+  const [url, setUrl] = useState(initialUrl ?? '')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  async function save() {
+    setSaving(true)
+    await fetch(`/api/leads/${leadId}/xero-link`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url.trim() || null }),
+    })
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <p className="text-sm font-semibold text-gray-900">Job Spec</p>
+          <p className="text-xs text-gray-400 mt-0.5">Xero link for the project specification</p>
+        </div>
+      </div>
+
+      {canUpload ? (
+        <div className="space-y-2">
+          <input
+            type="url"
+            value={url}
+            onChange={e => setUrl(e.target.value)}
+            placeholder="https://go.xero.com/..."
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600/30 focus:border-green-600"
+          />
+          <button
+            onClick={save}
+            disabled={saving}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[var(--brand-header)] text-white rounded-lg hover:opacity-90 disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            {saved ? 'Saved!' : saving ? 'Saving…' : 'Save link'}
+          </button>
+        </div>
+      ) : url ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
+        >
+          <ExternalLink className="w-4 h-4 shrink-0" /> Open Job Spec
+        </a>
+      ) : (
+        <p className="text-xs text-gray-400">No link added yet</p>
+      )}
+    </div>
+  )
+}
+
 function DeliverySection({
   leadId,
   canUpload,
@@ -256,7 +324,7 @@ function DeliverySection({
   )
 }
 
-export function JobDetails({ leadId, name, address, canUpload, jobFiles: initialJobFiles, deliveryInfo }: Props) {
+export function JobDetails({ leadId, name, address, canUpload, jobFiles: initialJobFiles, deliveryInfo, jobSpecUrl }: Props) {
   const router = useRouter()
   const [jobFiles, setJobFiles] = useState(initialJobFiles)
 
@@ -283,6 +351,8 @@ export function JobDetails({ leadId, name, address, canUpload, jobFiles: initial
             </p>
           )}
         </div>
+
+        <JobSpecSection leadId={leadId} canUpload={canUpload} initialUrl={jobSpecUrl} />
 
         <DeliverySection leadId={leadId} canUpload={canUpload} initialInfo={deliveryInfo} />
 
