@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // API routes site team are allowed to call
-const SITE_ALLOWED_API = /^\/api\/leads\/[^/]+\/(sign-off|snagging-sign-off|snagging-upload|snagging-task)$/
+const SITE_ALLOWED_API = /^\/api\/leads\/[^/]+\/(sign-off|snagging-sign-off|snagging-upload|snagging-task|build-approval)$|^\/api\/stock(\/.*)?$/
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -34,7 +34,7 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = path.startsWith('/login')
   const isAuthFlowRoute = path.startsWith('/auth/')   // /auth/callback, /auth/set-password
   const isApiRoute = path.startsWith('/api')
-  const isSiteRoute = path.startsWith('/jobs')
+  const isSiteRoute = path.startsWith('/jobs') || path.startsWith('/stock')
 
   if (!user && !isAuthRoute && !isAuthFlowRoute && !isApiRoute) {
     const url = request.nextUrl.clone()
