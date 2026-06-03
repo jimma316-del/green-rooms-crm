@@ -11,17 +11,17 @@ export default async function StockPage() {
     admin.from('stock_notes').select('notes').eq('id', 1).single(),
   ])
 
-  if (itemsError) {
-    console.error('[StockPage] stock_items error:', itemsError)
-    throw new Error(`Failed to load stock items: ${itemsError.message}`)
-  }
-
   return (
     <div className="px-4 md:px-6 py-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Stock</h1>
         <p className="text-sm text-gray-500 mt-0.5">Track what needs reordering</p>
       </div>
+      {itemsError && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-mono">
+          Error: {itemsError.message} (code: {itemsError.code})
+        </div>
+      )}
       <StockClient
         initialItems={items ?? []}
         initialNotes={notesRow?.notes ?? ''}
