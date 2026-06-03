@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload, FileText, Trash2, Loader2, ExternalLink, Save, Check } from 'lucide-react'
+import { ArrowLeft, Upload, FileText, Trash2, Loader2, ExternalLink, Save } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
@@ -10,8 +10,7 @@ type FileEntry = { url: string; name: string; uploaded_at: string }
 type Category = 'cut_list' | 'elevation'
 
 type DeliveryKey = 'doors_windows' | 'champion' | 'sips' | 'cladding' | 'rubber_roof' | 'plasterboard'
-type BuildApproval = { initials: string; signed_at: string } | null
-type DeliveryInfo = Partial<Record<DeliveryKey, string | null>> & { notes?: string; build_approval?: BuildApproval }
+type DeliveryInfo = Partial<Record<DeliveryKey, string | null>> & { notes?: string }
 
 const DELIVERY_ITEMS: { key: DeliveryKey; label: string }[] = [
   { key: 'doors_windows', label: 'Doors & Windows' },
@@ -30,7 +29,6 @@ interface Props {
   jobFiles: Partial<Record<Category, FileEntry[]>>
   deliveryInfo: DeliveryInfo
   jobSpecUrl: string | null
-  buildApproval: BuildApproval
 }
 
 const SECTIONS: { key: Category; label: string; description: string }[] = [
@@ -160,77 +158,6 @@ function FileSection({
           ))}
         </div>
       )}
-    </div>
-  )
-}
-
-function BuildApprovalSection({
-  leadId,
-  initial,
-}: {
-  leadId: string
-  initial: BuildApproval
-}) {
-  const [approval, setApproval] = useState<BuildApproval>(initial)
-  const [initials, setInitials] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function confirm() {
-    if (!initials.trim()) return
-    setSaving(true)
-    setError(null)
-    const res = await fetch(`/api/leads/${leadId}/build-approval`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initials: initials.trim() }),
-    })
-    const data = await res.json()
-    if (!res.ok) { setError(data.error ?? 'Failed to save'); setSaving(false); return }
-    setApproval(data.build_approval)
-    setSaving(false)
-  }
-
-  if (approval) {
-    return (
-      <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
-        <div className="w-7 h-7 bg-green-600 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-          <Check className="w-4 h-4 text-white" />
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-green-900">Build location &amp; screw height approved by customer</p>
-          <p className="text-xs text-green-700 mt-0.5">
-            Signed: <span className="font-bold">{approval.initials}</span> &nbsp;·&nbsp;{' '}
-            {new Date(approval.signed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}{' '}
-            {new Date(approval.signed_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-      <p className="text-sm font-semibold text-amber-900 mb-3">Build location &amp; screw height approved by customer</p>
-      <div className="flex items-center gap-2">
-        <input
-          type="text"
-          value={initials}
-          onChange={e => setInitials(e.target.value.slice(0, 4).toUpperCase())}
-          placeholder="Initials"
-          maxLength={4}
-          className="w-20 text-sm border border-amber-300 rounded-lg px-2 py-2 text-center uppercase font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-500 bg-white placeholder:font-normal placeholder:text-gray-400"
-        />
-        <button
-          onClick={confirm}
-          disabled={saving || !initials.trim()}
-          className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
-        >
-          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-          Confirm
-        </button>
-      </div>
-      {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
     </div>
   )
 }
@@ -397,7 +324,7 @@ function DeliverySection({
   )
 }
 
-export function JobDetails({ leadId, name, address, canUpload, jobFiles: initialJobFiles, deliveryInfo, jobSpecUrl, buildApproval }: Props) {
+export function JobDetails({ leadId, name, address, canUpload, jobFiles: initialJobFiles, deliveryInfo, jobSpecUrl }: Props) {
   const router = useRouter()
   const [jobFiles, setJobFiles] = useState(initialJobFiles)
 
@@ -419,8 +346,6 @@ export function JobDetails({ leadId, name, address, canUpload, jobFiles: initial
           <p className="font-bold text-gray-900 text-lg">{name}</p>
           {address && <p className="text-sm text-gray-500 mt-0.5">{address}</p>}
         </div>
-
-        <BuildApprovalSection leadId={leadId} initial={buildApproval} />
 
         <JobSpecSection leadId={leadId} canUpload={canUpload} initialUrl={jobSpecUrl} />
 

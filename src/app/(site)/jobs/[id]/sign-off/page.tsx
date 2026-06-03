@@ -12,13 +12,15 @@ export default async function SiteSignOffPage({ params }: Props) {
 
   const { data: lead } = await supabase
     .from('leads')
-    .select('id, name, address, postcode, email')
+    .select('id, name, address, postcode, email, delivery_info')
     .eq('id', id)
     .single()
 
   if (!lead) notFound()
 
   const address = [lead.address, lead.postcode].filter(Boolean).join('\n')
+  const deliveryInfo = (lead.delivery_info ?? {}) as Record<string, unknown>
+  const buildApproval = (deliveryInfo.build_approval ?? null) as { initials: string; signed_at: string } | null
 
   return (
     <SignOffForm
@@ -27,6 +29,7 @@ export default async function SiteSignOffPage({ params }: Props) {
       address={address}
       customerEmail={lead.email ?? null}
       backHref="/jobs"
+      buildApproval={buildApproval}
     />
   )
 }

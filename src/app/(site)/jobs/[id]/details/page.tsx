@@ -4,7 +4,6 @@ import { JobDetails } from '@/components/site/JobDetails'
 
 type Category = 'job_spec' | 'cut_list' | 'elevation'
 type FileEntry = { url: string; name: string; uploaded_at: string }
-type BuildApproval = { initials: string; signed_at: string } | null
 type DeliveryInfo = {
   doors_windows?: string | null
   champion?: string | null
@@ -13,7 +12,6 @@ type DeliveryInfo = {
   rubber_roof?: string | null
   plasterboard?: string | null
   notes?: string
-  build_approval?: BuildApproval
 }
 
 interface Props {
@@ -44,8 +42,6 @@ export default async function JobDetailsPage({ params }: Props) {
 
   const address = [lead.address, lead.address_line_2, lead.city, lead.postcode].filter(Boolean).join(', ')
   const canUpload = profile?.role !== 'site'
-  const deliveryInfo = (lead.delivery_info ?? {}) as DeliveryInfo
-  const buildApproval = deliveryInfo.build_approval ?? null
 
   return (
     <JobDetails
@@ -54,9 +50,8 @@ export default async function JobDetailsPage({ params }: Props) {
       address={address}
       canUpload={canUpload}
       jobFiles={(lead.job_files ?? {}) as Partial<Record<Category, FileEntry[]>>}
-      deliveryInfo={deliveryInfo}
+      deliveryInfo={(lead.delivery_info ?? {}) as DeliveryInfo}
       jobSpecUrl={lead.xero_quote_url ?? null}
-      buildApproval={buildApproval}
     />
   )
 }
