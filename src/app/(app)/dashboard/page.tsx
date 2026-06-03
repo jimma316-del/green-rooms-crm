@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { autoAdvanceSiteVisits } from '@/lib/autoAdvance'
 import { DashboardKPIs } from '@/components/dashboard/DashboardKPIs'
 import { HotLeadsPanel } from '@/components/dashboard/HotLeadsPanel'
@@ -58,8 +59,8 @@ export default async function DashboardPage() {
       .order('updated_at', { ascending: false })
       .limit(20),
 
-    // All open tasks, soonest due first
-    supabase.from('tasks')
+    // All open tasks, soonest due first — use admin client to bypass RLS
+    createAdminClient().from('tasks')
       .select('id, title, due_date, type, priority, lead_id, leads(name)')
       .is('completed_at', null)
       .order('due_date', { ascending: true, nullsFirst: false })

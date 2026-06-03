@@ -36,14 +36,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         .maybeSingle()
 
       if (!existing) {
-        await admin.from('tasks').insert({
+        const { error: taskErr } = await admin.from('tasks').insert({
           title,
           type: 'stock',
           priority: 'high',
-          lead_id: null,
+          lead_id: null as unknown as string,
           created_by: user.id,
           assigned_to: user.id,
         })
+        if (taskErr) console.error('[Stock] task insert error:', taskErr)
       }
     }
   }
