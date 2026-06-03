@@ -81,7 +81,7 @@ export default async function DashboardPage() {
 
     // Inbound SMS replies (last 30 days)
     createAdminClient().from('activities')
-      .select('id, body, created_at, lead_id, leads(name)')
+      .select('id, body, created_at, lead_id, leads(name, mobile)')
       .eq('type', 'sms_inbound')
       .gte('created_at', new Date(Date.now() - 30 * 86400000).toISOString())
       .order('created_at', { ascending: false })
