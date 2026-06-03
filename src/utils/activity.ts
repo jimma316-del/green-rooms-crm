@@ -16,6 +16,7 @@ export function activityIcon(type: string): string {
     payment_recorded: '💰',
     lead_created: '🌱',
     sms_sent: '💬',
+    sms_inbound: '📩',
   }
   return icons[type] ?? '•'
 }
@@ -36,6 +37,7 @@ export function activityLabel(type: string): string {
     payment_recorded: 'Payment recorded',
     lead_created: 'Lead created',
     sms_sent: 'Auto SMS sent',
+    sms_inbound: 'SMS reply received',
   }
   return labels[type] ?? type
 }

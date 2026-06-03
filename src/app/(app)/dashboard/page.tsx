@@ -8,6 +8,7 @@ import { HotLeadsPanel } from '@/components/dashboard/HotLeadsPanel'
 import { OverdueTasksPanel } from '@/components/dashboard/OverdueTasksPanel'
 import { RecentActivityPanel } from '@/components/dashboard/RecentActivityPanel'
 import { PipelineSummary } from '@/components/dashboard/PipelineSummary'
+import { SmsRepliesPanel } from '@/components/dashboard/SmsRepliesPanel'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -27,6 +28,7 @@ export default async function DashboardPage() {
     { data: overdueTasks },
     { data: recentActivity },
     { data: stageCounts },
+    { data: smsReplies },
   ] = await Promise.all([
     // New leads this week
     supabase.from('leads').select('id', { count: 'exact' })
@@ -76,6 +78,14 @@ export default async function DashboardPage() {
     supabase.from('leads')
       .select('stage, pipeline')
       .neq('pipeline', 'lost'),
+
+    // Inbound SMS replies (last 30 days)
+    createAdminClient().from('activities')
+      .select('id, body, created_at, lead_id, leads(name)')
+      .eq('type', 'sms_inbound')
+      .gte('created_at', new Date(Date.now() - 30 * 86400000).toISOString())
+      .order('created_at', { ascending: false })
+      .limit(20),
   ])
 
   type TaskItem = { id: string; title: string; due_date: string | null; type: string; priority: string; lead_id: string | null; leads: { name: string } | null }
@@ -109,6 +119,15 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {(smsReplies?.length ?? 0) > 0 && (
+        <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <span className="text-lg">📩</span>
+          <p className="text-sm font-medium text-amber-800">
+            {smsReplies!.length} SMS {smsReplies!.length === 1 ? 'reply' : 'replies'} received — see panel below
+          </p>
+        </div>
+      )}
+
       <DashboardKPIs kpis={kpis} />
       <PipelineSummary leads={stageCounts ?? []} />
 
@@ -116,6 +135,11 @@ export default async function DashboardPage() {
         <HotLeadsPanel leads={hotLeads ?? []} />
         <OverdueTasksPanel tasks={sortedTasks} />
         <RecentActivityPanel activities={recentActivity ?? []} />
+        {(smsReplies?.length ?? 0) > 0 && (
+          <div className="lg:col-span-3">
+            <SmsRepliesPanel replies={smsReplies as Parameters<typeof SmsRepliesPanel>[0]['replies']} />
+          </div>
+        )}
       </div>
     </div>
   )
