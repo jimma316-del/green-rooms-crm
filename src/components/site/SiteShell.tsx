@@ -56,7 +56,7 @@ export function SiteShell({ children, userName }: Props) {
         {siteNav.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (
-            <Link
+            <a
               key={href}
               href={href}
               className={cn(
@@ -68,7 +68,7 @@ export function SiteShell({ children, userName }: Props) {
             >
               <Icon className="w-4 h-4" />
               {label}
-            </Link>
+            </a>
           )
         })}
       </nav>
