@@ -119,14 +119,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {(smsReplies?.length ?? 0) > 0 && (
-        <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-          <span className="text-lg">📩</span>
-          <p className="text-sm font-medium text-amber-800">
-            {smsReplies!.length} SMS {smsReplies!.length === 1 ? 'reply' : 'replies'} received — see panel below
-          </p>
-        </div>
-      )}
+      <SmsRepliesPanel replies={(smsReplies ?? []) as Parameters<typeof SmsRepliesPanel>[0]['replies']} />
 
       <DashboardKPIs kpis={kpis} />
       <PipelineSummary leads={stageCounts ?? []} />
@@ -135,11 +128,6 @@ export default async function DashboardPage() {
         <HotLeadsPanel leads={hotLeads ?? []} />
         <OverdueTasksPanel tasks={sortedTasks} />
         <RecentActivityPanel activities={recentActivity ?? []} />
-        {(smsReplies?.length ?? 0) > 0 && (
-          <div className="lg:col-span-3">
-            <SmsRepliesPanel replies={smsReplies as Parameters<typeof SmsRepliesPanel>[0]['replies']} />
-          </div>
-        )}
       </div>
     </div>
   )

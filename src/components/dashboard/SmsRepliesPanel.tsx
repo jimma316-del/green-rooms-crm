@@ -22,34 +22,28 @@ export function SmsRepliesPanel({ replies }: { replies: SmsReply[] }) {
   if (replies.length === 0) return null
 
   return (
-    <div className="bg-white rounded-xl border border-amber-200 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center">
-            <MessageSquare className="w-3.5 h-3.5 text-amber-600" />
-          </div>
-          <h2 className="text-sm font-semibold text-gray-900">SMS Replies</h2>
-          <span className="text-[10px] font-bold bg-amber-500 text-white px-1.5 py-0.5 rounded-full">
-            {replies.length}
-          </span>
-        </div>
+    <div className="mb-6 bg-amber-50 border-2 border-amber-400 rounded-xl overflow-hidden">
+      <div className="bg-amber-400 px-4 py-2.5 flex items-center gap-2">
+        <MessageSquare className="w-4 h-4 text-white" />
+        <span className="text-sm font-bold text-white">
+          {replies.length} incoming SMS {replies.length === 1 ? 'reply' : 'replies'} — tap to open lead
+        </span>
       </div>
-
-      <div className="space-y-2">
+      <div className="divide-y divide-amber-200">
         {replies.map(reply => (
           <Link
             key={reply.id}
             href={`/leads/${reply.lead_id}`}
-            className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-amber-50 transition-colors group border border-amber-100"
+            className="flex items-start gap-3 px-4 py-3 hover:bg-amber-100 transition-colors group"
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+            <div className="w-2 h-2 rounded-full bg-amber-500 mt-1.5 shrink-0" />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-gray-900 truncate group-hover:text-amber-700">
-                {reply.leads?.name ?? 'Unknown'}
+              <p className="text-sm font-bold text-gray-900 group-hover:text-amber-800">
+                {reply.leads?.name ?? 'Unknown sender'}
               </p>
-              <p className="text-xs text-gray-500 truncate">{reply.body}</p>
+              <p className="text-sm text-gray-700 mt-0.5">{reply.body}</p>
             </div>
-            <span className="text-[10px] text-gray-400 shrink-0 mt-0.5">{timeAgo(reply.created_at)}</span>
+            <span className="text-xs text-amber-600 shrink-0 mt-0.5 font-medium">{timeAgo(reply.created_at)}</span>
           </Link>
         ))}
       </div>
