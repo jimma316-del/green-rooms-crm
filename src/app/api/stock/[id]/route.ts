@@ -16,8 +16,52 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params
   const body = await req.json()
   const admin = createAdminClient()
+
   const { error } = await admin.from('stock_items').update(body).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // When marking for reorder: create a high-priority task if none exists
+  if (body.needs_reorder === true) {
+    const { data: item } = await admin.from('stock_items').select('name').eq('id', id).single()
+    if (item) {
+      const title = `Order: ${item.name}`
+      // Check for an existing open task for this stock item
+      const { data: existing } = await admin
+        .from('tasks')
+        .select('id')
+        .eq('title', title)
+        .eq('type', 'stock')
+        .is('completed_at', null)
+        .limit(1)
+        .maybeSingle()
+
+      if (!existing) {
+        await admin.from('tasks').insert({
+          title,
+          type: 'stock',
+          priority: 'high',
+          lead_id: null,
+          created_by: user.id,
+          assigned_to: user.id,
+        })
+      }
+    }
+  }
+
+  // When un-marking: complete any open stock task for this item
+  if (body.needs_reorder === false) {
+    const { data: item } = await admin.from('stock_items').select('name').eq('id', id).single()
+    if (item) {
+      const title = `Order: ${item.name}`
+      await admin
+        .from('tasks')
+        .update({ completed_at: new Date().toISOString(), completed_by: user.id })
+        .eq('title', title)
+        .eq('type', 'stock')
+        .is('completed_at', null)
+    }
+  }
+
   return NextResponse.json({ ok: true })
 }
 

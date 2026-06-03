@@ -8,7 +8,7 @@ interface Task {
   due_date: string | null
   type: string
   priority: string
-  lead_id: string
+  lead_id: string | null
   leads: { name: string } | null
 }
 
@@ -34,10 +34,13 @@ export function OverdueTasksPanel({ tasks }: { tasks: Task[] }) {
         <div className="space-y-2">
           {tasks.map(task => {
             const over = task.due_date ? isOverdue(task.due_date) : false
+            const isStock = task.type === 'stock'
+            const href = isStock ? '/stock' : `/leads/${task.lead_id}`
+            const subtitle = isStock ? 'Stock reorder' : (task.leads?.name ?? 'Unknown lead')
             return (
               <Link
                 key={task.id}
-                href={`/leads/${task.lead_id}`}
+                href={href}
                 className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
               >
                 <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
@@ -46,7 +49,7 @@ export function OverdueTasksPanel({ tasks }: { tasks: Task[] }) {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 truncate group-hover:text-[var(--primary)]">{task.title}</p>
                   <p className="text-xs text-gray-500 flex items-center gap-1">
-                    {task.leads?.name ?? 'Unknown lead'}
+                    {subtitle}
                     {task.due_date && (
                       <span className={over ? 'text-red-400 flex items-center gap-0.5' : 'text-gray-400'}>
                         · {over && <AlertCircle className="w-3 h-3 inline" />} {formatDate(task.due_date)}

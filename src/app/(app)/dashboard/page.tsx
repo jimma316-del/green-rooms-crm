@@ -77,7 +77,7 @@ export default async function DashboardPage() {
       .neq('pipeline', 'lost'),
   ])
 
-  type TaskItem = { id: string; title: string; due_date: string | null; type: string; priority: string; lead_id: string; leads: { name: string } | null }
+  type TaskItem = { id: string; title: string; due_date: string | null; type: string; priority: string; lead_id: string | null; leads: { name: string } | null }
   const PRIORITY_ORDER: Record<string, number> = { high: 0, normal: 1, low: 2 }
   const sortedTasks = ((overdueTasks ?? []) as TaskItem[]).sort((a, b) => {
     const pa = PRIORITY_ORDER[a.priority] ?? 1
