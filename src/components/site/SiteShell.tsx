@@ -3,16 +3,23 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import { LogOut, KeyRound } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
+import { LogOut, KeyRound, HardHat, Package } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Props {
   children: React.ReactNode
   userName: string
 }
 
+const siteNav = [
+  { href: '/jobs', label: 'Jobs', icon: HardHat },
+  { href: '/stock', label: 'Stock', icon: Package },
+]
+
 export function SiteShell({ children, userName }: Props) {
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = createClient()
 
   async function signOut() {
@@ -45,6 +52,26 @@ export function SiteShell({ children, userName }: Props) {
           </button>
         </div>
       </header>
+      <nav className="bg-white border-b border-gray-200 px-4 flex gap-1">
+        {siteNav.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href || pathname.startsWith(href + '/')
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+                active
+                  ? 'border-[var(--brand-header)] text-[var(--brand-header)]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              )}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </Link>
+          )
+        })}
+      </nav>
       <main>{children}</main>
     </div>
   )
