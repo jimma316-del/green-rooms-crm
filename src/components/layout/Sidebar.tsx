@@ -4,21 +4,21 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, Users, KanbanSquare, CheckSquare,
-  Settings, LogOut, BarChart3, Mail, HardHat
+  LayoutDashboard, Users, KanbanSquare,
+  Settings, LogOut, BarChart3, Mail, HardHat, Package
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
-  { href: '/leads', label: 'All Leads', icon: Users },
+  { href: '/dashboard',  label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/leads',      label: 'All Leads',  icon: Users },
+  { href: '/pipeline',   label: 'Pipeline',   icon: KanbanSquare },
+  { href: '/jobs',       label: 'Jobs',       icon: HardHat },
+  { href: '/stock',      label: 'Stock',      icon: Package },
   { href: '/newsletter', label: 'Newsletter', icon: Mail },
-  { href: '/tasks', label: 'Tasks', icon: CheckSquare },
-  { href: '/jobs', label: 'Jobs', icon: HardHat },
-  { href: '/reports', label: 'Reports', icon: BarChart3 },
+  { href: '/reports',    label: 'Reports',    icon: BarChart3 },
 ]
 
 export function Sidebar() {

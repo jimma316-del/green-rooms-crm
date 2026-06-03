@@ -69,6 +69,14 @@ type StageHistoryRow = { id: string; lead_id: string; from_stage: string | null;
 type StageHistoryInsert = { id?: string; lead_id: string; from_stage?: string | null; to_stage: string; changed_by?: string | null; changed_at?: string; note?: string | null }
 type StageHistoryUpdate = Partial<StageHistoryInsert>
 
+type StockItemRow = { id: string; name: string; needs_reorder: boolean; order_index: number }
+type StockItemInsert = { id?: string; name: string; needs_reorder?: boolean; order_index?: number }
+type StockItemUpdate = Partial<StockItemInsert>
+
+type StockNotesRow = { id: number; notes: string }
+type StockNotesInsert = { id?: number; notes: string }
+type StockNotesUpdate = Partial<StockNotesInsert>
+
 export interface Database {
   public: {
     Tables: {
@@ -79,6 +87,8 @@ export interface Database {
       quotes: TableDef<QuotesRow, QuotesInsert, QuotesUpdate>
       payments: TableDef<PaymentsRow, PaymentsInsert, PaymentsUpdate>
       stage_history: TableDef<StageHistoryRow, StageHistoryInsert, StageHistoryUpdate>
+      stock_items: TableDef<StockItemRow, StockItemInsert, StockItemUpdate>
+      stock_notes: TableDef<StockNotesRow, StockNotesInsert, StockNotesUpdate>
     }
     Views: Record<string, never>
     Functions: Record<string, never>
