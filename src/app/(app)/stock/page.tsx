@@ -6,10 +6,15 @@ import { StockClient } from '@/components/stock/StockClient'
 export default async function StockPage() {
   const admin = createAdminClient()
 
-  const [{ data: items }, { data: notesRow }] = await Promise.all([
+  const [{ data: items, error: itemsError }, { data: notesRow }] = await Promise.all([
     admin.from('stock_items').select('*').order('order_index', { ascending: true }),
     admin.from('stock_notes').select('notes').eq('id', 1).single(),
   ])
+
+  if (itemsError) {
+    console.error('[StockPage] stock_items error:', itemsError)
+    throw new Error(`Failed to load stock items: ${itemsError.message}`)
+  }
 
   return (
     <div className="px-4 md:px-6 py-6">
