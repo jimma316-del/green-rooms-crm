@@ -79,15 +79,22 @@ function StageCell({ lead }: { lead: Lead }) {
       })
       toast.success('Stage updated — quote task created')
     } else if (newStage === 'quote_sent') {
-      await supabase.from('tasks').insert({
-        lead_id: lead.id,
-        created_by: user!.id,
-        assigned_to: user!.id,
-        title: 'Quote follow up',
-        type: 'whatsapp',
-        priority: 'normal',
-        due_date: new Date(Date.now() + 2 * 86400000).toISOString(),
-      })
+      await Promise.all([
+        supabase.from('tasks').insert({
+          lead_id: lead.id,
+          created_by: user!.id,
+          assigned_to: user!.id,
+          title: 'Quote follow up',
+          type: 'whatsapp',
+          priority: 'normal',
+          due_date: new Date(Date.now() + 2 * 86400000).toISOString(),
+        }),
+        supabase.from('tasks')
+          .update({ completed_at: new Date().toISOString(), completed_by: user!.id })
+          .eq('lead_id', lead.id)
+          .in('title', [`${lead.name} Quote`, `${lead.name} Site Visit`, 'Prepare quote'])
+          .is('completed_at', null),
+      ])
       toast.success('Stage updated — follow-up task set for 48hrs')
     } else {
       toast.success('Stage updated')
