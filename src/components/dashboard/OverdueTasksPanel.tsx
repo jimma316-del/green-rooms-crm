@@ -1,10 +1,17 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { CheckSquare, AlertCircle, Plus } from 'lucide-react'
 import { formatDate, isOverdue } from '@/utils/date'
 import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import { toast } from 'sonner'
 
 interface Task {
   id: string
@@ -16,33 +23,58 @@ interface Task {
   leads: { name: string } | null
 }
 
+const TASK_TYPES = [
+  { value: 'whatsapp',          label: 'WhatsApp' },
+  { value: 'email',             label: 'Email' },
+  { value: 'call',              label: 'Call' },
+  { value: 'in_person_meeting', label: 'In Person Meeting' },
+  { value: 'send_info',         label: 'Send Info' },
+  { value: 'note',              label: 'General / Note' },
+]
+
 export function OverdueTasksPanel({ tasks: initial }: { tasks: Task[] }) {
   const [tasks, setTasks] = useState(initial)
-  const [text, setText] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [title, setTitle] = useState('')
+  const [taskType, setTaskType] = useState('whatsapp')
+  const [dueDate, setDueDate] = useState('')
+  const [dateTbc, setDateTbc] = useState(false)
+  const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
 
-  async function addTask() {
-    const title = text.trim()
-    if (!title) return
+  async function createTask() {
+    if (!title.trim()) { toast.error('Enter a task title'); return }
+    if (!dueDate && !dateTbc) { toast.error('Set a due date or check Date TBC'); return }
     setSaving(true)
+
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setSaving(false); return }
 
-    const { data: task } = await supabase.from('tasks').insert({
-      title,
-      type: 'note',
+    const { data: task, error } = await supabase.from('tasks').insert({
+      title: title.trim(),
+      type: taskType,
       priority: 'normal',
-      lead_id: null,
+      lead_id: null as unknown as string,
       created_by: user.id,
       assigned_to: user.id,
+      notes: notes.trim() || null,
+      due_date: dateTbc ? null : new Date(dueDate).toISOString(),
     }).select('id, title, due_date, type, priority, lead_id, leads(name)').single()
 
-    if (task) setTasks(prev => [task as Task, ...prev])
-    setText('')
+    if (error) {
+      toast.error('Failed to create task')
+    } else {
+      setTasks(prev => [task as Task, ...prev])
+      setTitle('')
+      setTaskType('whatsapp')
+      setDueDate('')
+      setDateTbc(false)
+      setNotes('')
+      setAdding(false)
+      toast.success('Task created')
+    }
     setSaving(false)
-    inputRef.current?.focus()
   }
 
   return (
@@ -57,28 +89,75 @@ export function OverdueTasksPanel({ tasks: initial }: { tasks: Task[] }) {
             </span>
           )}
         </div>
-        <Link href="/tasks" className="text-xs text-[var(--primary)] hover:underline">View all →</Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setAdding(a => !a)}
+            className="flex items-center gap-1 text-xs text-[var(--primary)] hover:underline font-medium"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add task
+          </button>
+          <Link href="/tasks" className="text-xs text-[var(--primary)] hover:underline">View all →</Link>
+        </div>
       </div>
 
-      <div className="flex items-center gap-1.5 mb-3">
-        <input
-          ref={inputRef}
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && addTask()}
-          placeholder="Add a task…"
-          disabled={saving}
-          className="flex-1 text-sm px-2.5 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder:text-gray-400 disabled:opacity-50"
-        />
-        <button
-          onClick={addTask}
-          disabled={saving || !text.trim()}
-          className="p-1.5 rounded-lg bg-[var(--primary)] text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
-          title="Add task"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
-      </div>
+      {adding && (
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg space-y-2 border border-gray-100">
+          <Input
+            placeholder="Task title"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            className="text-xs"
+          />
+          <div className="flex gap-2">
+            <Select value={taskType} onValueChange={v => v && setTaskType(v)}>
+              <SelectTrigger className="flex-1 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TASK_TYPES.map(t => (
+                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex-1 flex flex-col gap-1">
+              <Input
+                type="date"
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+                disabled={dateTbc}
+                className="text-xs disabled:opacity-40"
+              />
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={dateTbc}
+                  onChange={e => { setDateTbc(e.target.checked); if (e.target.checked) setDueDate('') }}
+                  className="w-3.5 h-3.5 rounded accent-[var(--primary)]"
+                />
+                <span className="text-[11px] text-gray-500">Date TBC</span>
+              </label>
+            </div>
+          </div>
+          <Textarea
+            placeholder="Notes (optional)"
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            rows={2}
+            className="text-xs"
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={createTask}
+              disabled={!title.trim() || (!dueDate && !dateTbc) || saving}
+              className="bg-[var(--primary)] hover:bg-[var(--primary)]/90"
+            >
+              {saving ? 'Saving…' : 'Create'}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>Cancel</Button>
+          </div>
+        </div>
+      )}
 
       {tasks.length === 0 ? (
         <p className="text-sm text-gray-400 py-4 text-center">No open tasks</p>
