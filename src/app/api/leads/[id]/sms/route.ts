@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const admin = createAdminClient()
   const { data: lead } = await admin
     .from('leads')
-    .select('id, name, mobile, postcode')
+    .select('id, name, mobile, postcode, pipeline')
     .eq('id', id)
     .single()
 
@@ -71,7 +71,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ ok: true, custom: true })
   }
 
-  // Automated template — block if already sent
+  // Automated template — block if already sent or lead is lost/out of area
+  if (lead.pipeline === 'lost') {
+    return NextResponse.json({ error: 'Cannot send automated SMS to a lost or out-of-area lead' }, { status: 409 })
+  }
+
   const { data: currentLead } = await admin.from('leads').select('sms_sent_at, postcode').eq('id', id).single()
   if (currentLead?.sms_sent_at) {
     return NextResponse.json({ error: 'Automated SMS already sent to this customer' }, { status: 409 })
