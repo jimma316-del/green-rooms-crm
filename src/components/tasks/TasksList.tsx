@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { CheckSquare, Plus, AlertCircle, Pencil, Trash2, Check, X } from 'lucide-react'
+import { CheckSquare, Plus, AlertCircle, Pencil, Trash2, Check, X, Flag } from 'lucide-react'
 import { toast } from 'sonner'
 import { isOverdue, formatDate } from '@/utils/date'
 import { cn } from '@/lib/utils'
@@ -38,6 +38,7 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
   const [dueDate, setDueDate] = useState('')
   const [dateTbc, setDateTbc] = useState(false)
   const [notes, setNotes] = useState('')
+  const [urgent, setUrgent] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<{ type: string; due_date: string; notes: string }>({ type: '', due_date: '', notes: '' })
@@ -56,7 +57,7 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
       title: TASK_TYPE_LABELS[taskType],
       type: taskType,
       notes: notes.trim() || null,
-      priority: 'normal',
+      priority: urgent ? 'high' : 'normal',
       due_date: dateTbc ? null : new Date(dueDate).toISOString(),
     }).select('*, users!tasks_assigned_to_fkey(full_name)').single()
 
@@ -88,10 +89,17 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
       setDueDate('')
       setDateTbc(false)
       setNotes('')
+      setUrgent(false)
       setAdding(false)
       router.refresh()
     }
     setSaving(false)
+  }
+
+  async function toggleUrgent(taskId: string, currentPriority: string) {
+    const newPriority = currentPriority === 'high' ? 'normal' : 'high'
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, priority: newPriority } : t))
+    await supabase.from('tasks').update({ priority: newPriority }).eq('id', taskId)
   }
 
   async function completeTask(taskId: string) {
@@ -208,11 +216,23 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
             rows={2}
             className="text-xs"
           />
-          <div className="flex gap-2">
-            <Button size="sm" onClick={createTask} disabled={(!dueDate && !dateTbc) || saving} className="bg-[var(--primary)] hover:bg-[var(--primary)]/90">
-              {saving ? 'Saving…' : 'Create'}
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>Cancel</Button>
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={urgent}
+                onChange={e => setUrgent(e.target.checked)}
+                className="w-3.5 h-3.5 rounded accent-orange-500"
+              />
+              <Flag className="w-3 h-3 text-orange-500" />
+              <span className="text-[11px] text-gray-600 font-medium">Mark as urgent</span>
+            </label>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={createTask} disabled={(!dueDate && !dateTbc) || saving} className="bg-[var(--primary)] hover:bg-[var(--primary)]/90">
+                {saving ? 'Saving…' : 'Create'}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>Cancel</Button>
+            </div>
           </div>
         </div>
       )}
@@ -296,6 +316,13 @@ export function TasksList({ tasks: initialTasks, leadId }: Props) {
                   </div>
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => toggleUrgent(task.id, task.priority ?? 'normal')}
+                    title={task.priority === 'high' ? 'Remove urgent' : 'Mark as urgent'}
+                    className={cn('p-1 transition-colors', task.priority === 'high' ? 'text-orange-500' : 'text-gray-300 hover:text-orange-400')}
+                  >
+                    <Flag className="w-3 h-3" fill={task.priority === 'high' ? 'currentColor' : 'none'} />
+                  </button>
                   <button onClick={() => startEdit(task)} className="p-1 text-gray-400 hover:text-gray-600"><Pencil className="w-3 h-3" /></button>
                   <button onClick={() => deleteTask(task.id)} className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-3 h-3" /></button>
                 </div>
