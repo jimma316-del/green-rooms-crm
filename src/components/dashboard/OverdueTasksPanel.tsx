@@ -87,6 +87,16 @@ export function OverdueTasksPanel({ tasks: initial }: { tasks: Task[] }) {
     await supabase.from('tasks').update({ priority: newPriority }).eq('id', task.id)
   }
 
+  async function completeTask(taskId: string) {
+    setTasks(prev => prev.filter(t => t.id !== taskId))
+    const { data: { user } } = await supabase.auth.getUser()
+    await supabase.from('tasks').update({
+      completed_at: new Date().toISOString(),
+      completed_by: user?.id,
+    }).eq('id', taskId)
+    toast.success('Task completed')
+  }
+
   return (
     <div className="bg-white rounded-xl border border-border p-4">
       <div className="flex items-center justify-between mb-3">
@@ -193,6 +203,11 @@ export function OverdueTasksPanel({ tasks: initial }: { tasks: Task[] }) {
             const subtitle = isStock ? 'Stock reorder' : (task.leads?.name ?? (task.lead_id ? 'Unknown lead' : 'General'))
             return (
               <div key={task.id} className="flex items-center gap-1.5 group rounded-lg hover:bg-gray-50 transition-colors pr-1">
+                <button
+                  onClick={() => completeTask(task.id)}
+                  title="Mark complete"
+                  className="w-4 h-4 rounded border-2 border-gray-300 hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors shrink-0 ml-1"
+                />
                 <button
                   onClick={() => toggleUrgent(task)}
                   title={isUrgent ? 'Remove urgent' : 'Mark as urgent'}
