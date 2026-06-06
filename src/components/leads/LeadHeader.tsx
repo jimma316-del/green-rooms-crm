@@ -37,8 +37,11 @@ export function LeadHeader({ lead }: { lead: Lead }) {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
 
+    const newPipeline = STAGE_CONFIG[newStage as Stage]?.pipeline
+    const clearHot = newPipeline === 'project' || newPipeline === 'lost' || newStage === 'job_booked'
+
     await Promise.all([
-      supabase.from('leads').update({ stage: newStage }).eq('id', lead.id),
+      supabase.from('leads').update({ stage: newStage, ...(clearHot ? { is_hot: false } : {}) }).eq('id', lead.id),
       supabase.from('stage_history').insert({
         lead_id: lead.id,
         from_stage: stage,
@@ -95,6 +98,7 @@ export function LeadHeader({ lead }: { lead: Lead }) {
     }
 
     setStage(newStage)
+    if (clearHot) setIsHot(false)
     setSaving(false)
     router.refresh()
   }

@@ -127,7 +127,9 @@ export function PipelineBoard({ leads: initialLeads, pipeline }: Props) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    const { error } = await supabase.from('leads').update({ stage: toStage }).eq('id', dragging)
+    const toPipeline = STAGE_CONFIG[toStage as Stage]?.pipeline
+    const clearHot = toPipeline === 'project' || toPipeline === 'lost' || toStage === 'job_booked'
+    const { error } = await supabase.from('leads').update({ stage: toStage, ...(clearHot ? { is_hot: false } : {}) }).eq('id', dragging)
     if (error) {
       toast.error('Failed to move lead')
       setLeads(initialLeads)

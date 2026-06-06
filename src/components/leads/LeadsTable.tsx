@@ -65,8 +65,9 @@ function StageCell({ lead }: { lead: Lead }) {
     if (!newStage || newStage === stage) return
     setSaving(true)
     const newPipeline = STAGE_CONFIG[newStage as Stage]?.pipeline ?? 'sales'
+    const clearHot = newPipeline === 'project' || newPipeline === 'lost' || newStage === 'job_booked'
     const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from('leads').update({ stage: newStage, pipeline: newPipeline }).eq('id', lead.id)
+    await supabase.from('leads').update({ stage: newStage, pipeline: newPipeline, ...(clearHot ? { is_hot: false } : {}) }).eq('id', lead.id)
     if (newStage === 'quoting') {
       await supabase.from('tasks').insert({
         lead_id: lead.id,
