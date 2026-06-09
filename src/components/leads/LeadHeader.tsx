@@ -41,7 +41,7 @@ export function LeadHeader({ lead }: { lead: Lead }) {
     const clearHot = newPipeline === 'project' || newPipeline === 'lost' || newStage === 'job_booked'
 
     await Promise.all([
-      supabase.from('leads').update({ stage: newStage, ...(clearHot ? { is_hot: false } : {}) }).eq('id', lead.id),
+      supabase.from('leads').update({ stage: newStage, pipeline: newPipeline, ...(clearHot ? { is_hot: false } : {}) }).eq('id', lead.id),
       supabase.from('stage_history').insert({
         lead_id: lead.id,
         from_stage: stage,
