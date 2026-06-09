@@ -23,31 +23,43 @@ export async function POST(req: NextRequest) {
   const body = params.get('Body') ?? ''
   const messageSid = params.get('MessageSid') ?? ''
 
+  console.log(`[SMS Inbound] Received from=${from} sid=${messageSid} body="${body}"`)
+
   if (!from || !body) {
+    console.warn('[SMS Inbound] Missing From or Body — ignoring')
     return new NextResponse(TWIML, { headers: XML_HEADERS })
   }
 
   const admin = createAdminClient()
   const possibleNumbers = normaliseUkNumber(from)
+  console.log(`[SMS Inbound] Looking up numbers:`, possibleNumbers)
 
-  // Find the lead whose mobile matches any of the number variants
-  const { data: lead } = await admin
+  const { data: lead, error: leadError } = await admin
     .from('leads')
     .select('id, name')
     .in('mobile', possibleNumbers)
     .limit(1)
     .maybeSingle()
 
+  if (leadError) {
+    console.error('[SMS Inbound] Lead lookup error:', leadError)
+  }
+
   if (lead) {
-    await admin.from('activities').insert({
+    const { error: insertError } = await admin.from('activities').insert({
       lead_id: lead.id,
+      created_by: null,
       type: 'sms_inbound',
       body,
       metadata: { from, message_sid: messageSid },
     })
-    console.log(`[SMS Inbound] Matched to lead ${lead.id} (${lead.name}): ${body}`)
+    if (insertError) {
+      console.error(`[SMS Inbound] Failed to insert activity:`, insertError)
+    } else {
+      console.log(`[SMS Inbound] Saved — lead ${lead.id} (${lead.name})`)
+    }
   } else {
-    console.warn(`[SMS Inbound] No lead matched for ${from}: ${body}`)
+    console.warn(`[SMS Inbound] No lead matched for ${from} (tried: ${possibleNumbers.join(', ')})`)
   }
 
   return new NextResponse(TWIML, { headers: XML_HEADERS })
