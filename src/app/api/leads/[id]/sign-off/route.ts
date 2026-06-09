@@ -201,9 +201,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const address = [lead.address, lead.postcode].filter(Boolean).join(', ')
 
-  // Convert base64 signatures to buffers for email attachments
+  // Convert base64 signatures to buffers
   const toBuffer = (dataUrl: string) =>
     Buffer.from(dataUrl.replace(/^data:image\/png;base64,/, ''), 'base64')
+
+  // Upload signatures to storage and get public URLs
+  async function uploadSig(dataUrl: string, filename: string): Promise<string | null> {
+    const buffer = toBuffer(dataUrl)
+    const path = `${id}/${filename}-${Date.now()}.png`
+    const { error } = await admin.storage.from('snagging-media').upload(path, buffer, { contentType: 'image/png' })
+    if (error) return null
+    const { data: { publicUrl } } = admin.storage.from('snagging-media').getPublicUrl(path)
+    return publicUrl
+  }
+
+  const [customerSigUrl, pmSigUrl] = await Promise.all([
+    uploadSig(body.customerSig, 'customer-signature'),
+    uploadSig(body.pmSig, 'pm-signature'),
+  ])
 
   const html = buildEmailHtml({
     customerName: lead.name,
@@ -230,10 +245,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     ],
   })
 
-  // Mark lead as signed off
-  await admin.from('leads').update({ signed_off_at: new Date().toISOString() }).eq('id', id)
+  // Mark lead as signed off and save sign-off data
+  await admin.from('leads').update({
+    signed_off_at: new Date().toISOString(),
+    sign_off_satisfied: body.customerSatisfied === 'yes',
+    sign_off_details: body.satisfactionDetails ?? null,
+    sign_off_comments: body.comments ?? null,
+    customer_sig_url: customerSigUrl,
+    pm_sig_url: pmSigUrl,
+  }).eq('id', id)
 
-  // Log activity regardless of email success
+  // Log activity
   await admin.from('activities').insert({
     lead_id: id,
     created_by: user.id,

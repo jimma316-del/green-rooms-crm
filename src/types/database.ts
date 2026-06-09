@@ -27,6 +27,11 @@ type LeadsRow = {
   distance_miles: number | null
   signed_off_at: string | null
   snagging_signed_off_at: string | null
+  sign_off_satisfied: boolean | null
+  sign_off_details: string | null
+  sign_off_comments: string | null
+  customer_sig_url: string | null
+  pm_sig_url: string | null
   job_files: Json
   delivery_info: Json
 }
@@ -44,6 +49,11 @@ type LeadsInsert = {
   distance_miles?: number | null
   signed_off_at?: string | null
   snagging_signed_off_at?: string | null
+  sign_off_satisfied?: boolean | null
+  sign_off_details?: string | null
+  sign_off_comments?: string | null
+  customer_sig_url?: string | null
+  pm_sig_url?: string | null
   job_files?: Json
   delivery_info?: Json
 }

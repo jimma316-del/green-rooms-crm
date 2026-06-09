@@ -10,6 +10,7 @@ import { TasksList } from '@/components/tasks/TasksList'
 import { ActivityFeed } from '@/components/leads/ActivityFeed'
 import { LeadAnalytics } from '@/components/leads/LeadAnalytics'
 import { MergeBanner } from '@/components/leads/MergeBanner'
+import { SignOffRecord } from '@/components/leads/SignOffRecord'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -82,6 +83,16 @@ export default async function LeadPage({ params }: Props) {
           <LeadContact lead={lead} />
           <LeadDates lead={lead} />
           <LeadAnalytics calculatorData={typedLead.calculator_data as Record<string, unknown> | null} createdAt={typedLead.created_at} />
+          {typedLead.signed_off_at && (
+            <SignOffRecord
+              signedOffAt={typedLead.signed_off_at}
+              satisfied={typedLead.sign_off_satisfied ?? null}
+              details={typedLead.sign_off_details ?? null}
+              comments={typedLead.sign_off_comments ?? null}
+              customerSigUrl={typedLead.customer_sig_url ?? null}
+              pmSigUrl={typedLead.pm_sig_url ?? null}
+            />
+          )}
         </div>
 
         {/* Right column */}
