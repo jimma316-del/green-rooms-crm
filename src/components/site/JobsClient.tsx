@@ -313,7 +313,7 @@ function SnaggingCard({ job }: { job: SnaggingJob }) {
 
 function ArchiveCard({ job }: { job: ArchivedJob }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4 opacity-70">
+    <Link href={`/jobs/${job.id}/snagging`} className="block bg-white rounded-xl border border-gray-100 p-4 opacity-70 hover:opacity-100 hover:border-gray-200 transition-all">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-700">{job.name}</p>
@@ -333,7 +333,7 @@ function ArchiveCard({ job }: { job: ArchivedJob }) {
           <CheckCircle2 className="w-4 h-4" /> Done
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
