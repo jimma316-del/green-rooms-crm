@@ -16,7 +16,7 @@ export function SnaggingSignOff({ leadId, name, address }: Props) {
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
-  const [photo, setPhoto] = useState<string | null>(null)
+  const [photos, setPhotos] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -25,6 +25,7 @@ export function SnaggingSignOff({ leadId, name, address }: Props) {
 
   async function handleFile(file: File) {
     if (!file.type.startsWith('image/')) return
+    if (photos.length >= 3) return
     setUploading(true)
     setUploadError(null)
     const supabase = createClient()
@@ -38,7 +39,7 @@ export function SnaggingSignOff({ leadId, name, address }: Props) {
         .uploadToSignedUrl(urlData.path, urlData.token, file, { contentType: file.type })
       if (uploadErr) { setUploadError(uploadErr.message); return }
 
-      setPhoto(urlData.publicUrl)
+      setPhotos(prev => [...prev, urlData.publicUrl])
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
@@ -53,7 +54,7 @@ export function SnaggingSignOff({ leadId, name, address }: Props) {
     const res = await fetch(`/api/leads/${leadId}/snagging-sign-off`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notes, mediaUrls: photo ? [photo] : [] }),
+      body: JSON.stringify({ notes, mediaUrls: photos }),
     })
     if (res.ok) setDone(true)
     setLoading(false)
@@ -100,18 +101,22 @@ export function SnaggingSignOff({ leadId, name, address }: Props) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <p className="text-sm font-medium text-gray-700 mb-3">
-              Completion photo <span className="text-gray-400 font-normal">(optional)</span>
+              Completion photos <span className="text-gray-400 font-normal">(up to 3, optional)</span>
             </p>
-            {photo && (
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 mb-3">
-                <img src={photo} alt="Completion" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => setPhoto(null)}
-                  className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center"
-                >
-                  <X className="w-4 h-4 text-white" />
-                </button>
+            {photos.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {photos.map((url, i) => (
+                  <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
+                    <img src={url} alt="Completion" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setPhotos(prev => prev.filter((_, j) => j !== i))}
+                      className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full flex items-center justify-center"
+                    >
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
             <input
@@ -133,7 +138,7 @@ export function SnaggingSignOff({ leadId, name, address }: Props) {
               <div className="flex items-center justify-center gap-2 py-2.5 text-sm text-gray-400">
                 <Loader2 className="w-4 h-4 animate-spin" /> Uploading…
               </div>
-            ) : (
+            ) : photos.length < 3 ? (
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -150,7 +155,7 @@ export function SnaggingSignOff({ leadId, name, address }: Props) {
                   <ImagePlus className="w-4 h-4" /> Gallery
                 </button>
               </div>
-            )}
+            ) : null}
             {uploadError && (
               <p className="mt-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{uploadError}</p>
             )}
