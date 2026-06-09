@@ -31,7 +31,7 @@ export function SiteShell({ children, userName }: Props) {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[var(--brand-header)] text-white px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Image src="/logo.svg" alt="The Green Rooms" width={24} height={24} className="rounded" />
+          <Image src="/logo.png" alt="The Green Rooms" width={24} height={24} className="rounded" />
           <span className="font-semibold text-sm">The Green Rooms</span>
         </div>
         <div className="flex items-center gap-3">
