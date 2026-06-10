@@ -15,6 +15,14 @@ interface KPIs {
 
 const cards = [
   {
+    key: 'todayTasks' as const,
+    label: "Today's Tasks",
+    sublabel: 'due today',
+    icon: CalendarCheck,
+    href: '/tasks',
+    color: 'bg-amber-50 text-amber-600',
+  },
+  {
     key: 'newLeads' as const,
     label: 'New Leads',
     sublabel: 'this week',
@@ -23,12 +31,12 @@ const cards = [
     color: 'bg-blue-50 text-blue-600',
   },
   {
-    key: 'todayTasks' as const,
-    label: "Today's Tasks",
-    sublabel: 'due today',
-    icon: CalendarCheck,
-    href: '/tasks',
-    color: 'bg-amber-50 text-amber-600',
+    key: 'siteVisitsBooked' as const,
+    label: 'Site Visits Booked',
+    sublabel: 'upcoming visits',
+    icon: MapPin,
+    href: '/leads?stage=site_survey_booked',
+    color: 'bg-purple-50 text-purple-600',
   },
   {
     key: 'quotesWaiting' as const,
@@ -69,14 +77,6 @@ const cards = [
     icon: AlertTriangle,
     href: '/leads?stage=final_followup',
     color: 'bg-rose-50 text-rose-600',
-  },
-  {
-    key: 'siteVisitsBooked' as const,
-    label: 'Site Visits Booked',
-    sublabel: 'upcoming visits',
-    icon: MapPin,
-    href: '/leads?stage=site_survey_booked',
-    color: 'bg-purple-50 text-purple-600',
   },
   {
     key: 'jobsInProgress' as const,
