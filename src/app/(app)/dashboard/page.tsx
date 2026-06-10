@@ -29,6 +29,10 @@ export default async function DashboardPage() {
     { data: recentActivity },
     { data: stageCounts },
     { data: smsReplies },
+    { data: quoteSent },
+    { data: inConversation },
+    { data: followUp },
+    { data: finalFollowUp },
   ] = await Promise.all([
     // New leads this week
     supabase.from('leads').select('id', { count: 'exact' })
@@ -86,6 +90,11 @@ export default async function DashboardPage() {
       .gte('created_at', new Date(Date.now() - 30 * 86400000).toISOString())
       .order('created_at', { ascending: false })
       .limit(20),
+
+    supabase.from('leads').select('id', { count: 'exact' }).eq('stage', 'quote_sent'),
+    supabase.from('leads').select('id', { count: 'exact' }).eq('stage', 'in_conversation'),
+    supabase.from('leads').select('id', { count: 'exact' }).eq('stage', 'followup'),
+    supabase.from('leads').select('id', { count: 'exact' }).eq('stage', 'final_followup'),
   ])
 
   type TaskItem = { id: string; title: string; due_date: string | null; type: string; priority: string; lead_id: string | null; leads: { name: string } | null }
@@ -106,6 +115,10 @@ export default async function DashboardPage() {
     quotesWaiting: quotesWaiting?.length ?? 0,
     siteVisitsBooked: depositsOut?.length ?? 0,
     jobsInProgress: jobsInProgress?.length ?? 0,
+    quoteSent: quoteSent?.length ?? 0,
+    inConversation: inConversation?.length ?? 0,
+    followUp: followUp?.length ?? 0,
+    finalFollowUp: finalFollowUp?.length ?? 0,
   }
 
   return (

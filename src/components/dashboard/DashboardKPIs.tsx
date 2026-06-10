@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Users, CalendarCheck, FileText, MapPin, HardHat } from 'lucide-react'
+import { Users, CalendarCheck, FileText, MapPin, HardHat, Send, MessageCircle, Clock, AlertTriangle } from 'lucide-react'
 
 interface KPIs {
   newLeads: number
@@ -7,6 +7,10 @@ interface KPIs {
   quotesWaiting: number
   siteVisitsBooked: number
   jobsInProgress: number
+  quoteSent: number
+  inConversation: number
+  followUp: number
+  finalFollowUp: number
 }
 
 const cards = [
@@ -35,6 +39,38 @@ const cards = [
     color: 'bg-orange-50 text-orange-600',
   },
   {
+    key: 'quoteSent' as const,
+    label: 'Quote Sent',
+    sublabel: 'awaiting response',
+    icon: Send,
+    href: '/leads?stage=quote_sent',
+    color: 'bg-yellow-50 text-yellow-600',
+  },
+  {
+    key: 'inConversation' as const,
+    label: 'In Conversation',
+    sublabel: 'active discussions',
+    icon: MessageCircle,
+    href: '/leads?stage=in_conversation',
+    color: 'bg-teal-50 text-teal-600',
+  },
+  {
+    key: 'followUp' as const,
+    label: 'Follow Up',
+    sublabel: 'needs chasing',
+    icon: Clock,
+    href: '/leads?stage=followup',
+    color: 'bg-indigo-50 text-indigo-600',
+  },
+  {
+    key: 'finalFollowUp' as const,
+    label: 'Final Follow Up',
+    sublabel: 'last chance',
+    icon: AlertTriangle,
+    href: '/leads?stage=final_followup',
+    color: 'bg-rose-50 text-rose-600',
+  },
+  {
     key: 'siteVisitsBooked' as const,
     label: 'Site Visits Booked',
     sublabel: 'upcoming visits',
@@ -54,7 +90,7 @@ const cards = [
 
 export function DashboardKPIs({ kpis }: { kpis: KPIs }) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+    <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3">
       {cards.map(({ key, label, sublabel, icon: Icon, href, color }) => (
         <Link
           key={key}
