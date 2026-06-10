@@ -87,7 +87,7 @@ export function LeadHeader({ lead }: { lead: Lead }) {
           .is('completed_at', null),
       ])
       toast.success('Stage updated — follow-up task set for 48hrs')
-    } else if (newStage === 'lost' || newStage === 'out_of_area') {
+    } else if (newStage === 'lost' || newStage === 'out_of_area' || newStage === 'parked') {
       await supabase.from('tasks')
         .update({ completed_at: new Date().toISOString(), completed_by: user!.id })
         .eq('lead_id', lead.id)
@@ -185,6 +185,7 @@ export function LeadHeader({ lead }: { lead: Lead }) {
               <SelectSeparator />
               <SelectGroup>
                 <SelectLabel className="text-[10px] uppercase tracking-wide text-gray-400">Other</SelectLabel>
+                <SelectItem value="parked">Parked</SelectItem>
                 <SelectItem value="out_of_area">Out Of Area</SelectItem>
                 <SelectItem value="lost">Lost</SelectItem>
               </SelectGroup>

@@ -132,6 +132,7 @@ function StageCell({ lead }: { lead: Lead }) {
         <SelectSeparator />
         <SelectGroup>
           <SelectLabel className="text-[10px] uppercase tracking-wide text-gray-400">Other</SelectLabel>
+          <SelectItem value="parked">Parked</SelectItem>
           <SelectItem value="out_of_area">Out Of Area</SelectItem>
           <SelectItem value="lost">Lost</SelectItem>
         </SelectGroup>

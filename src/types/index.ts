@@ -14,6 +14,8 @@ export type SalesStage =
 
 export type OutOfAreaStage = 'out_of_area'
 
+export type ParkedStage = 'parked'
+
 export type ProjectStage =
   | 'doors_windows_ordered'
   | 'final_designs_confirmed'
@@ -26,7 +28,7 @@ export type ProjectStage =
 
 export type LostStage = 'lost'
 
-export type Stage = SalesStage | ProjectStage | OutOfAreaStage | LostStage
+export type Stage = SalesStage | ProjectStage | OutOfAreaStage | ParkedStage | LostStage
 
 export type LostReason =
   | 'too_expensive'
@@ -217,6 +219,7 @@ export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; c
   awaiting_payment:          { label: 'Awaiting Payment',          pipeline: 'project', color: 'bg-amber-100 text-amber-800' },
   paid_closed:               { label: 'Paid / Closed',             pipeline: 'project', color: 'bg-emerald-100 text-emerald-800' },
   snagging:                  { label: 'Snagging',                  pipeline: 'project', color: 'bg-orange-100 text-orange-800' },
+  parked:               { label: 'Parked',                 pipeline: 'lost',    color: 'bg-sky-100 text-sky-700' },
   out_of_area:          { label: 'Out Of Area',            pipeline: 'lost',    color: 'bg-gray-100 text-gray-600' },
   lost:                 { label: 'Lost',                  pipeline: 'lost',    color: 'bg-red-100 text-red-700' },
 }
