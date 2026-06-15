@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { MapPin, FileText, Pencil, Check, X, ExternalLink } from 'lucide-react'
+import { MapPin, FileText, Pencil, Check, X, ExternalLink, Calculator } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
@@ -13,8 +13,20 @@ interface Lead {
   address: string | null
   postcode: string | null
   notes: string | null
+  calculator_data: Record<string, unknown> | null
   xero_quote_url: string | null
   xero_invoice_url: string | null
+}
+
+function extractCalcFields(data: Record<string, unknown>): Record<string, string> {
+  const fields = (data?.payload as Record<string, unknown>)?.data ?? data
+  const result: Record<string, string> = {}
+  for (const [k, v] of Object.entries(fields as Record<string, unknown>)) {
+    if (v !== null && v !== undefined && typeof v !== 'object') {
+      result[k] = String(v)
+    }
+  }
+  return result
 }
 
 
@@ -61,7 +73,8 @@ export function LeadProject({ lead }: { lead: Lead }) {
     setEditing(false)
   }
 
-  const hasData = lead.address || lead.postcode || lead.notes || lead.xero_quote_url || lead.xero_invoice_url
+  const calcFields = lead.calculator_data ? extractCalcFields(lead.calculator_data) : null
+  const hasData = lead.address || lead.postcode || lead.notes || lead.calculator_data || lead.xero_quote_url || lead.xero_invoice_url
 
   if (editing) {
     return (
@@ -176,6 +189,24 @@ export function LeadProject({ lead }: { lead: Lead }) {
                 </a>
               )}
             </div>
+          )}
+
+          {calcFields && Object.keys(calcFields).length > 0 && (
+            <details className="mt-1 pt-2 border-t border-gray-100 group">
+              <summary className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none list-none hover:text-gray-700">
+                <Calculator className="w-3.5 h-3.5 shrink-0" />
+                <span>Calculator submission</span>
+                <span className="ml-auto transition-transform group-open:rotate-90 text-gray-400">▶</span>
+              </summary>
+              <div className="mt-2 space-y-1">
+                {Object.entries(calcFields).map(([k, v]) => (
+                  <div key={k} className="flex justify-between text-xs gap-4">
+                    <span className="text-gray-400 capitalize shrink-0">{k.replace(/_/g, ' ')}</span>
+                    <span className="text-gray-700 font-medium text-right">{v}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
           )}
         </div>
       )}

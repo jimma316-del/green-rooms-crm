@@ -45,6 +45,11 @@ export async function POST(req: NextRequest) {
   const project_type = 'garden_room'
   const calculator_data = { ...body }
 
+  const structureRaw = String(fields['Structure'] || '').toLowerCase()
+  const tags = ['calculator_lead']
+  if (structureRaw.includes('canopy')) tags.push('canopy')
+  if (structureRaw.includes('hidden')) tags.push('hidden_storage')
+
   // Calculate distance from KT16 0AN
   let distance_miles: number | null = null
   const cleanPostcode = postcode?.toUpperCase() ?? null
@@ -90,11 +95,11 @@ export async function POST(req: NextRequest) {
     stage,
     pipeline,
     is_hot: false,
-    tags: ['calculator_lead'],
+    tags,
     marketing_consent,
     calculator_data,
     distance_miles,
-    notes: `Calculator submission. Estimated: ${rawBudget || 'N/A'}. Width: ${w}m × Depth: ${d}m. Structure: ${fields['Structure'] || 'N/A'}. Doors: ${fields['What doors would you like?'] || 'N/A'}.`,
+    notes: null,
   }).select().single()
 
   if (error) {
