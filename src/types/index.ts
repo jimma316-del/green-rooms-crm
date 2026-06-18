@@ -210,7 +210,7 @@ export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; c
   followup:             { label: 'Follow-Up',             pipeline: 'sales',   color: 'bg-amber-100 text-amber-800' },
   final_followup:       { label: 'Final Follow-Up',       pipeline: 'sales',   color: 'bg-rose-100 text-rose-800' },
   in_conversation:      { label: 'In Conversation',       pipeline: 'sales',   color: 'bg-teal-100 text-teal-800' },
-  job_booked:           { label: 'Job Booked',            pipeline: 'sales',   color: 'bg-green-100 text-green-800' },
+  job_booked:           { label: 'Job Booked',            pipeline: 'project', color: 'bg-green-100 text-green-800' },
   doors_windows_ordered:     { label: 'Doors & Windows Ordered',   pipeline: 'project', color: 'bg-cyan-100 text-cyan-800' },
   final_designs_confirmed:   { label: 'Final Designs Confirmed',   pipeline: 'project', color: 'bg-violet-100 text-violet-800' },
   design_book_created:       { label: 'Design Book Created',       pipeline: 'project', color: 'bg-indigo-100 text-indigo-700' },
