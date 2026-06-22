@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   const fields = body?.payload?.data ?? body
 
   // Only process calculator submissions
-  if (!fields['Desired Width In Meters']) {
+  if (!fields['Desired Width In Meters'] && !fields.width) {
     return NextResponse.json({ skip: true })
   }
 
@@ -18,10 +18,6 @@ export async function POST(req: NextRequest) {
   const phone = fields['Phone'] || fields.phone || null
   const postcode = fields['Post Code'] || fields['Postcode'] || fields.postcode || null
   const address = fields['Address Line 1'] || fields['Address 1'] || fields['Address'] || fields['First Line of Address'] || fields['Street Address'] || null
-  const address_line_2 = fields['Address Line 2'] || fields['Adress Line 2'] || fields['Address 2'] || null
-  const city = fields['City Or Town'] || fields['City'] || fields['Town'] || fields['city'] || fields['town'] || null
-  const marketingRaw = fields['Keep Me Updated'] ?? fields['I would like to receive marketing emails'] ?? null
-  const marketing_consent = marketingRaw === true || String(marketingRaw).toLowerCase() === 'yes' || String(marketingRaw).toLowerCase() === 'true'
 
   // Budget from calculator e.g. "£14290 (Inc VAT)"
   let budget_min: number | null = null
@@ -38,8 +34,8 @@ export async function POST(req: NextRequest) {
 
   // Size from width × depth
   let size: number | null = null
-  const w = parseFloat(String(fields['Desired Width In Meters'] || '0'))
-  const d = parseFloat(String(fields['Desired Depth In Meters'] || '0'))
+  const w = parseFloat(String(fields['Desired Width In Meters'] || fields.width || '0'))
+  const d = parseFloat(String(fields['Desired Depth In Meters'] || fields.depth || '0'))
   if (w > 0 && d > 0) size = w * d
 
   const project_type = 'garden_room'
@@ -85,8 +81,6 @@ export async function POST(req: NextRequest) {
     mobile: phone,
     postcode: cleanPostcode,
     address: address ?? null,
-    address_line_2: address_line_2 ?? null,
-    city: city ?? null,
     project_type,
     budget_min,
     budget_max,
@@ -96,7 +90,6 @@ export async function POST(req: NextRequest) {
     pipeline,
     is_hot: false,
     tags,
-    marketing_consent,
     calculator_data,
     distance_miles,
     notes: null,
