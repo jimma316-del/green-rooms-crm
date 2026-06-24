@@ -59,6 +59,35 @@ export async function POST(req: NextRequest) {
   const stage = tooFar ? 'out_of_area' : 'new_lead'
   const pipeline = tooFar ? 'lost' : 'sales'
 
+  // Spam filter: UK postcodes follow a known pattern
+  const ukPostcode = /^[A-Z]{1,2}[0-9][0-9A-Z]?\s*[0-9][A-Z]{2}$/i
+  if (cleanPostcode && !ukPostcode.test(cleanPostcode.trim())) {
+    console.log('Spam rejected: invalid UK postcode', cleanPostcode)
+    return NextResponse.json({ skip: true })
+  }
+
+  // Spam filter: UK phone numbers start with 07, 01, 02, 03 or +44
+  const ukPhone = /^(\+44|0)[0-9]{9,10}$/
+  if (phone && !ukPhone.test(String(phone).replace(/[\s\-().]/g, ''))) {
+    console.log('Spam rejected: non-UK phone number', phone)
+    return NextResponse.json({ skip: true })
+  }
+
+  // Spam filter: name segments over 18 chars are almost certainly spam
+  const nameParts = name.trim().split(/\s+/)
+  const longestPart = Math.max(...nameParts.map(p => p.length))
+  if (longestPart > 18) {
+    console.log('Spam rejected: suspiciously long name segment', name)
+    return NextResponse.json({ skip: true })
+  }
+
+  // Spam filter: real names have vowels
+  const vowelRatio = (name.match(/[aeiou]/gi) || []).length / name.replace(/\s/g, '').length
+  if (name !== 'Calculator Lead' && vowelRatio < 0.15) {
+    console.log('Spam rejected: name has too few vowels', name, vowelRatio)
+    return NextResponse.json({ skip: true })
+  }
+
   // Check for duplicate email — if found, update existing lead instead of creating
   let existingLeadId: string | null = null
   if (email) {

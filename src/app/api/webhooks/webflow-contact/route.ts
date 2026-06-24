@@ -30,11 +30,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ skip: true })
   }
 
-  // Spam filter: names shouldn't be a single unbroken string of random chars
+  // Spam filter: UK phone numbers start with 07, 01, 02, 03 or +44
+  const ukPhone = /^(\+44|0)[0-9]{9,10}$/
+  if (phone && !ukPhone.test(phone.replace(/[\s\-().]/g, ''))) {
+    console.log('Spam rejected: non-UK phone number', phone)
+    return NextResponse.json({ skip: true })
+  }
+
+  // Spam filter: names shouldn't contain long random-looking segments
+  // Real first/last names are almost never longer than 18 characters
   const nameParts = name.trim().split(/\s+/)
   const longestPart = Math.max(...nameParts.map(p => p.length))
-  if (longestPart > 25) {
+  if (longestPart > 18) {
     console.log('Spam rejected: suspiciously long name segment', name)
+    return NextResponse.json({ skip: true })
+  }
+
+  // Spam filter: real names have vowels — random strings often don't
+  const vowelRatio = (name.match(/[aeiou]/gi) || []).length / name.replace(/\s/g, '').length
+  if (vowelRatio < 0.15) {
+    console.log('Spam rejected: name has too few vowels', name, vowelRatio)
     return NextResponse.json({ skip: true })
   }
 
