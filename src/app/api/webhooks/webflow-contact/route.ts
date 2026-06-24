@@ -23,6 +23,21 @@ export async function POST(req: NextRequest) {
   const marketingRaw = fields['Form Subscribe 2'] ?? fields['Keep Me Updated'] ?? null
   const marketing_consent = marketingRaw === true || String(marketingRaw).toLowerCase() === 'yes' || String(marketingRaw).toLowerCase() === 'true'
 
+  // Spam filter: UK postcodes follow a known pattern — gibberish fails immediately
+  const ukPostcode = /^[A-Z]{1,2}[0-9][0-9A-Z]?\s*[0-9][A-Z]{2}$/i
+  if (postcode && !ukPostcode.test(postcode.trim())) {
+    console.log('Spam rejected: invalid UK postcode', postcode)
+    return NextResponse.json({ skip: true })
+  }
+
+  // Spam filter: names shouldn't be a single unbroken string of random chars
+  const nameParts = name.trim().split(/\s+/)
+  const longestPart = Math.max(...nameParts.map(p => p.length))
+  if (longestPart > 25) {
+    console.log('Spam rejected: suspiciously long name segment', name)
+    return NextResponse.json({ skip: true })
+  }
+
   const supabase = createAdminClient()
 
   const { data: lead, error } = await supabase.from('leads').insert({
