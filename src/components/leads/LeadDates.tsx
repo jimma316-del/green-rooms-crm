@@ -37,7 +37,7 @@ function siteVisitCalendarUrl(lead: Lead, date: string) {
   const end = toCalendarDate(new Date(new Date(date).getTime() + 60 * 60 * 1000).toISOString())
   const params = new URLSearchParams({
     action: 'TEMPLATE',
-    text: `Site Visit – ${lead.name}`,
+    text: `${lead.name} – Site Visit`,
     dates: `${start}/${end}`,
     details: [lead.mobile, fullAddress(lead)].filter(Boolean).join(' | '),
     location: fullAddress(lead),
@@ -55,7 +55,7 @@ function jobCalendarUrl(lead: Lead, startDate: string, endDate: string) {
   endExclusive.setDate(endExclusive.getDate() + 1)
   const params = new URLSearchParams({
     action: 'TEMPLATE',
-    text: `Job – ${lead.name}`,
+    text: `${lead.name} – Job`,
     dates: `${start}/${fmt(endExclusive)}`,
     details: [lead.mobile, fullAddress(lead)].filter(Boolean).join(' | '),
     location: fullAddress(lead),
