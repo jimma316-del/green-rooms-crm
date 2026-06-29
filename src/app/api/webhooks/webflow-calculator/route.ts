@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
   // Spam filter: name segments over 18 chars are almost certainly spam
   const nameParts = name.trim().split(/\s+/)
-  const longestPart = Math.max(...nameParts.map(p => p.length))
+  const longestPart = Math.max(...nameParts.map((p: string) => p.length))
   if (longestPart > 18) {
     console.log('Spam rejected: suspiciously long name segment', name)
     return NextResponse.json({ skip: true })

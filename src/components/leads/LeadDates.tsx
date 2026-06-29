@@ -13,10 +13,14 @@ interface Lead {
   address: string | null
   city: string | null
   postcode: string | null
+  stage: string
+  pipeline: string
   site_visit_date: string | null
   job_date: string | null
   job_end_date: string | null
 }
+
+const PRE_VISIT_STAGES = ['new_lead', 'followup', 'final_followup', 'in_conversation', 'quote_sent', 'quoting']
 
 function toCalendarDate(iso: string) {
   // Format: YYYYMMDDTHHmmss / YYYYMMDD
@@ -81,8 +85,14 @@ export function LeadDates({ lead }: { lead: Lead }) {
 
   async function save(field: 'site_visit_date' | 'job_date', value: string) {
     setSaving(field === 'site_visit_date' ? 'site' : 'job')
+    const shouldAdvanceStage =
+      field === 'site_visit_date' && value && PRE_VISIT_STAGES.includes(lead.stage)
+
     const update = field === 'site_visit_date'
-      ? { site_visit_date: value ? new Date(value).toISOString() : null }
+      ? {
+          site_visit_date: value ? new Date(value).toISOString() : null,
+          ...(shouldAdvanceStage ? { stage: 'site_survey_booked', pipeline: 'sales' } : {}),
+        }
       : { job_date: jobDate || null, job_end_date: jobEndDate || null }
     const { error } = await supabase
       .from('leads')
