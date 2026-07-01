@@ -12,12 +12,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ skip: true })
   }
 
-  const firstName = fields['First Name 2'] || fields['Name'] || fields.name || ''
-  const surname = fields['Surname 2'] || fields['Surname'] || ''
-  const name = [firstName, surname].filter(Boolean).join(' ') || 'Unknown'
+  const name = fields['Name 2'] || fields['Name'] || fields.name ||
+    [fields['First Name 2'] || fields['First Name'], fields['Surname 2'] || fields['Surname']].filter(Boolean).join(' ') ||
+    'Unknown'
   const email = fields['Email Address 2'] || fields['Email'] || fields.email || null
   const phone = fields['Contact Number 2'] || fields['Phone Number'] || fields.phone || null
   const postcode = fields['Postcode 2'] || fields['Postcode'] || fields.postcode || null
+  const address = fields['Address Line 1 2'] || fields['Address Line 1'] || fields['Address 2'] || fields['Address'] || fields['Street Address'] || null
+  const address_line_2 = fields['Address Line 2 2'] || fields['Address Line 2'] || fields['Adress Line 2'] || null
+  const city = fields['City Or Town 2'] || fields['City 2'] || fields['Town 2'] || fields['City Or Town'] || fields['City'] || fields['Town'] || null
   const message = fields['Message 2'] || fields['Garden Room Project'] || fields.message || null
   const hearAboutUs = fields['Question 2'] || fields['How did you hear about us?'] || null
   const marketingRaw = fields['Form Subscribe 2'] ?? fields['Keep Me Updated'] ?? null
@@ -40,7 +43,7 @@ export async function POST(req: NextRequest) {
   // Spam filter: names shouldn't contain long random-looking segments
   // Real first/last names are almost never longer than 18 characters
   const nameParts = name.trim().split(/\s+/)
-  const longestPart = Math.max(...nameParts.map(p => p.length))
+  const longestPart = Math.max(...nameParts.map((p: string) => p.length))
   if (longestPart > 18) {
     console.log('Spam rejected: suspiciously long name segment', name)
     return NextResponse.json({ skip: true })
@@ -61,6 +64,9 @@ export async function POST(req: NextRequest) {
     mobile: phone,
     notes: message || null,
     source_referrer: hearAboutUs,
+    address: address ?? null,
+    address_line_2: address_line_2 ?? null,
+    city: city ?? null,
     postcode: postcode?.toUpperCase(),
     lead_source: 'website_form',
     stage: 'new_lead',
