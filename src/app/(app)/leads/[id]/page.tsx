@@ -31,6 +31,8 @@ export default async function LeadPage({ params }: Props) {
     { data: lead },
     { data: tasks },
     { data: activities },
+    { data: assessment },
+    { data: quotes },
   ] = await Promise.all([
     supabase
       .from('leads')
@@ -49,6 +51,19 @@ export default async function LeadPage({ params }: Props) {
       .eq('lead_id', id)
       .order('created_at', { ascending: false })
       .limit(50),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any)
+      .from('site_assessments')
+      .select('id, width_m, depth_m, updated_at')
+      .eq('lead_id', id)
+      .single(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any)
+      .from('lead_quotes')
+      .select('id, status, updated_at, tiers')
+      .eq('lead_id', id)
+      .order('updated_at', { ascending: false })
+      .limit(1),
   ])
 
   if (!lead) notFound()
@@ -98,6 +113,54 @@ export default async function LeadPage({ params }: Props) {
         {/* Right column */}
         <div className="md:col-span-2 space-y-4">
           <LeadProject lead={lead} />
+
+          {/* Assessment & Quote card */}
+          <div className="bg-white rounded-xl border border-border p-4">
+            <h2 className="text-sm font-semibold text-[var(--primary)] mb-3">Site Assessment & Quote</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <a href={`/leads/${id}/assessment`}
+                className="flex flex-col gap-1 p-3 rounded-lg border border-gray-200 hover:border-[var(--primary)] hover:bg-gray-50 transition-colors">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Assessment</span>
+                {assessment ? (
+                  <>
+                    <span className="text-sm font-medium text-gray-900">
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {(assessment as any).width_m}m × {(assessment as any).depth_m}m
+                    </span>
+                    <span className="text-xs text-green-600">✓ Completed — edit ↗</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm text-gray-400">Not started</span>
+                    <span className="text-xs text-[var(--primary)]">Start assessment ↗</span>
+                  </>
+                )}
+              </a>
+
+              {quotes && quotes.length > 0 ? (
+                <a href={`/leads/${id}/quote/${(quotes[0] as { id: string }).id}`}
+                  className="flex flex-col gap-1 p-3 rounded-lg border border-gray-200 hover:border-[var(--primary)] hover:bg-gray-50 transition-colors">
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quote</span>
+                  <span className="text-sm font-medium text-gray-900 capitalize">
+                    {(quotes[0] as { status: string }).status}
+                  </span>
+                  <span className="text-xs text-[var(--primary)]">Edit quote ↗</span>
+                </a>
+              ) : (
+                <a href={`/leads/${id}/quote`}
+                  className={`flex flex-col gap-1 p-3 rounded-lg border border-gray-200 transition-colors ${
+                    assessment ? 'hover:border-[var(--primary)] hover:bg-gray-50' : 'opacity-50 pointer-events-none'
+                  }`}>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quote</span>
+                  <span className="text-sm text-gray-400">Not created</span>
+                  <span className="text-xs text-[var(--primary)]">
+                    {assessment ? 'Build quote ↗' : 'Complete assessment first'}
+                  </span>
+                </a>
+              )}
+            </div>
+          </div>
+
           <TasksList tasks={tasks ?? []} leadId={id} />
           <ActivityFeed activities={activities ?? []} leadId={id} />
         </div>
