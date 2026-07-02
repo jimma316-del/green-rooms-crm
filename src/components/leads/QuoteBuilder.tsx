@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Plus, Trash2, Printer, Save, GripVertical } from 'lucide-react'
 import type { LeadQuote, QuoteTier, QuoteLineItem, SiteAssessment } from '@/types/assessment'
-import { CLADDING_LABELS, tierTotal, poundStr, TIER_DEFAULTS } from '@/types/assessment'
+import { CLADDING_LABELS, tierTotal, poundStr, TIER_DEFAULTS, PRICING, DOOR_OPTIONS, WINDOW_OPTIONS, ELEC_OPTIONS, CLIMATE_OPTIONS } from '@/types/assessment'
 
 const TIER_COLOURS = {
   good:   { bg: 'bg-slate-50',  border: 'border-slate-200', badge: 'bg-slate-100 text-slate-700',  active: 'border-slate-400' },
@@ -13,73 +13,168 @@ const TIER_COLOURS = {
   best:   { bg: 'bg-amber-50',  border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700',  active: 'border-amber-500' },
 }
 
+function wallsLabel(n: number) {
+  return n === 1 ? 'front wall' : n === 2 ? 'front + 1 side' : n === 3 ? 'front + 2 sides' : 'all 4 walls'
+}
+
+function claddingCostFor(rate: number, w: number, d: number, walls: number) {
+  if (walls === 1) return w * rate
+  if (walls === 2) return w * rate + d * rate
+  if (walls === 3) return w * rate + d * rate * 2
+  return (w + d) * rate * 2
+}
+
+function p(pounds: number) { return Math.round(pounds * 100) }
+
 function buildDefaultItems(a: SiteAssessment, tierKey: 'good' | 'better' | 'best'): QuoteLineItem[] {
   const items: QuoteLineItem[] = []
-  const cladding = a.tiers_enabled
-    ? (tierKey === 'good' ? a.cladding_good : tierKey === 'better' ? a.cladding_better : a.cladding_best) ?? 'box_profile'
-    : (a.single_cladding ?? 'box_profile')
+  const w = a.width_m ?? 4
+  const d = a.depth_m ?? 3
+  const sqm = w * d
+  const walls = a.cladding_walls ?? 1
 
-  const sqm = a.width_m && a.depth_m ? a.width_m * a.depth_m : 0
-  const claddingLabel = CLADDING_LABELS[cladding] ?? cladding
+  const cladKey = a.tiers_enabled
+    ? (tierKey === 'good' ? a.cladding_good : tierKey === 'better' ? a.cladding_better : a.cladding_best) ?? 'thermo_ayous'
+    : (a.single_cladding ?? 'thermo_ayous')
+  const claddingLabel = CLADDING_LABELS[cladKey] ?? cladKey
+  const claddingRate = PRICING.CLADDING[cladKey] ?? 245
 
+  const roofUplift = sqm * (PRICING.ROOF[a.roof_type ?? 'flat'] ?? 0)
+  const structureBase = PRICING.BASE + sqm * PRICING.SQM + roofUplift
+  const roofLabel = a.roof_type === 'flat' ? 'flat roof'
+    : a.roof_type === 'dual_pitched' ? 'dual pitched roof'
+    : a.roof_type === 'dual_extended' ? 'dual pitched extended height roof'
+    : a.roof_type === 'single_ext' ? 'single pitch extended roof'
+    : 'flat roof'
+
+  // Structure
   items.push({
     id: crypto.randomUUID(), category: 'room', vat: true,
-    description: `Garden Room ${a.width_m ?? '?'}m × ${a.depth_m ?? '?'}m — ${claddingLabel} cladding`,
-    amount_pence: 0,
+    description: `Garden Room ${w}m × ${d}m (${sqm.toFixed(1)}m²) — SIPS panel construction, ${roofLabel}, fully insulated & decorated`,
+    amount_pence: p(structureBase),
   })
 
-  if (a.cable_run_m) {
-    items.push({
-      id: crypto.randomUUID(), category: 'electrics', vat: true,
-      description: a.has_consumer_unit
-        ? `Consumer unit connection & first fix (${a.cable_run_m}m cable run)`
-        : `Mains supply connection (${a.cable_run_m}m armoured cable run)`,
-      amount_pence: 0,
-    })
-  }
+  // Cladding
+  items.push({
+    id: crypto.randomUUID(), category: 'room', vat: true,
+    description: `External cladding — ${claddingLabel} (${wallsLabel(walls)})`,
+    amount_pence: p(claddingCostFor(claddingRate, w, d, walls)),
+  })
 
-  if (a.downlight_count > 0 || a.double_socket_count > 0) {
-    items.push({
-      id: crypto.randomUUID(), category: 'electrics', vat: true,
-      description: `Electrics — ${a.downlight_count} LED downlights, ${a.double_socket_count} double sockets${a.usb_socket_count > 0 ? `, ${a.usb_socket_count} USB sockets` : ''}, EIC certificate`,
-      amount_pence: 0,
-    })
-  }
-
-  if (a.electricals?.includes('cat6')) {
-    items.push({ id: crypto.randomUUID(), category: 'electrics', vat: true, description: 'WiFi via Cat6a data cable', amount_pence: 0 })
-  }
-
-  const hasAc = a.climate === 'ac_2_5kw' || a.climate === 'ac_5kw'
-  if (hasAc) {
-    const acLabel = a.climate === 'ac_5kw' ? '5kW' : '2.5kW'
+  // Canopy
+  if (a.has_canopy) {
     items.push({
       id: crypto.randomUUID(), category: 'extras', vat: true,
-      description: `Air conditioning — ${acLabel} unit (heat & cool)`,
-      amount_pence: 0,
+      description: `Front canopy${a.canopy_depth_m ? ` (${a.canopy_depth_m}m depth)` : ''} with ${claddingLabel} cladding`,
+      amount_pence: p(1000 + w * claddingRate / 2),
     })
   }
 
-  if (a.climate === 'wall_heater') {
-    items.push({ id: crypto.randomUUID(), category: 'extras', vat: true, description: 'Electric panel heater', amount_pence: 0 })
+  if (a.has_side_canopy) {
+    items.push({
+      id: crypto.randomUUID(), category: 'extras', vat: true,
+      description: 'Side canopy',
+      amount_pence: p(700 + 2 * claddingRate),
+    })
   }
 
+  if (a.has_storage) {
+    items.push({ id: crypto.randomUUID(), category: 'extras', vat: true, description: 'Hidden storage', amount_pence: p(1740) })
+  }
+
+  if (a.has_glass_corner) {
+    items.push({ id: crypto.randomUUID(), category: 'extras', vat: true, description: 'Glass corner unit', amount_pence: p(1450) })
+  }
+
+  if (a.has_skylight) {
+    items.push({ id: crypto.randomUUID(), category: 'extras', vat: true, description: 'Roof skylight', amount_pence: p(1400) })
+  }
+
+  // Doors
+  for (const door of a.doors ?? []) {
+    const opt = DOOR_OPTIONS.find(o => o.value === door.key)
+    if (!opt) continue
+    items.push({
+      id: crypto.randomUUID(), category: 'room', vat: true,
+      description: `${opt.label} — ${door.colour} (${door.position} elevation)`,
+      amount_pence: p(opt.price),
+    })
+  }
+
+  // Windows
+  for (const win of a.windows ?? []) {
+    const opt = WINDOW_OPTIONS.find(o => o.value === win.type)
+    if (!opt) continue
+    const glaz = win.glazing !== 'double' ? ` ${win.glazing}-glazed` : ''
+    const op = win.opening ? ' opening' : ' fixed'
+    items.push({
+      id: crypto.randomUUID(), category: 'room', vat: true,
+      description: `${win.count > 1 ? `${win.count}× ` : ''}${opt.label}${glaz}${op} — ${win.colour} (${win.position})`,
+      amount_pence: p(opt.price * win.count),
+    })
+  }
+
+  // Standard electrics (priced by James based on cable run / spec)
+  const electricParts = [
+    a.has_consumer_unit ? 'consumer unit & EIC certificate' : null,
+    a.cable_run_m ? `${a.cable_run_m}m armoured cable` : null,
+    a.downlight_count > 0 ? `${a.downlight_count} LED downlights` : null,
+    a.double_socket_count > 0 ? `${a.double_socket_count} double sockets` : null,
+    a.usb_socket_count > 0 ? `${a.usb_socket_count} USB sockets` : null,
+  ].filter(Boolean).join(', ')
+  if (electricParts) {
+    items.push({
+      id: crypto.randomUUID(), category: 'electrics', vat: true,
+      description: `Standard electrics — ${electricParts}`,
+      amount_pence: 0, // price TBC by James
+    })
+  }
+
+  // Electrical extras
+  for (const elec of a.electricals ?? []) {
+    const opt = ELEC_OPTIONS.find(e => e.value === elec)
+    if (!opt) continue
+    items.push({
+      id: crypto.randomUUID(), category: 'electrics', vat: true,
+      description: opt.label,
+      amount_pence: p(opt.price),
+    })
+  }
+
+  // Climate
+  if (a.climate && a.climate !== 'none') {
+    const opt = CLIMATE_OPTIONS.find(c => c.value === a.climate)
+    if (opt) {
+      items.push({
+        id: crypto.randomUUID(), category: 'extras', vat: true,
+        description: opt.label,
+        amount_pence: p(opt.price),
+      })
+    }
+  }
+
+  // Decking
   if (a.has_decking) {
-    const deckSqm = a.deck_w && a.deck_d ? ` (approx ${(a.deck_w * a.deck_d).toFixed(1)}m²)` : ''
+    const deckPrice = 225 + 360 * (a.deck_w ?? 3) * (a.deck_d ?? 2)
+    const deckSqm = a.deck_w && a.deck_d ? ` (${(a.deck_w * a.deck_d).toFixed(1)}m²)` : ''
     items.push({
       id: crypto.randomUUID(), category: 'decking', vat: true,
       description: `Composite decking${deckSqm}`,
-      amount_pence: 0,
+      amount_pence: p(deckPrice),
     })
   }
 
+  // Planning
   if (a.planning_type === 'full_planning' || a.planning_type === 'conservation_area' || a.planning_type === 'listed_building') {
-    items.push({ id: crypto.randomUUID(), category: 'extras', vat: false, description: 'Planning application fee (exempt from VAT)', amount_pence: 0 })
+    items.push({ id: crypto.randomUUID(), category: 'extras', vat: false, description: 'Planning application support (VAT exempt)', amount_pence: 0 })
   }
 
-  if (sqm > 0) {
-    items.push({ id: crypto.randomUUID(), category: 'other', vat: false, description: 'Ground screws (permitted development / no concrete)', amount_pence: 0 })
-  }
+  // Ground screws
+  items.push({
+    id: crypto.randomUUID(), category: 'other', vat: false,
+    description: `Ground screw foundations — ${sqm.toFixed(1)}m² footprint (no concrete, no groundworks)`,
+    amount_pence: 0, // James to price
+  })
 
   return items
 }
