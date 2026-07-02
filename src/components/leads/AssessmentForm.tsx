@@ -705,11 +705,16 @@ export function AssessmentForm({ leadId, initialData, quoteId }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(draft),
       })
-      if (!res.ok) throw new Error()
+      const json = await res.json()
+      if (!res.ok) {
+        toast.error(`Save failed: ${json.error ?? res.status}`)
+        return
+      }
       setLastSaved(new Date())
       toast.success('Assessment saved')
-    } catch {
+    } catch (e) {
       toast.error('Could not save assessment')
+      console.error(e)
     } finally {
       setSaving(false)
     }
@@ -723,19 +728,26 @@ export function AssessmentForm({ leadId, initialData, quoteId }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(draft),
       })
-      if (!res.ok) throw new Error('assessment save failed')
-      const { assessment } = await res.json()
+      const resJson = await res.json()
+      if (!res.ok) {
+        toast.error(`Assessment save failed: ${resJson.error ?? res.status}`)
+        return
+      }
 
       const qRes = await fetch(`/api/leads/${leadId}/quotes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assessment_id: assessment?.id }),
+        body: JSON.stringify({ assessment_id: resJson.assessment?.id }),
       })
-      if (!qRes.ok) throw new Error('quote create failed')
-      const q = await qRes.json()
-      router.push(`/leads/${leadId}/quote/${q.id}`)
-    } catch {
+      const qJson = await qRes.json()
+      if (!qRes.ok) {
+        toast.error(`Quote create failed: ${qJson.error ?? qRes.status}`)
+        return
+      }
+      router.push(`/leads/${leadId}/quote/${qJson.quote.id}`)
+    } catch (e) {
       toast.error('Could not save and create quote')
+      console.error(e)
     } finally {
       setSaving(false)
     }
