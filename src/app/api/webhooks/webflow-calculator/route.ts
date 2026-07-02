@@ -16,16 +16,14 @@ export async function POST(req: NextRequest) {
   // Log incoming field names to help diagnose missing fields
   console.log('Calculator webhook fields:', JSON.stringify(fields))
 
-  const firstName = String(fields['first_name'] || fields['First name'] || fields['First Name'] || fields['name'] || fields['Name'] || '')
-  const surname   = String(fields['surname'] || fields['last_name'] || fields['Surname'] || fields['Last name'] || fields['Last Name'] || '')
-  const name = [firstName, surname].filter(Boolean).join(' ') || 'Calculator Lead'
-
-  const email = fields['Email 2'] || fields['Email'] || fields['email'] || null
-  const phone = fields['phone'] || fields['Phone'] || fields['mobile'] || fields['Mobile'] || fields['Contact Number'] || fields['Contact Number 2'] || null
-  const postcode = fields['postcode'] || fields['Postcode'] || fields['Post Code'] || fields['post_code'] || null
-  const address = fields['address'] || fields['first_line'] || fields['Address Line 1'] || fields['First line of address'] || fields['First Line of Address'] || null
-  const address_line_2 = fields['address_line_2'] || fields['second_line'] || fields['Address line 2'] || fields['Address Line 2'] || null
-  const city = fields['city'] || fields['town'] || fields['City'] || fields['Town'] || fields['City or town'] || fields['City Or Town'] || null
+  // Fields sent directly from Netlify function (clean separate fields)
+  const name = String(fields['name'] || fields['first_name'] || fields['First Name'] || 'Calculator Lead')
+  const email = fields['email'] || fields['Email'] || null
+  const phone = fields['phone'] || fields['Phone'] || fields['mobile'] || null
+  const postcode = fields['postcode'] || fields['Postcode'] || fields['Post Code'] || null
+  const address = fields['address'] || fields['Address Line 1'] || null
+  const address_line_2 = fields['address_line_2'] || fields['Address Line 2'] || null
+  const city = fields['city'] || fields['City'] || fields['Town'] || null
 
   // Budget from calculator e.g. "£14290 (Inc VAT)"
   let budget_min: number | null = null
