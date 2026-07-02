@@ -40,7 +40,7 @@ interface Lead {
 
 function brochureType(tags: string[], sqm: number | null, distance: number | null, pipeline: string): 'R' | 'P' | null {
   // Only show for leads within SMS range (≤20 miles) and not lost — same criteria as automated SMS
-  if (pipeline === 'lost' || distance === null || distance > 20) return null
+  if (pipeline === 'lost' || distance === null || distance > 25) return null
   if (tags.includes('canopy') || tags.includes('hidden_storage')) return 'R'
   if (sqm !== null && sqm > 15) return 'R'
   return 'P'

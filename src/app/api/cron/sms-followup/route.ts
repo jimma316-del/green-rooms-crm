@@ -70,9 +70,9 @@ export async function GET(req: NextRequest) {
         results.skipped++
         continue
       }
-      if (miles <= 12) {
+      if (miles <= 15) {
         message = MESSAGE_CLOSE(firstName)
-      } else if (miles <= 20) {
+      } else if (miles <= 25) {
         message = MESSAGE_FAR(firstName)
       } else {
         // Outside 20 miles — don't send

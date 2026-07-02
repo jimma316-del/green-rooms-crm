@@ -62,9 +62,9 @@ export async function POST(req: NextRequest) {
 
     const firstName = (lead.name ?? 'there').split(' ')[0]
     let message: string
-    if (miles <= 12) {
+    if (miles <= 15) {
       message = MESSAGE_CLOSE(firstName)
-    } else if (miles <= 20) {
+    } else if (miles <= 25) {
       message = MESSAGE_FAR(firstName)
     } else {
       results.skipped++
