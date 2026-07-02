@@ -14,15 +14,18 @@ export async function POST(req: NextRequest) {
   }
 
   // Log incoming field names to help diagnose missing fields
-  console.log('Calculator webhook fields:', Object.keys(fields))
+  console.log('Calculator webhook fields:', JSON.stringify(fields))
 
-  const name = fields['Enter Your Full Name'] || fields['Name 2'] || fields['Name'] || fields.name || 'Calculator Lead'
-  const email = fields['Email 2'] || fields['Email'] || fields.email || null
-  const phone = fields['Phone 2'] || fields['Phone'] || fields['Contact Number'] || fields['Contact Number 2'] || fields.phone || null
-  const postcode = fields['Post Code 2'] || fields['Post Code'] || fields['Postcode 2'] || fields['Postcode'] || fields.postcode || null
-  const address = fields['address'] || fields['Address Line 1 2'] || fields['Address Line 1'] || fields['Address 2'] || fields['Address'] || fields['First Line of Address'] || fields['Street Address'] || null
-  const address_line_2 = fields['Address Line 2 2'] || fields['Address Line 2'] || fields['Adress Line 2'] || null
-  const city = fields['City Or Town 2'] || fields['City 2'] || fields['Town 2'] || fields['City Or Town'] || fields['City'] || fields['Town'] || null
+  const firstName = String(fields['first_name'] || fields['First name'] || fields['First Name'] || fields['name'] || fields['Name'] || '')
+  const surname   = String(fields['surname'] || fields['last_name'] || fields['Surname'] || fields['Last name'] || fields['Last Name'] || '')
+  const name = [firstName, surname].filter(Boolean).join(' ') || 'Calculator Lead'
+
+  const email = fields['Email 2'] || fields['Email'] || fields['email'] || null
+  const phone = fields['phone'] || fields['Phone'] || fields['mobile'] || fields['Mobile'] || fields['Contact Number'] || fields['Contact Number 2'] || null
+  const postcode = fields['postcode'] || fields['Postcode'] || fields['Post Code'] || fields['post_code'] || null
+  const address = fields['address'] || fields['first_line'] || fields['Address Line 1'] || fields['First line of address'] || fields['First Line of Address'] || null
+  const address_line_2 = fields['address_line_2'] || fields['second_line'] || fields['Address line 2'] || fields['Address Line 2'] || null
+  const city = fields['city'] || fields['town'] || fields['City'] || fields['Town'] || fields['City or town'] || fields['City Or Town'] || null
 
   // Budget from calculator e.g. "£14290 (Inc VAT)"
   let budget_min: number | null = null
