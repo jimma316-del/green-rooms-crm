@@ -13,11 +13,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ skip: true })
   }
 
-  const name = fields['Enter Your Full Name'] || fields.name || fields['Name'] || 'Calculator Lead'
-  const email = fields['Email'] || fields.email || null
-  const phone = fields['Phone'] || fields.phone || null
-  const postcode = fields['Post Code'] || fields['Postcode'] || fields.postcode || null
-  const address = fields['Address Line 1'] || fields['Address 1'] || fields['Address'] || fields['First Line of Address'] || fields['Street Address'] || null
+  // Log incoming field names to help diagnose missing fields
+  console.log('Calculator webhook fields:', Object.keys(fields))
+
+  const name = fields['Enter Your Full Name'] || fields['Name 2'] || fields['Name'] || fields.name || 'Calculator Lead'
+  const email = fields['Email 2'] || fields['Email'] || fields.email || null
+  const phone = fields['Phone 2'] || fields['Phone'] || fields['Contact Number'] || fields['Contact Number 2'] || fields.phone || null
+  const postcode = fields['Post Code 2'] || fields['Post Code'] || fields['Postcode 2'] || fields['Postcode'] || fields.postcode || null
+  const address = fields['Address Line 1 2'] || fields['Address Line 1'] || fields['Address 2'] || fields['Address'] || fields['First Line of Address'] || fields['Street Address'] || null
+  const address_line_2 = fields['Address Line 2 2'] || fields['Address Line 2'] || fields['Adress Line 2'] || null
+  const city = fields['City Or Town 2'] || fields['City 2'] || fields['Town 2'] || fields['City Or Town'] || fields['City'] || fields['Town'] || null
 
   // Budget from calculator e.g. "£14290 (Inc VAT)"
   let budget_min: number | null = null
@@ -110,6 +115,8 @@ export async function POST(req: NextRequest) {
     mobile: phone,
     postcode: cleanPostcode,
     address: address ?? null,
+    address_line_2: address_line_2 ?? null,
+    city: city ?? null,
     project_type,
     budget_min,
     budget_max,
