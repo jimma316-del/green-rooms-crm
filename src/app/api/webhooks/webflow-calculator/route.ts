@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   const email = fields['Email 2'] || fields['Email'] || fields.email || null
   const phone = fields['Phone 2'] || fields['Phone'] || fields['Contact Number'] || fields['Contact Number 2'] || fields.phone || null
   const postcode = fields['Post Code 2'] || fields['Post Code'] || fields['Postcode 2'] || fields['Postcode'] || fields.postcode || null
-  const address = fields['Address Line 1 2'] || fields['Address Line 1'] || fields['Address 2'] || fields['Address'] || fields['First Line of Address'] || fields['Street Address'] || null
+  const address = fields['address'] || fields['Address Line 1 2'] || fields['Address Line 1'] || fields['Address 2'] || fields['Address'] || fields['First Line of Address'] || fields['Street Address'] || null
   const address_line_2 = fields['Address Line 2 2'] || fields['Address Line 2'] || fields['Adress Line 2'] || null
   const city = fields['City Or Town 2'] || fields['City 2'] || fields['Town 2'] || fields['City Or Town'] || fields['City'] || fields['Town'] || null
 
