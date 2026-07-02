@@ -194,25 +194,28 @@ export default async function PrintPage({ params }: Props) {
                 </>}
                 {a.roof_type && <>
                   <div className="spec-label">Roof</div>
-                  <div className="spec-value">{a.roof_type === 'flat' ? 'Flat (EPDM rubber membrane)' : a.roof_type === 'apex' ? 'Apex pitched roof' : 'Mono-pitch roof'}</div>
+                  <div className="spec-value">{
+                    a.roof_type === 'flat' ? 'Flat (EPDM rubber membrane)' :
+                    a.roof_type === 'dual_pitched' ? 'Dual pitched (A-frame)' :
+                    a.roof_type === 'dual_extended' ? 'Dual pitched extended height' :
+                    a.roof_type === 'single_ext' ? 'Single pitch extended height' :
+                    a.roof_type.replace(/_/g, ' ')
+                  }</div>
                 </>}
                 {a.has_canopy && <>
                   <div className="spec-label">Canopy</div>
                   <div className="spec-value">Covered outdoor canopy{a.canopy_depth_m ? ` (${a.canopy_depth_m}m depth)` : ''}</div>
                 </>}
-                {a.door_type && <>
-                  <div className="spec-label">Main Doors</div>
+                {a.doors?.length > 0 && <>
+                  <div className="spec-label">Doors</div>
                   <div className="spec-value">
-                    {a.door_type === 'bifold' ? `Aluminium bi-fold (${a.door_panels ?? ''}-panel)` :
-                     a.door_type === 'sliding' ? 'Aluminium sliding doors' :
-                     a.door_type === 'french' ? 'Aluminium French doors' : 'Aluminium single door'}
-                    {a.door_colour ? ` — ${a.door_colour}` : ''}
+                    {a.doors.map(d => `${d.key.replace(/_/g, ' ')} — ${d.colour} (${d.position})`).join('; ')}
                   </div>
                 </>}
-                {a.windows.length > 0 && <>
+                {a.windows?.length > 0 && <>
                   <div className="spec-label">Windows</div>
                   <div className="spec-value">
-                    {a.windows.map(w => `${w.count > 1 ? `${w.count}× ` : ''}${w.width_mm}×${w.height_mm}mm ${w.type} (${w.position})`).join(', ')}
+                    {a.windows.map(w => `${w.count > 1 ? `${w.count}× ` : ''}${w.width_mm}×${w.height_mm}mm ${w.type.replace(/_/g,' ')} (${w.position})${w.glazing !== 'double' ? ` ${w.glazing} glazed` : ''}`).join(', ')}
                   </div>
                 </>}
                 {(a.downlight_count > 0 || a.double_socket_count > 0) && <>
@@ -222,23 +225,15 @@ export default async function PrintPage({ params }: Props) {
                       a.downlight_count > 0 ? `${a.downlight_count} LED downlights` : null,
                       a.double_socket_count > 0 ? `${a.double_socket_count} double sockets` : null,
                       a.usb_socket_count > 0 ? `${a.usb_socket_count} USB sockets` : null,
-                      a.has_wifi ? 'WiFi point' : null,
-                      a.has_ac ? `AC (${a.ac_units} unit${a.ac_units !== 1 ? 's' : ''})` : null,
-                      a.has_ufh ? 'Underfloor heating' : null,
+                      a.electricals?.includes('cat6') ? 'WiFi via Cat6a' : null,
+                      a.climate === 'ac_2_5kw' ? 'Air con 2.5kW' : a.climate === 'ac_5kw' ? 'Air con 5kW' : null,
+                      a.climate === 'wall_heater' ? 'Electric panel heater' : null,
                     ].filter(Boolean).join(', ')}
                   </div>
                 </>}
                 {a.has_decking && <>
                   <div className="spec-label">Decking</div>
-                  <div className="spec-value">Composite decking{a.decking_sqm ? ` approx ${a.decking_sqm}m²` : ''}</div>
-                </>}
-                {a.has_blinds && <>
-                  <div className="spec-label">Blinds</div>
-                  <div className="spec-value">Fitted blinds throughout</div>
-                </>}
-                {a.has_acoustic_panels && <>
-                  <div className="spec-label">Acoustic Panels</div>
-                  <div className="spec-value">Acoustic wall panels</div>
+                  <div className="spec-value">Composite decking{a.deck_w && a.deck_d ? ` approx ${(a.deck_w * a.deck_d).toFixed(1)}m²` : ''}</div>
                 </>}
               </div>
 

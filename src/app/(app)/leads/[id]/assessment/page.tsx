@@ -26,7 +26,7 @@ export default async function AssessmentPage({ params }: Props) {
       <div className="bg-white border-b border-gray-100 px-4 py-3">
         <a href={`/leads/${id}`} className="text-xs text-gray-500 hover:text-gray-700">← {lead.name}</a>
       </div>
-      <AssessmentForm leadId={id} initial={assessment as SiteAssessment | null} />
+      <AssessmentForm leadId={id} initialData={assessment ? (assessment as unknown as SiteAssessment) : undefined} />
     </div>
   )
 }

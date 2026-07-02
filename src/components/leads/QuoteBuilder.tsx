@@ -46,41 +46,34 @@ function buildDefaultItems(a: SiteAssessment, tierKey: 'good' | 'better' | 'best
     })
   }
 
-  if (a.has_wifi) {
-    items.push({ id: crypto.randomUUID(), category: 'electrics', vat: true, description: 'WiFi access point', amount_pence: 0 })
+  if (a.electricals?.includes('cat6')) {
+    items.push({ id: crypto.randomUUID(), category: 'electrics', vat: true, description: 'WiFi via Cat6a data cable', amount_pence: 0 })
   }
 
-  if (a.has_ac) {
+  const hasAc = a.climate === 'ac_2_5kw' || a.climate === 'ac_5kw'
+  if (hasAc) {
+    const acLabel = a.climate === 'ac_5kw' ? '5kW' : '2.5kW'
     items.push({
       id: crypto.randomUUID(), category: 'extras', vat: true,
-      description: `Air conditioning — ${a.ac_units} unit${a.ac_units > 1 ? 's' : ''}`,
+      description: `Air conditioning — ${acLabel} unit (heat & cool)`,
       amount_pence: 0,
     })
   }
 
-  if (a.has_ufh) {
-    items.push({ id: crypto.randomUUID(), category: 'extras', vat: true, description: 'Underfloor heating', amount_pence: 0 })
+  if (a.climate === 'wall_heater') {
+    items.push({ id: crypto.randomUUID(), category: 'extras', vat: true, description: 'Electric panel heater', amount_pence: 0 })
   }
 
-  const includedTiers: Record<string, string[]> = { good: ['good','better','best'], better: ['better','best'], best: ['best'] }
-
-  if (a.has_decking && a.decking_tier && includedTiers[a.decking_tier]?.includes(tierKey)) {
+  if (a.has_decking) {
+    const deckSqm = a.deck_w && a.deck_d ? ` (approx ${(a.deck_w * a.deck_d).toFixed(1)}m²)` : ''
     items.push({
       id: crypto.randomUUID(), category: 'decking', vat: true,
-      description: `Composite decking${a.decking_sqm ? ` (approx ${a.decking_sqm}m²)` : ''}`,
+      description: `Composite decking${deckSqm}`,
       amount_pence: 0,
     })
   }
 
-  if (a.has_blinds && a.blinds_tier && includedTiers[a.blinds_tier]?.includes(tierKey)) {
-    items.push({ id: crypto.randomUUID(), category: 'extras', vat: true, description: 'Fitted blinds', amount_pence: 0 })
-  }
-
-  if (a.has_acoustic_panels) {
-    items.push({ id: crypto.randomUUID(), category: 'extras', vat: true, description: 'Acoustic wall panels', amount_pence: 0 })
-  }
-
-  if (a.needs_planning) {
+  if (a.planning_type === 'full_planning' || a.planning_type === 'conservation_area' || a.planning_type === 'listed_building') {
     items.push({ id: crypto.randomUUID(), category: 'extras', vat: false, description: 'Planning application fee (exempt from VAT)', amount_pence: 0 })
   }
 
@@ -352,10 +345,10 @@ export function QuoteBuilder({
         <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600">
           <span className="font-medium text-gray-800">From assessment: </span>
           {assessment.width_m}m × {assessment.depth_m}m
-          {assessment.roof_type && ` · ${assessment.roof_type.replace('_', ' ')} roof`}
+          {assessment.roof_type && ` · ${assessment.roof_type.replace(/_/g, ' ')} roof`}
           {assessment.has_canopy && ` · canopy`}
-          {' · '}{assessment.door_type?.replace('_', ' ')} doors
-          {assessment.has_ac && ` · AC`}
+          {assessment.doors?.length > 0 && ` · ${assessment.doors.length} door set${assessment.doors.length > 1 ? 's' : ''}`}
+          {(assessment.climate === 'ac_2_5kw' || assessment.climate === 'ac_5kw') && ` · AC`}
           {assessment.has_decking && ` · decking`}
         </div>
       )}
