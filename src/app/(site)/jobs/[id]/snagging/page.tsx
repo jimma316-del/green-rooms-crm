@@ -31,7 +31,7 @@ export default async function SnaggingPage({ params }: Props) {
       .order('created_at', { ascending: true }),
     admin
       .from('tasks')
-      .select('id, title, notes, type, completed_at')
+      .select('id, title, notes, type, completed_at, due_date')
       .eq('lead_id', id),
   ])
 

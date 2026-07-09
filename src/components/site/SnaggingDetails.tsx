@@ -3,13 +3,14 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { MapPin, ArrowLeft, Camera, X, Loader2, Play, Pencil, Check, ClipboardCheck } from 'lucide-react'
+import { MapPin, ArrowLeft, Camera, X, Loader2, Play, Pencil, Check, ClipboardCheck, Calendar } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface SnaggingTask {
   id: string
   title: string
   notes: string | null
+  due_date: string | null
 }
 
 interface Props {
@@ -49,6 +50,8 @@ export function SnaggingDetails({ leadId, name, address, existingPhotos, task }:
   const [taskNotes, setTaskNotes] = useState(task?.notes ?? '')
   const [taskId, setTaskId] = useState(task?.id ?? null)
   const [savingTask, setSavingTask] = useState(false)
+  const [snaggingDate, setSnaggingDate] = useState(task?.due_date?.slice(0, 10) ?? '')
+  const [savingDate, setSavingDate] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
@@ -63,6 +66,16 @@ export function SnaggingDetails({ leadId, name, address, existingPhotos, task }:
     if (data.taskId) setTaskId(data.taskId)
     setSavingTask(false)
     setEditingTask(false)
+  }
+
+  async function saveSnaggingDate(date: string) {
+    setSavingDate(true)
+    await fetch(`/api/leads/${leadId}/snagging-task`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ taskId, due_date: date || null }),
+    })
+    setSavingDate(false)
   }
 
   async function handleFiles(files: FileList | null) {
@@ -131,6 +144,23 @@ export function SnaggingDetails({ leadId, name, address, existingPhotos, task }:
                 <p className="text-sm text-gray-500">{address}</p>
               </div>
             )}
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="w-4 h-4 text-orange-500" />
+              <p className="text-sm font-semibold text-gray-800">Snagging date</p>
+              {savingDate && <span className="text-xs text-gray-400 ml-auto">Saving…</span>}
+            </div>
+            <input
+              type="date"
+              value={snaggingDate}
+              onChange={e => {
+                setSnaggingDate(e.target.value)
+                saveSnaggingDate(e.target.value)
+              }}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500"
+            />
           </div>
 
           <div className="bg-white rounded-xl border border-orange-200 p-5">

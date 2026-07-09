@@ -3,14 +3,20 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { taskId, notes } = await req.json() as { taskId: string | null; notes: string }
+  const body = await req.json() as { taskId: string | null; notes?: string; due_date?: string | null }
+  const { taskId, notes, due_date } = body
   const admin = createAdminClient()
+
+  const patch = {
+    ...(notes !== undefined ? { notes: notes.trim() || null } : {}),
+    ...(due_date !== undefined ? { due_date: due_date || null } : {}),
+  }
 
   if (taskId) {
     // Update existing task
     const { error } = await admin
       .from('tasks')
-      .update({ notes: notes.trim() || null })
+      .update(patch)
       .eq('id', taskId)
       .eq('lead_id', id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -30,7 +36,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         assigned_to: userId,
         title: 'Snagging',
         type: 'snagging',
-        notes: notes.trim() || null,
+        notes: notes?.trim() || null,
+        due_date: due_date || null,
         priority: 'normal',
       })
       .select('id')
