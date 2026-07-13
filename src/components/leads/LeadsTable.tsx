@@ -260,9 +260,12 @@ export function LeadsTable({ leads, total, page, pageSize, duplicateEmails }: Pr
   function exportCSV() {
     const selectedLeads = leads.filter(l => selected.has(l.id))
     const rows = [
-      ['Name', 'Address Line 1', 'Address Line 2', 'City', 'Postcode'],
+      ['Name', 'Address Line 1', 'Address Line 2', 'City', 'Postcode', 'Brochure'],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...selectedLeads.map(l => [l.name, l.address ?? '', (l as any).address_line_2 ?? '', (l as any).city ?? '', l.postcode ?? '']),
+      ...selectedLeads.map(l => {
+        const bType = brochureType(l.tags ?? [], l.approx_size_sqm, l.distance_miles, l.pipeline)
+        return [l.name, l.address ?? '', (l as any).address_line_2 ?? '', (l as any).city ?? '', l.postcode ?? '', bType === 'R' ? 'Room' : bType === 'P' ? 'Pod' : '']
+      }),
     ]
     const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
