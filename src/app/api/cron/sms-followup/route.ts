@@ -5,6 +5,7 @@ import { sendSms, formatUkMobile } from '@/lib/sms'
 
 const WA_LINK = 'https://wa.me/441932640242?text=Hi%2C%20I%27d%20like%20to%20discuss%20my%20garden%20room%20project'
 
+// Calculator leads — came through the price calculator
 const MESSAGE_CLOSE = (firstName: string) => `Hi ${firstName}, thanks for visiting our website and requesting a quote from The Green Rooms!
 
 Would you like me to arrange a site visit with James? He can talk through your project in more detail, have a look at the space, and answer any questions you may have.
@@ -29,8 +30,19 @@ Natasha
 The Green Rooms
 www.thegreenrooms.com`
 
+// Site visit / contact form leads — already requested a visit
+const MESSAGE_SITE_VISIT = (firstName: string) => `Hi ${firstName}, thanks for getting in touch with The Green Rooms!
+
+James would be happy to pop round and have a look at your space — just let us know when would be a good time for you.
+
+WhatsApp us here: ${WA_LINK}
+
+Kind regards,
+Natasha
+The Green Rooms
+www.thegreenrooms.com`
+
 export async function GET(req: NextRequest) {
-  // Verify this is a legitimate Vercel cron request
   const authHeader = req.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -41,12 +53,13 @@ export async function GET(req: NextRequest) {
 
   const { data: leads, error } = await supabase
     .from('leads')
-    .select('id, name, mobile, postcode')
-    .not('calculator_data', 'is', null)
+    .select('id, name, mobile, postcode, calculator_data, lead_source')
     .not('mobile', 'is', null)
     .is('sms_sent_at', null)
     .lte('created_at', cutoff)
     .neq('pipeline', 'lost')
+    // Exclude manual/referral — those are already-known contacts
+    .not('lead_source', 'in', '("manual","referral")')
 
   if (error) {
     console.error('SMS cron query error:', error)
@@ -57,44 +70,44 @@ export async function GET(req: NextRequest) {
 
   for (const lead of leads ?? []) {
     const phone = formatUkMobile(lead.mobile ?? '')
-    if (!phone) { results.skipped++; continue }
+    if (!phone || !lead.postcode) { results.skipped++; continue }
+
+    const miles = await distanceFromBase(lead.postcode)
+    if (miles === null) { results.skipped++; continue }
 
     const firstName = (lead.name ?? 'there').split(' ')[0]
+    const isCalculatorLead = lead.calculator_data !== null
+    let message: string
 
-    let message: string | null = null
-
-    if (lead.postcode) {
-      const miles = await distanceFromBase(lead.postcode)
-      if (miles === null) {
-        // Postcode lookup failed — skip rather than guess
-        results.skipped++
-        continue
-      }
+    if (isCalculatorLead) {
       if (miles <= 15) {
         message = MESSAGE_CLOSE(firstName)
       } else if (miles <= 25) {
         message = MESSAGE_FAR(firstName)
       } else {
-        // Outside 20 miles — don't send
+        // Too far — mark to avoid re-checking
         results.skipped++
         await supabase.from('leads').update({ sms_sent_at: new Date().toISOString() }).eq('id', lead.id)
         continue
       }
     } else {
-      // No postcode — skip
-      results.skipped++
-      continue
+      // Site visit / contact form lead
+      if (miles > 25) {
+        results.skipped++
+        await supabase.from('leads').update({ sms_sent_at: new Date().toISOString() }).eq('id', lead.id)
+        continue
+      }
+      message = MESSAGE_SITE_VISIT(firstName)
     }
 
     const ok = await sendSms(phone, message)
-
     if (ok) {
       await supabase.from('leads').update({ sms_sent_at: new Date().toISOString() }).eq('id', lead.id)
       await supabase.from('activities').insert({
         lead_id: lead.id,
         created_by: lead.id,
         type: 'sms_sent',
-        body: 'Automated follow-up SMS sent',
+        body: `Automated follow-up SMS sent (${isCalculatorLead ? 'calculator' : 'site visit'} lead)`,
       })
       results.sent++
     } else {

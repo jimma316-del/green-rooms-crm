@@ -30,6 +30,17 @@ Natasha
 The Green Rooms
 www.thegreenrooms.com`
 
+const MESSAGE_SITE_VISIT = (firstName: string) => `Hi ${firstName}, thanks for getting in touch with The Green Rooms!
+
+James would be happy to pop round and have a look at your space — just let us know when would be a good time for you.
+
+WhatsApp us here: ${WA_LINK}
+
+Kind regards,
+Natasha
+The Green Rooms
+www.thegreenrooms.com`
+
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
@@ -42,12 +53,12 @@ export async function POST(req: NextRequest) {
 
   const { data: leads, error } = await admin
     .from('leads')
-    .select('id, name, mobile, postcode')
-    .not('calculator_data', 'is', null)
+    .select('id, name, mobile, postcode, calculator_data, lead_source')
     .not('mobile', 'is', null)
     .is('sms_sent_at', null)
     .lte('created_at', cutoff)
     .neq('pipeline', 'lost')
+    .not('lead_source', 'in', '("manual","referral")')
 
   if (error) return NextResponse.json({ error: 'Query failed', detail: error.message }, { status: 500 })
 
@@ -59,16 +70,16 @@ export async function POST(req: NextRequest) {
 
     const miles = await distanceFromBase(lead.postcode)
     if (miles === null) { results.skipped++; continue }
+    if (miles > 25) { results.skipped++; continue }
 
     const firstName = (lead.name ?? 'there').split(' ')[0]
+    const isCalculatorLead = lead.calculator_data !== null
     let message: string
-    if (miles <= 15) {
-      message = MESSAGE_CLOSE(firstName)
-    } else if (miles <= 25) {
-      message = MESSAGE_FAR(firstName)
+
+    if (isCalculatorLead) {
+      message = miles <= 15 ? MESSAGE_CLOSE(firstName) : MESSAGE_FAR(firstName)
     } else {
-      results.skipped++
-      continue
+      message = MESSAGE_SITE_VISIT(firstName)
     }
 
     const ok = await sendSms(phone, message)
@@ -78,7 +89,7 @@ export async function POST(req: NextRequest) {
         lead_id: lead.id,
         created_by: user.id,
         type: 'sms_sent',
-        body: 'Automated follow-up SMS sent (manual trigger)',
+        body: `Automated follow-up SMS sent (${isCalculatorLead ? 'calculator' : 'site visit'} lead, manual trigger)`,
       })
       results.sent++
       results.leads.push(lead.name ?? lead.id)
