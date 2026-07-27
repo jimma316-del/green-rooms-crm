@@ -54,11 +54,11 @@ export async function POST(req: NextRequest) {
   const { data: leads, error } = await admin
     .from('leads')
     .select('id, name, mobile, postcode, calculator_data, lead_source')
+    .not('calculator_data', 'is', null)
     .not('mobile', 'is', null)
     .is('sms_sent_at', null)
     .lte('created_at', cutoff)
     .neq('pipeline', 'lost')
-    .not('lead_source', 'in', '("manual","referral")')
 
   if (error) return NextResponse.json({ error: 'Query failed', detail: error.message }, { status: 500 })
 

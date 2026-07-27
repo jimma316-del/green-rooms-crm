@@ -54,12 +54,11 @@ export async function GET(req: NextRequest) {
   const { data: leads, error } = await supabase
     .from('leads')
     .select('id, name, mobile, postcode, calculator_data, lead_source')
+    .not('calculator_data', 'is', null)
     .not('mobile', 'is', null)
     .is('sms_sent_at', null)
     .lte('created_at', cutoff)
     .neq('pipeline', 'lost')
-    // Exclude manual/referral — those are already-known contacts
-    .not('lead_source', 'in', '("manual","referral")')
 
   if (error) {
     console.error('SMS cron query error:', error)
