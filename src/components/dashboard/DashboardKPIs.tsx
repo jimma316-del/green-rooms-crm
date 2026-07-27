@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Users, CalendarCheck, FileText, MapPin, HardHat, Send, MessageCircle, Clock, AlertTriangle } from 'lucide-react'
+import { Users, CalendarCheck, FileText, MapPin, HardHat, Send, MessageCircle, Clock } from 'lucide-react'
 
 interface KPIs {
   newLeads: number
@@ -10,7 +10,6 @@ interface KPIs {
   quoteSent: number
   inConversation: number
   followUp: number
-  finalFollowUp: number
 }
 
 const cards = [
@@ -71,14 +70,6 @@ const cards = [
     color: 'bg-indigo-50 text-indigo-600',
   },
   {
-    key: 'finalFollowUp' as const,
-    label: 'Final Follow Up',
-    sublabel: 'last chance',
-    icon: AlertTriangle,
-    href: '/leads?stage=final_followup',
-    color: 'bg-rose-50 text-rose-600',
-  },
-  {
     key: 'jobsInProgress' as const,
     label: 'Jobs Booked',
     sublabel: 'booked & in build',
@@ -90,7 +81,7 @@ const cards = [
 
 export function DashboardKPIs({ kpis }: { kpis: KPIs }) {
   return (
-    <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3">
+    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3">
       {cards.map(({ key, label, sublabel, icon: Icon, href, color }) => (
         <Link
           key={key}

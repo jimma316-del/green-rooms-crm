@@ -36,7 +36,7 @@ export default async function LeadsPage({ searchParams }: Props) {
 
   let query = supabase
     .from('leads')
-    .select('id, name, mobile, email, address, address_line_2, city, postcode, stage, pipeline, is_hot, lead_source, updated_at, created_at, first_contact_at, assigned_to, marketing_consent, distance_miles, sms_sent_at, brochures_sent, approx_size_sqm, tags, tasks(id, title, due_date, completed_at)', { count: 'exact' })
+    .select('id, name, mobile, email, address, address_line_2, city, postcode, stage, pipeline, lead_source, updated_at, created_at, first_contact_at, assigned_to, marketing_consent, distance_miles, sms_sent_at, brochures_sent, approx_size_sqm, tags, tasks(id, title, due_date, completed_at)', { count: 'exact' })
 
   if (params.q) {
     query = query.or(`name.ilike.%${params.q}%,email.ilike.%${params.q}%,mobile.ilike.%${params.q}%,postcode.ilike.%${params.q}%`)
@@ -44,7 +44,6 @@ export default async function LeadsPage({ searchParams }: Props) {
   if (params.stage) query = query.eq('stage', params.stage)
   if (params.pipeline) query = query.eq('pipeline', params.pipeline)
   if (params.source) query = query.eq('lead_source', params.source)
-  if (params.hot === 'true') query = query.eq('is_hot', true)
   if (params.marketing === 'true') query = query.eq('marketing_consent', true)
   const { data: leads, count } = await query
     .order(sortCol, { ascending, nullsFirst: false })

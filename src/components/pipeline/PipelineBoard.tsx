@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { STAGE_CONFIG, SALES_STAGES } from '@/types'
 import type { Pipeline, Stage } from '@/types'
-import { Flame, MapPin, Building2, MessageSquare, BookOpen } from 'lucide-react'
+import { MapPin, Building2, MessageSquare, BookOpen } from 'lucide-react'
 import { formatDistanceToNow } from '@/utils/date'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -18,7 +18,6 @@ interface Lead {
   pipeline: string
   project_type: string | null
   postcode: string | null
-  is_hot: boolean
   updated_at: string
   job_date: string | null
   sms_sent_at: string | null
@@ -128,8 +127,7 @@ export function PipelineBoard({ leads: initialLeads, pipeline }: Props) {
     const { data: { user } } = await supabase.auth.getUser()
 
     const toPipeline = STAGE_CONFIG[toStage as Stage]?.pipeline
-    const clearHot = toPipeline === 'project' || toPipeline === 'lost' || toStage === 'job_booked'
-    const { error } = await supabase.from('leads').update({ stage: toStage, ...(clearHot ? { is_hot: false } : {}) }).eq('id', dragging)
+    const { error } = await supabase.from('leads').update({ stage: toStage, pipeline: toPipeline }).eq('id', dragging)
     if (error) {
       toast.error('Failed to move lead')
       setLeads(initialLeads)
@@ -307,7 +305,6 @@ function LeadCard({
         >
           {lead.name}
         </Link>
-        {lead.is_hot && <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0 mt-0.5" />}
       </div>
 
       {subStageCfg && (

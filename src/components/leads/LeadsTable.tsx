@@ -8,7 +8,7 @@ import type { Stage } from '@/types'
 import {
   Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger,
 } from '@/components/ui/select'
-import { Flame, Phone, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Search, X, Trash2, Download, Mail, MailCheck, MessageSquare, BookOpen } from 'lucide-react'
+import { Phone, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Search, X, Trash2, Download, Mail, MailCheck, MessageSquare, BookOpen } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { formatDistanceToNow, formatShortDate } from '@/utils/date'
 import { cn } from '@/lib/utils'
@@ -24,7 +24,6 @@ interface Lead {
   postcode: string | null
   stage: string
   pipeline: string
-  is_hot: boolean
   lead_source: string | null
   updated_at: string
   created_at: string
@@ -65,9 +64,8 @@ function StageCell({ lead }: { lead: Lead }) {
     if (!newStage || newStage === stage) return
     setSaving(true)
     const newPipeline = STAGE_CONFIG[newStage as Stage]?.pipeline ?? 'sales'
-    const clearHot = newPipeline === 'project' || newPipeline === 'lost' || newStage === 'job_booked'
     const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from('leads').update({ stage: newStage, pipeline: newPipeline, ...(clearHot ? { is_hot: false } : {}) }).eq('id', lead.id)
+    await supabase.from('leads').update({ stage: newStage, pipeline: newPipeline }).eq('id', lead.id)
     if (newStage === 'quoting') {
       await supabase.from('tasks').insert({
         lead_id: lead.id,
@@ -478,7 +476,6 @@ export function LeadsTable({ leads, total, page, pageSize, duplicateEmails }: Pr
                     </td>
                     <td className="px-4 py-3">
                       <Link href={`/leads/${lead.id}`} className="flex items-center gap-2 group">
-                        {lead.is_hot && <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0" />}
                         <span className="font-medium text-gray-900 group-hover:text-[var(--primary)]">{lead.name}</span>
                         {lead.email && duplicateEmails?.has(lead.email) && (
                           <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium shrink-0">Dup</span>
@@ -561,7 +558,6 @@ export function LeadsTable({ leads, total, page, pageSize, duplicateEmails }: Pr
               <Link key={lead.id} href={`/leads/${lead.id}`} className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    {lead.is_hot && <Flame className="w-3.5 h-3.5 text-orange-500" />}
                     <span className="font-medium text-gray-900 text-sm">{lead.name}</span>
                   </div>
                   <p className="text-xs text-gray-500 mt-0.5">

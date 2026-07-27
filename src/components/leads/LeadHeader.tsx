@@ -6,27 +6,24 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { STAGE_CONFIG, SALES_STAGES, PROJECT_STAGES } from '@/types'
 import type { Stage } from '@/types'
-import { ChevronLeft, Flame, Phone, MessageCircle, Mail, Trash2, ClipboardCheck } from 'lucide-react'
+import { ChevronLeft, Phone, MessageCircle, Mail, Trash2, ClipboardCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 
 interface Lead {
   id: string
   name: string
   stage: string
   pipeline: string
-  is_hot: boolean
   mobile: string | null
   email: string | null
 }
 
 export function LeadHeader({ lead }: { lead: Lead }) {
   const [stage, setStage] = useState(lead.stage)
-  const [isHot, setIsHot] = useState(lead.is_hot)
   const [saving, setSaving] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -38,10 +35,9 @@ export function LeadHeader({ lead }: { lead: Lead }) {
     const { data: { user } } = await supabase.auth.getUser()
 
     const newPipeline = STAGE_CONFIG[newStage as Stage]?.pipeline
-    const clearHot = newPipeline === 'project' || newPipeline === 'lost' || newStage === 'job_booked'
 
     await Promise.all([
-      supabase.from('leads').update({ stage: newStage, pipeline: newPipeline, ...(clearHot ? { is_hot: false } : {}) }).eq('id', lead.id),
+      supabase.from('leads').update({ stage: newStage, pipeline: newPipeline }).eq('id', lead.id),
       supabase.from('stage_history').insert({
         lead_id: lead.id,
         from_stage: stage,
@@ -98,7 +94,6 @@ export function LeadHeader({ lead }: { lead: Lead }) {
     }
 
     setStage(newStage)
-    if (clearHot) setIsHot(false)
     setSaving(false)
     router.refresh()
   }
@@ -108,12 +103,6 @@ export function LeadHeader({ lead }: { lead: Lead }) {
     await supabase.from('leads').delete().eq('id', lead.id)
     router.push('/leads')
     router.refresh()
-  }
-
-  async function toggleHot() {
-    const newHot = !isHot
-    setIsHot(newHot)
-    await supabase.from('leads').update({ is_hot: newHot }).eq('id', lead.id)
   }
 
   function whatsappUrl() {
@@ -135,18 +124,6 @@ export function LeadHeader({ lead }: { lead: Lead }) {
           >
             <Trash2 className="w-3.5 h-3.5" />
             Delete
-          </button>
-          <button
-          onClick={toggleHot}
-          className={cn(
-            'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors',
-            isHot
-              ? 'bg-orange-100 text-orange-600'
-              : 'bg-gray-100 text-gray-500 hover:bg-orange-50 hover:text-orange-400'
-          )}
-        >
-          <Flame className="w-3.5 h-3.5" />
-          {isHot ? 'Hot lead' : 'Mark hot'}
           </button>
         </div>
       </div>

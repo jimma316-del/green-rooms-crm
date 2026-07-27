@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Flame } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 import { STAGE_CONFIG } from '@/types'
 import type { Stage } from '@/types'
 import { formatDistanceToNow } from '@/utils/date'
@@ -18,14 +18,14 @@ export function HotLeadsPanel({ leads }: { leads: Lead[] }) {
     <div className="bg-white rounded-xl border border-border p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
-          <Flame className="w-4 h-4 text-orange-500" />
-          <h2 className="text-sm font-semibold text-[var(--primary)]">Hot Leads</h2>
+          <MessageCircle className="w-4 h-4 text-teal-500" />
+          <h2 className="text-sm font-semibold text-[var(--primary)]">In Conversation</h2>
         </div>
-        <Link href="/leads?hot=true" className="text-xs text-[var(--primary)] hover:underline">View all →</Link>
+        <Link href="/leads?stage=in_conversation" className="text-xs text-[var(--primary)] hover:underline">View all →</Link>
       </div>
 
       {leads.length === 0 ? (
-        <p className="text-sm text-gray-400 py-4 text-center">No hot leads right now</p>
+        <p className="text-sm text-gray-400 py-4 text-center">No leads in conversation right now</p>
       ) : (
         <div className="space-y-2">
           {leads.map(lead => {

@@ -8,7 +8,6 @@ export type SalesStage =
   | 'quoting'
   | 'quote_sent'
   | 'followup'
-  | 'final_followup'
   | 'in_conversation'
   | 'job_booked'
 
@@ -207,8 +206,7 @@ export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; c
   site_survey_booked:   { label: 'Site Survey Booked',    pipeline: 'sales',   color: 'bg-purple-100 text-purple-800' },
   quoting:              { label: 'Quoting',               pipeline: 'sales',   color: 'bg-indigo-100 text-indigo-800' },
   quote_sent:           { label: 'Quote Sent',            pipeline: 'sales',   color: 'bg-orange-100 text-orange-800' },
-  followup:             { label: 'Follow-Up',             pipeline: 'sales',   color: 'bg-amber-100 text-amber-800' },
-  final_followup:       { label: 'Final Follow-Up',       pipeline: 'sales',   color: 'bg-rose-100 text-rose-800' },
+  followup:             { label: 'Follow Up',              pipeline: 'sales',   color: 'bg-amber-100 text-amber-800' },
   in_conversation:      { label: 'In Conversation',       pipeline: 'sales',   color: 'bg-teal-100 text-teal-800' },
   job_booked:           { label: 'Job Booked',            pipeline: 'project', color: 'bg-green-100 text-green-800' },
   doors_windows_ordered:     { label: 'Doors & Windows Ordered',   pipeline: 'project', color: 'bg-cyan-100 text-cyan-800' },
@@ -226,7 +224,7 @@ export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; c
 
 export const SALES_STAGES: SalesStage[] = [
   'new_lead', 'site_survey_booked',
-  'quoting', 'quote_sent', 'in_conversation', 'followup', 'final_followup', 'job_booked',
+  'quoting', 'quote_sent', 'in_conversation', 'followup', 'job_booked',
 ]
 
 export const PROJECT_STAGES: ProjectStage[] = [

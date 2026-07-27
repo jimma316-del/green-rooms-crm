@@ -24,15 +24,14 @@ export default async function DashboardPage() {
     { data: quotesWaiting },
     { data: depositsOut },
     { data: jobsInProgress },
-    { data: hotLeads },
+    { data: inConversationLeads },
     { data: overdueTasks },
     { data: recentActivity },
     { data: stageCounts },
     { data: smsReplies },
     { data: quoteSent },
-    { data: inConversation },
+    { data: inConversationCount },
     { data: followUp },
-    { data: finalFollowUp },
   ] = await Promise.all([
     // New leads this week
     supabase.from('leads').select('id', { count: 'exact' })
@@ -57,11 +56,11 @@ export default async function DashboardPage() {
       .eq('pipeline', 'project')
       .in('stage', ['job_booked', 'doors_windows_ordered', 'final_designs_confirmed', 'design_book_created', 'schedule_sent_to_client', 'in_build']),
 
-    // Hot leads: manually flagged with the flame icon
+    // In conversation leads — shown in the panel on the dashboard
     supabase.from('leads')
       .select('id, name, stage, project_type, updated_at, postcode')
-      .eq('is_hot', true)
-      .eq('is_newsletter', false)
+      .eq('stage', 'in_conversation')
+      .neq('pipeline', 'lost')
       .order('updated_at', { ascending: false })
       .limit(20),
 
@@ -94,7 +93,6 @@ export default async function DashboardPage() {
     supabase.from('leads').select('id', { count: 'exact' }).eq('stage', 'quote_sent'),
     supabase.from('leads').select('id', { count: 'exact' }).eq('stage', 'in_conversation'),
     supabase.from('leads').select('id', { count: 'exact' }).eq('stage', 'followup'),
-    supabase.from('leads').select('id', { count: 'exact' }).eq('stage', 'final_followup'),
   ])
 
   type TaskItem = { id: string; title: string; due_date: string | null; type: string; priority: string; lead_id: string | null; leads: { name: string } | null }
@@ -116,9 +114,8 @@ export default async function DashboardPage() {
     siteVisitsBooked: depositsOut?.length ?? 0,
     jobsInProgress: jobsInProgress?.length ?? 0,
     quoteSent: quoteSent?.length ?? 0,
-    inConversation: inConversation?.length ?? 0,
+    inConversation: inConversationCount?.length ?? 0,
     followUp: followUp?.length ?? 0,
-    finalFollowUp: finalFollowUp?.length ?? 0,
   }
 
   return (
@@ -138,7 +135,7 @@ export default async function DashboardPage() {
       <PipelineSummary leads={stageCounts ?? []} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-        <HotLeadsPanel leads={hotLeads ?? []} />
+        <HotLeadsPanel leads={inConversationLeads ?? []} />
         <OverdueTasksPanel tasks={sortedTasks} />
         <RecentActivityPanel activities={recentActivity ?? []} />
       </div>
