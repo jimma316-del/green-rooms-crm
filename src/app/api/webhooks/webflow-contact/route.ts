@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   const email = fields['Email Address 2'] || fields['Email'] || fields.email || null
   const phone = fields['Contact Number 2'] || fields['Phone Number'] || fields.phone || null
   const postcode = fields['Postcode 2'] || fields['Postcode'] || fields.postcode || null
-  const address = fields['Address Line 1 2'] || fields['Address Line 1'] || fields['Address 2'] || fields['Address'] || fields['Street Address'] || null
+  const address = fields['Address Line 1 2'] || fields['Address Line 1'] || fields['Address 2'] || fields['Address'] || fields['Street Address'] || fields.address || null
   const address_line_2 = fields['Address Line 2 2'] || fields['Address Line 2'] || fields['Adress Line 2'] || null
   const city = fields['City Or Town 2'] || fields['City 2'] || fields['Town 2'] || fields['City Or Town'] || fields['City'] || fields['Town'] || null
   const message = fields['Message 2'] || fields['Garden Room Project'] || fields.message || null
