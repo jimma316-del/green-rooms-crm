@@ -35,9 +35,10 @@ export function LeadHeader({ lead }: { lead: Lead }) {
     const { data: { user } } = await supabase.auth.getUser()
 
     const newPipeline = STAGE_CONFIG[newStage as Stage]?.pipeline
+    const extraFields = newStage === 'snagging' ? { snagging_signed_off_at: null } : {}
 
     await Promise.all([
-      supabase.from('leads').update({ stage: newStage, pipeline: newPipeline }).eq('id', lead.id),
+      supabase.from('leads').update({ stage: newStage, pipeline: newPipeline, ...extraFields }).eq('id', lead.id),
       supabase.from('stage_history').insert({
         lead_id: lead.id,
         from_stage: stage,
