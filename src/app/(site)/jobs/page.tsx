@@ -1,11 +1,11 @@
 export const dynamic = 'force-dynamic'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { STAGE_CONFIG } from '@/types'
 import { JobsClient } from '@/components/site/JobsClient'
 
 export default async function JobsPage() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const [{ data: leads }, { data: snaggingLeads }, { data: archivedLeads }] = await Promise.all([
     // Active jobs (not snagging, not paid/closed, has job date)
