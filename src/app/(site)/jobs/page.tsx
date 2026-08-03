@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { createClient } from '@/lib/supabase/server'
 import { STAGE_CONFIG } from '@/types'
 import { JobsClient } from '@/components/site/JobsClient'
