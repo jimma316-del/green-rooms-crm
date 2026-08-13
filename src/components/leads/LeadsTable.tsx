@@ -213,7 +213,15 @@ export function LeadsTable({ leads, total, page, pageSize, duplicateEmails }: Pr
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isMarketingFilter = searchParams.get('marketing') === 'true'
+  const stageFilter = searchParams.get('stage')
   const allSelected = leads.length > 0 && leads.every(l => selected.has(l.id))
+
+  function clearStageFilter() {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('stage')
+    params.delete('page')
+    router.push(`${pathname}?${params.toString()}`)
+  }
 
   function toggleMarketingFilter() {
     const params = new URLSearchParams(searchParams.toString())
@@ -351,6 +359,15 @@ export function LeadsTable({ leads, total, page, pageSize, duplicateEmails }: Pr
             </button>
           )}
         </div>
+        {stageFilter && (
+          <button
+            onClick={clearStageFilter}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border bg-purple-50 border-purple-200 text-purple-700 font-medium whitespace-nowrap hover:bg-purple-100 transition-colors"
+          >
+            {STAGE_CONFIG[stageFilter as Stage]?.label ?? stageFilter}
+            <X className="w-3 h-3 ml-0.5" />
+          </button>
+        )}
         <button
           onClick={toggleMarketingFilter}
           className={cn(
