@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { STAGE_CONFIG, SALES_STAGES } from '@/types'
+import { STAGE_CONFIG } from '@/types'
 import type { Pipeline, Stage } from '@/types'
 import { MapPin, Building2, MessageSquare, BookOpen } from 'lucide-react'
 import { formatDistanceToNow } from '@/utils/date'
@@ -37,6 +37,17 @@ interface Props {
   leads: Lead[]
   pipeline: Pipeline
 }
+
+// Site Visits column groups site_survey_booked + showroom_meeting; showroom leads show sub-stage label
+const SALES_COLUMNS: ColumnConfig[] = [
+  { id: 'new_lead',            label: 'New Lead',          stages: ['new_lead'],            dropStage: 'new_lead',            color: STAGE_CONFIG.new_lead.color },
+  { id: 'site_visits',         label: 'Site Visit Booked', stages: ['site_survey_booked', 'showroom_meeting'], dropStage: 'site_survey_booked', color: STAGE_CONFIG.site_survey_booked.color },
+  { id: 'quoting',             label: 'Quoting',           stages: ['quoting'],             dropStage: 'quoting',             color: STAGE_CONFIG.quoting.color },
+  { id: 'quote_sent',          label: 'Quote Sent',        stages: ['quote_sent'],          dropStage: 'quote_sent',          color: STAGE_CONFIG.quote_sent.color },
+  { id: 'in_conversation',     label: 'In Conversation',   stages: ['in_conversation'],     dropStage: 'in_conversation',     color: STAGE_CONFIG.in_conversation.color },
+  { id: 'followup',            label: 'Follow Up',         stages: ['followup'],            dropStage: 'followup',            color: STAGE_CONFIG.followup.color },
+  { id: 'job_booked',          label: 'Job Booked',        stages: ['job_booked'],          dropStage: 'job_booked',          color: STAGE_CONFIG.job_booked.color },
+]
 
 // Job Booked column aggregates all pre-build stages so cards show sub-stage labels
 const PROJECT_COLUMNS: ColumnConfig[] = [
@@ -84,15 +95,7 @@ export function PipelineBoard({ leads: initialLeads, pipeline }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
-  const columns: ColumnConfig[] = pipeline === 'sales'
-    ? SALES_STAGES.map(stage => ({
-        id: stage,
-        label: STAGE_CONFIG[stage as Stage].label,
-        stages: [stage],
-        dropStage: stage,
-        color: STAGE_CONFIG[stage as Stage].color,
-      }))
-    : PROJECT_COLUMNS
+  const columns: ColumnConfig[] = pipeline === 'sales' ? SALES_COLUMNS : PROJECT_COLUMNS
 
   function leadsByColumn(col: ColumnConfig) {
     const filtered = leads.filter(l => col.stages.includes(l.stage))

@@ -34,7 +34,7 @@ const cards = [
     label: 'Site Visits Booked',
     sublabel: 'upcoming visits',
     icon: MapPin,
-    href: '/leads?stage=site_survey_booked',
+    href: '/pipeline',
     color: 'bg-purple-50 text-purple-600',
   },
   {

@@ -5,6 +5,7 @@ export type Pipeline = 'sales' | 'project' | 'lost'
 export type SalesStage =
   | 'new_lead'
   | 'site_survey_booked'
+  | 'showroom_meeting'
   | 'quoting'
   | 'quote_sent'
   | 'followup'
@@ -204,6 +205,7 @@ export interface StageHistory {
 export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; color: string }> = {
   new_lead:             { label: 'New Lead',              pipeline: 'sales',   color: 'bg-slate-100 text-slate-700' },
   site_survey_booked:   { label: 'Site Survey Booked',    pipeline: 'sales',   color: 'bg-purple-100 text-purple-800' },
+  showroom_meeting:     { label: 'Showroom Meeting',       pipeline: 'sales',   color: 'bg-blue-100 text-blue-800' },
   quoting:              { label: 'Quoting',               pipeline: 'sales',   color: 'bg-indigo-100 text-indigo-800' },
   quote_sent:           { label: 'Quote Sent',            pipeline: 'sales',   color: 'bg-orange-100 text-orange-800' },
   followup:             { label: 'Follow Up',              pipeline: 'sales',   color: 'bg-amber-100 text-amber-800' },
@@ -223,7 +225,7 @@ export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; c
 }
 
 export const SALES_STAGES: SalesStage[] = [
-  'new_lead', 'site_survey_booked',
+  'new_lead', 'site_survey_booked', 'showroom_meeting',
   'quoting', 'quote_sent', 'in_conversation', 'followup', 'job_booked',
 ]
 

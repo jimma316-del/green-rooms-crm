@@ -47,9 +47,9 @@ export default async function DashboardPage() {
     supabase.from('leads').select('id', { count: 'exact' })
       .eq('stage', 'quoting'),
 
-    // Site surveys booked
+    // Site surveys + showroom meetings booked
     supabase.from('leads').select('id', { count: 'exact' })
-      .eq('stage', 'site_survey_booked'),
+      .in('stage', ['site_survey_booked', 'showroom_meeting']),
 
     // Jobs booked (all pre-build and in-build project stages)
     supabase.from('leads').select('id', { count: 'exact' })
