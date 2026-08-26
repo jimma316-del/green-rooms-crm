@@ -95,6 +95,11 @@ export default async function DashboardPage() {
     supabase.from('leads').select('id', { count: 'exact' }).eq('stage', 'followup'),
   ])
 
+  const { data: stockAlerts } = await createAdminClient()
+    .from('stock_items')
+    .select('id, name')
+    .eq('needs_reorder', true)
+
   type TaskItem = { id: string; title: string; due_date: string | null; type: string; priority: string; lead_id: string | null; leads: { name: string } | null }
   const PRIORITY_ORDER: Record<string, number> = { high: 0, normal: 1, low: 2 }
   const sortedTasks = ((overdueTasks ?? []) as TaskItem[]).sort((a, b) => {
@@ -128,6 +133,21 @@ export default async function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {stockAlerts && stockAlerts.length > 0 && (
+        <a href="/stock" className="flex items-center gap-3 mb-4 px-4 py-3 bg-amber-50 border border-amber-300 rounded-xl hover:bg-amber-100 transition-colors">
+          <span className="text-xl">📦</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-800">
+              {stockAlerts.length} item{stockAlerts.length > 1 ? 's' : ''} need{stockAlerts.length === 1 ? 's' : ''} ordering
+            </p>
+            <p className="text-xs text-amber-700 truncate">
+              {stockAlerts.map(i => i.name).join(', ')}
+            </p>
+          </div>
+          <span className="text-xs font-medium text-amber-700 shrink-0">View stock →</span>
+        </a>
+      )}
 
       <SmsRepliesPanel replies={(smsReplies ?? []) as Parameters<typeof SmsRepliesPanel>[0]['replies']} />
 
