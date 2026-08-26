@@ -1,6 +1,7 @@
 import { Sidebar } from './Sidebar'
 import { MobileNav } from './MobileNav'
 import { NewLeadButton } from '@/components/leads/NewLeadButton'
+import { NewLeadNotifier } from './NewLeadNotifier'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +14,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <NewLeadButton />
+      <NewLeadNotifier />
     </div>
   )
 }
