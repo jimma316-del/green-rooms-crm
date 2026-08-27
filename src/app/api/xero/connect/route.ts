@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 const XERO_AUTH_URL = 'https://login.xero.com/identity/connect/authorize'
-const SCOPES = 'openid offline_access accounting.settings.read accounting.transactions.read'
+const SCOPES = 'openid offline_access accounting.settings.read accounting.reports.profitandloss.read accounting.reports.executivesummary.read'
 
 export async function GET() {
   const supabase = await createClient()

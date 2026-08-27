@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-const SCOPES = 'openid offline_access accounting.settings.read accounting.transactions.read'
+const SCOPES = 'openid offline_access accounting.settings.read accounting.reports.profitandloss.read accounting.reports.executivesummary.read'
 const XERO_AUTH_URL = 'https://login.xero.com/identity/connect/authorize'
 
 export async function GET() {
