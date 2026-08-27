@@ -137,8 +137,8 @@ export function FinanceDashboard({ connection, cacheRows }: Props) {
           <p className="text-xs text-gray-400 mt-0.5">
             {connection.org_name} ·{' '}
             {connection.last_sync_at
-              ? `Last synced ${new Date(connection.last_sync_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`
-              : 'Never synced'}
+              ? `Last synced ${new Date(connection.last_sync_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · Cash basis`
+              : 'Never synced · Cash basis'}
           </p>
         </div>
         <button

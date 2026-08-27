@@ -62,7 +62,7 @@ export async function POST() {
   let res: Response
   try {
     res = await xeroFetch(
-      `/Reports/ProfitAndLoss?fromDate=${fromStr}&toDate=${toStr}&periods=11&timeframe=MONTH&standardLayout=true`
+      `/Reports/ProfitAndLoss?fromDate=${fromStr}&toDate=${toStr}&periods=11&timeframe=MONTH&standardLayout=true&basis=CASH`
     )
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Sync failed'

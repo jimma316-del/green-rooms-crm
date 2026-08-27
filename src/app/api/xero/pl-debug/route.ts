@@ -9,7 +9,7 @@ export async function GET() {
   const toStr = toDate.toISOString().slice(0, 10)
 
   const res = await xeroFetch(
-    `/Reports/ProfitAndLoss?fromDate=${fromStr}&toDate=${toStr}&periods=11&timeframe=MONTH&standardLayout=true`
+    `/Reports/ProfitAndLoss?fromDate=${fromStr}&toDate=${toStr}&periods=11&timeframe=MONTH&standardLayout=true&basis=CASH`
   )
   const json = await res.json()
 
