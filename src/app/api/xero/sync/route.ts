@@ -44,14 +44,14 @@ export async function POST() {
   // Last 12 months ending today
   const now = new Date()
   const toDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  const fromDate = new Date(now.getFullYear(), now.getMonth() - 11, 1)
+  const fromDate = new Date(now.getFullYear(), now.getMonth() - 10, 1)
   const fromStr = fromDate.toISOString().slice(0, 10)
   const toStr = toDate.toISOString().slice(0, 10)
 
   let res: Response
   try {
     res = await xeroFetch(
-      `/Reports/ProfitAndLoss?fromDate=${fromStr}&toDate=${toStr}&periods=12&timeframe=MONTH&standardLayout=true`
+      `/Reports/ProfitAndLoss?fromDate=${fromStr}&toDate=${toStr}&periods=11&timeframe=MONTH&standardLayout=true`
     )
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Sync failed'
