@@ -16,7 +16,6 @@ const navItems = [
   { href: '/jobs', label: 'Jobs', icon: HardHat },
   { href: '/tasks', label: 'Tasks', icon: CheckSquare },
   { href: '/reports', label: 'Reports', icon: BarChart3 },
-  { href: '/finance', label: 'Finance', icon: PoundSterling },
 ]
 
 export function MobileNav() {

@@ -19,7 +19,6 @@ const navItems = [
   { href: '/stock',      label: 'Stock',      icon: Package },
 
   { href: '/reports',    label: 'Reports',    icon: BarChart3 },
-  { href: '/finance',    label: 'Finance',    icon: PoundSterling },
 ]
 
 export function Sidebar() {
