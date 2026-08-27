@@ -27,13 +27,14 @@ export async function GET() {
     path: '/',
   })
 
-  const params = new URLSearchParams({
-    response_type: 'code',
-    client_id: process.env.XERO_CLIENT_ID!,
-    redirect_uri: process.env.XERO_REDIRECT_URI!,
-    scope: SCOPES,
-    state,
-  })
+  // Build URL manually — URLSearchParams encodes spaces as '+' but Xero requires '%20'
+  const url =
+    `${XERO_AUTH_URL}` +
+    `?response_type=code` +
+    `&client_id=${encodeURIComponent(process.env.XERO_CLIENT_ID!)}` +
+    `&redirect_uri=${encodeURIComponent(process.env.XERO_REDIRECT_URI!)}` +
+    `&scope=${encodeURIComponent(SCOPES)}` +
+    `&state=${encodeURIComponent(state)}`
 
-  return NextResponse.redirect(`${XERO_AUTH_URL}?${params}`)
+  return NextResponse.redirect(url)
 }
