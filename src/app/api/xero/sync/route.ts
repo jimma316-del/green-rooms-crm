@@ -9,10 +9,21 @@ const MONTH_MAP: Record<string, string> = {
 }
 
 function parseXeroMonth(str: string): string | null {
-  const match = str.trim().match(/^(\w{3})\s+(\d{4})$/)
-  if (!match) return null
-  const month = MONTH_MAP[match[1]]
-  return month ? `${match[2]}-${month}` : null
+  const s = str.trim()
+  // "31 Aug 26" format (Xero uses end-of-month dates as column headers)
+  const m1 = s.match(/^\d{1,2}\s+(\w{3})\s+(\d{2})$/)
+  if (m1) {
+    const month = MONTH_MAP[m1[1]]
+    if (!month) return null
+    return `${2000 + parseInt(m1[2])}-${month}`
+  }
+  // "Aug 2026" fallback
+  const m2 = s.match(/^(\w{3})\s+(\d{4})$/)
+  if (m2) {
+    const month = MONTH_MAP[m2[1]]
+    return month ? `${m2[2]}-${month}` : null
+  }
+  return null
 }
 
 interface XeroCell { Value: string }
