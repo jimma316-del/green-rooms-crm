@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, KanbanSquare,
-  Settings, LogOut, BarChart3, HardHat, Package
+  Settings, LogOut, BarChart3, HardHat, Package, PoundSterling
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -19,6 +19,7 @@ const navItems = [
   { href: '/stock',      label: 'Stock',      icon: Package },
 
   { href: '/reports',    label: 'Reports',    icon: BarChart3 },
+  { href: '/finance',    label: 'Finance',    icon: PoundSterling },
 ]
 
 export function Sidebar() {

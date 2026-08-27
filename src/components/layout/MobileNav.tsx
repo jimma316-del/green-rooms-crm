@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, KanbanSquare, CheckSquare, Menu, X, BarChart3, Settings, LogOut, HardHat } from 'lucide-react'
+import { LayoutDashboard, Users, KanbanSquare, CheckSquare, Menu, X, BarChart3, Settings, LogOut, HardHat, PoundSterling } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -16,6 +16,7 @@ const navItems = [
   { href: '/jobs', label: 'Jobs', icon: HardHat },
   { href: '/tasks', label: 'Tasks', icon: CheckSquare },
   { href: '/reports', label: 'Reports', icon: BarChart3 },
+  { href: '/finance', label: 'Finance', icon: PoundSterling },
 ]
 
 export function MobileNav() {
