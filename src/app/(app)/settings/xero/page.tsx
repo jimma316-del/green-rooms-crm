@@ -18,7 +18,7 @@ export default async function XeroSettingsPage({ searchParams }: PageProps) {
   const admin = createAdminClient()
   const { data: profile } = await admin.from('users').select('role').eq('id', user!.id).single()
 
-  if (profile?.role !== 'admin') {
+  if (profile?.role === 'site') {
     return (
       <div className="px-4 md:px-6 py-6 max-w-2xl">
         <p className="text-sm text-gray-500">Admin access required to manage integrations.</p>

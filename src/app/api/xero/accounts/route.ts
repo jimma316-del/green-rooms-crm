@@ -19,7 +19,7 @@ export async function GET() {
 
   const admin = createAdminClient()
   const { data: profile } = await admin.from('users').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') {
+  if (profile?.role === 'site') {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
   }
 

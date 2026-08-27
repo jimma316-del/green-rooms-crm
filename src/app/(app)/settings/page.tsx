@@ -42,7 +42,7 @@ export default async function SettingsPage() {
         </div>
       )}
 
-      {profile?.role === 'admin' && (
+      {profile?.role !== 'site' && (
         <div className="bg-white rounded-xl border border-gray-100 p-6 mt-4">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">Integrations</h2>
           <a
