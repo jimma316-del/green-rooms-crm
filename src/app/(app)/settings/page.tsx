@@ -42,6 +42,27 @@ export default async function SettingsPage() {
         </div>
       )}
 
+      {profile?.role === 'admin' && (
+        <div className="bg-white rounded-xl border border-gray-100 p-6 mt-4">
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">Integrations</h2>
+          <a
+            href="/settings/xero"
+            className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#13B5EA] flex items-center justify-center shrink-0">
+                <span className="text-white font-bold text-xs">X</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-800">Xero</p>
+                <p className="text-xs text-gray-400">Connect your accounting data</p>
+              </div>
+            </div>
+            <span className="text-gray-300 group-hover:text-gray-500 transition-colors">→</span>
+          </a>
+        </div>
+      )}
+
       <SettingsActions />
     </div>
   )

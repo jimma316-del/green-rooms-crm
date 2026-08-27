@@ -87,6 +87,74 @@ type StockNotesRow = { id: number; notes: string }
 type StockNotesInsert = { id?: number; notes: string }
 type StockNotesUpdate = Partial<StockNotesInsert>
 
+type XeroConnectionRow = {
+  id: number
+  access_token: string
+  refresh_token: string
+  token_expires_at: string
+  tenant_id: string
+  org_name: string
+  connected_at: string
+  last_sync_at: string | null
+  last_sync_error: string | null
+}
+type XeroConnectionInsert = {
+  id?: number
+  access_token: string
+  refresh_token: string
+  token_expires_at: string
+  tenant_id: string
+  org_name: string
+  connected_at?: string
+  last_sync_at?: string | null
+  last_sync_error?: string | null
+}
+type XeroConnectionUpdate = Partial<XeroConnectionInsert>
+
+type XeroAccountRow = {
+  account_id: string
+  code: string | null
+  name: string
+  type: string
+  class: string | null
+  status: string
+  updated_at: string
+}
+type XeroAccountInsert = {
+  account_id: string
+  code?: string | null
+  name: string
+  type: string
+  class?: string | null
+  status?: string
+  updated_at?: string
+}
+type XeroAccountUpdate = Partial<XeroAccountInsert>
+
+type XeroAccountMappingRow = { account_id: string; treatment: string; updated_at: string }
+type XeroAccountMappingInsert = { account_id: string; treatment: string; updated_at?: string }
+type XeroAccountMappingUpdate = Partial<XeroAccountMappingInsert>
+
+type XeroFinancialCacheRow = {
+  id: string
+  period: string
+  account_id: string | null
+  account_name: string
+  account_type: string | null
+  net_amount_pence: number
+  synced_at: string
+}
+type XeroFinancialCacheInsert = {
+  id?: string
+  period: string
+  account_id?: string | null
+  account_name: string
+  account_type?: string | null
+  net_amount_pence?: number
+  synced_at?: string
+}
+type XeroFinancialCacheUpdate = Partial<XeroFinancialCacheInsert>
+
 export interface Database {
   public: {
     Tables: {
@@ -99,6 +167,10 @@ export interface Database {
       stage_history: TableDef<StageHistoryRow, StageHistoryInsert, StageHistoryUpdate>
       stock_items: TableDef<StockItemRow, StockItemInsert, StockItemUpdate>
       stock_notes: TableDef<StockNotesRow, StockNotesInsert, StockNotesUpdate>
+      xero_connection: TableDef<XeroConnectionRow, XeroConnectionInsert, XeroConnectionUpdate>
+      xero_accounts: TableDef<XeroAccountRow, XeroAccountInsert, XeroAccountUpdate>
+      xero_account_mappings: TableDef<XeroAccountMappingRow, XeroAccountMappingInsert, XeroAccountMappingUpdate>
+      xero_financial_cache: TableDef<XeroFinancialCacheRow, XeroFinancialCacheInsert, XeroFinancialCacheUpdate>
     }
     Views: Record<string, never>
     Functions: Record<string, never>
