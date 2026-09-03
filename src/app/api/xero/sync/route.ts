@@ -34,14 +34,25 @@ interface XeroRow {
   Rows?: XeroRow[]
 }
 
-// These are the P&L summary rows we cache — individual account lines are skipped
-const SUMMARY_NAMES = new Set([
-  'Total Income',
-  'Total Cost of Sales',
-  'Gross Profit',
-  'Total Operating Expenses',
-  'Net Profit',
+// Summary row names from both Xero standard layout and custom company layouts
+const REVENUE_NAMES = new Set(['Total Income', 'Total Turnover'])
+const COGS_NAMES = new Set(['Total Cost of Sales'])
+const GROSS_PROFIT_NAMES = new Set(['Gross Profit'])
+const OPEX_NAMES = new Set(['Total Operating Expenses', 'Total Administrative Costs', 'Total Overhead Expenses'])
+const NET_PROFIT_NAMES = new Set(['Net Profit', 'Operating Profit', 'Profit after Taxation', 'Profit on Ordinary Activities Before Taxation'])
+
+const ALL_SUMMARY_NAMES = new Set([
+  ...REVENUE_NAMES, ...COGS_NAMES, ...GROSS_PROFIT_NAMES, ...OPEX_NAMES, ...NET_PROFIT_NAMES,
 ])
+
+function summaryCategory(name: string): string {
+  if (REVENUE_NAMES.has(name)) return 'Total Income'
+  if (COGS_NAMES.has(name)) return 'Total Cost of Sales'
+  if (GROSS_PROFIT_NAMES.has(name)) return 'Gross Profit'
+  if (OPEX_NAMES.has(name)) return 'Total Operating Expenses'
+  if (NET_PROFIT_NAMES.has(name)) return 'Net Profit'
+  return name
+}
 
 export async function POST() {
   const supabase = await createClient()
@@ -62,7 +73,7 @@ export async function POST() {
   let res: Response
   try {
     res = await xeroFetch(
-      `/Reports/ProfitAndLoss?fromDate=${fromStr}&toDate=${toStr}&periods=11&timeframe=MONTH&standardLayout=true&paymentsOnly=true`
+      `/Reports/ProfitAndLoss?fromDate=${fromStr}&toDate=${toStr}&periods=11&timeframe=MONTH`
     )
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Sync failed'
@@ -111,8 +122,9 @@ export async function POST() {
     for (const row of section.Rows ?? []) {
       const cells = row.Cells
       if (!cells?.length) continue
-      const name: string = cells[0].Value
-      if (!SUMMARY_NAMES.has(name)) continue
+      const rawName: string = cells[0].Value
+      if (!ALL_SUMMARY_NAMES.has(rawName)) continue
+      const name = summaryCategory(rawName)
 
       for (let i = 1; i < cells.length && i - 1 < periods.length; i++) {
         const pence = Math.round((parseFloat(cells[i].Value || '0') || 0) * 100)
