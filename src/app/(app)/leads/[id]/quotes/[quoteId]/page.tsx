@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { QuoteEditorClient } from '@/components/quotes/QuoteEditorClient'
 import { VariationsPanel } from '@/components/quotes/VariationsPanel'
 import { ElevationDiagramBuilder } from '@/components/quotes/ElevationDiagramBuilder'
-import { QuoteEditorTabs } from '@/components/quotes/QuoteEditorTabs'
+import { QuoteEditorTabs, QuoteTabPanel } from '@/components/quotes/QuoteEditorTabs'
 
 interface Props { params: Promise<{ id: string; quoteId: string }> }
 
@@ -127,45 +127,38 @@ export default async function QuoteEditorPage({ params }: Props) {
       </div>
 
       <QuoteEditorTabs>
-        {(activeTab) => (
-          <>
-            {/* Quote tab */}
-            <div className={activeTab === 'quote' ? '' : 'hidden'}>
-              <QuoteEditorClient
-                leadId={leadId}
-                lead={lead}
-                quoteId={quoteId}
-                quoteRef={quote.quote_ref}
-                versions={versions}
-                currentVersion={currentVersion}
-                initialSections={sections}
-                initialPaymentSchedule={paymentRes.data ?? []}
-                productsGrouped={productsGrouped}
-              />
-            </div>
+        <QuoteTabPanel tabId="quote">
+          <QuoteEditorClient
+            leadId={leadId}
+            lead={lead}
+            quoteId={quoteId}
+            quoteRef={quote.quote_ref}
+            versions={versions}
+            currentVersion={currentVersion}
+            initialSections={sections}
+            initialPaymentSchedule={paymentRes.data ?? []}
+            productsGrouped={productsGrouped}
+          />
+        </QuoteTabPanel>
 
-            {/* Elevation diagrams tab */}
-            <div className={activeTab === 'elevations' ? 'max-w-5xl mx-auto w-full px-4 py-6' : 'hidden'}>
-              <ElevationDiagramBuilder
-                quoteId={quoteId}
-                versionId={currentVersion.id}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                initialAssets={elevationAssets as any}
-              />
-            </div>
+        <QuoteTabPanel tabId="elevations" className="max-w-5xl mx-auto w-full px-4 py-6">
+          <ElevationDiagramBuilder
+            quoteId={quoteId}
+            versionId={currentVersion.id}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            initialAssets={elevationAssets as any}
+          />
+        </QuoteTabPanel>
 
-            {/* Variations tab */}
-            <div className={activeTab === 'variations' ? 'max-w-5xl mx-auto w-full px-4 py-6' : 'hidden'}>
-              <VariationsPanel
-                quoteId={quoteId}
-                leadEmail={lead.email}
-                leadName={lead.name}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                initialVariations={variations as any}
-              />
-            </div>
-          </>
-        )}
+        <QuoteTabPanel tabId="variations" className="max-w-5xl mx-auto w-full px-4 py-6">
+          <VariationsPanel
+            quoteId={quoteId}
+            leadEmail={lead.email}
+            leadName={lead.name}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            initialVariations={variations as any}
+          />
+        </QuoteTabPanel>
       </QuoteEditorTabs>
     </div>
   )
