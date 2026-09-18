@@ -987,7 +987,7 @@ export function QuoteEditorClient({
             Send to Client →
           </button>
           <a
-            href={`/leads/${leadId}/quotes/${quoteId}/preview`}
+            href={`/api/quotes/${quoteId}/pdf`}
             target="_blank"
             className="block w-full text-center text-sm font-medium text-[var(--primary)] border border-[var(--primary)] px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
           >

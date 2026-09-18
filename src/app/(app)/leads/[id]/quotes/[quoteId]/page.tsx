@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { QuoteEditorClient } from '@/components/quotes/QuoteEditorClient'
 import { VariationsPanel } from '@/components/quotes/VariationsPanel'
 import { ElevationDiagramBuilder } from '@/components/quotes/ElevationDiagramBuilder'
+import { QuoteEditorTabs } from '@/components/quotes/QuoteEditorTabs'
 
 interface Props { params: Promise<{ id: string; quoteId: string }> }
 
@@ -125,42 +126,47 @@ export default async function QuoteEditorPage({ params }: Props) {
         </span>
       </div>
 
-      <QuoteEditorClient
-        leadId={leadId}
-        lead={lead}
-        quoteId={quoteId}
-        quoteRef={quote.quote_ref}
-        versions={versions}
-        currentVersion={currentVersion}
-        initialSections={sections}
-        initialPaymentSchedule={paymentRes.data ?? []}
-        productsGrouped={productsGrouped}
-      />
+      <QuoteEditorTabs>
+        {(activeTab) => (
+          <>
+            {/* Quote tab */}
+            <div className={activeTab === 'quote' ? '' : 'hidden'}>
+              <QuoteEditorClient
+                leadId={leadId}
+                lead={lead}
+                quoteId={quoteId}
+                quoteRef={quote.quote_ref}
+                versions={versions}
+                currentVersion={currentVersion}
+                initialSections={sections}
+                initialPaymentSchedule={paymentRes.data ?? []}
+                productsGrouped={productsGrouped}
+              />
+            </div>
 
-      {/* Variations + Elevation panels */}
-      <div className="max-w-5xl mx-auto w-full px-4 pb-8 space-y-4">
-        {/* Elevation diagrams */}
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <h3 className="text-sm font-semibold text-[var(--primary)] mb-3">Elevation Diagrams</h3>
-          <ElevationDiagramBuilder
-            quoteId={quoteId}
-            versionId={currentVersion.id}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            initialAssets={elevationAssets as any}
-          />
-        </div>
+            {/* Elevation diagrams tab */}
+            <div className={activeTab === 'elevations' ? 'max-w-5xl mx-auto w-full px-4 py-6' : 'hidden'}>
+              <ElevationDiagramBuilder
+                quoteId={quoteId}
+                versionId={currentVersion.id}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                initialAssets={elevationAssets as any}
+              />
+            </div>
 
-        {/* Variation orders */}
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <VariationsPanel
-            quoteId={quoteId}
-            leadEmail={lead.email}
-            leadName={lead.name}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            initialVariations={variations as any}
-          />
-        </div>
-      </div>
+            {/* Variations tab */}
+            <div className={activeTab === 'variations' ? 'max-w-5xl mx-auto w-full px-4 py-6' : 'hidden'}>
+              <VariationsPanel
+                quoteId={quoteId}
+                leadEmail={lead.email}
+                leadName={lead.name}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                initialVariations={variations as any}
+              />
+            </div>
+          </>
+        )}
+      </QuoteEditorTabs>
     </div>
   )
 }
