@@ -21,11 +21,12 @@ export function NewQuoteButton({ leadId, hasAssessment }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lead_id: leadId, from_assessment: hasAssessment }),
       })
-      if (!res.ok) throw new Error('Failed to create quote')
-      const { quoteId } = await res.json()
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Failed to create quote')
+      const { quoteId } = data
       router.push(`/leads/${leadId}/quotes/${quoteId}`)
-    } catch {
-      toast.error('Failed to create quote')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create quote')
       setLoading(false)
     }
   }
