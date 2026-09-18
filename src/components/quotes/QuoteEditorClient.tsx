@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Plus, Trash2, ChevronDown, ChevronUp, X, Check, Pencil } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronUp, X, Check, Pencil, FileText } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface LineItem {
@@ -38,7 +38,9 @@ interface PaymentMilestone {
   percentage: number | null
   due_trigger: string
   paid_at: string | null
+  payment_ref: string | null
   xero_invoice_id: string | null
+  xero_invoice_number: string | null
 }
 
 interface Version {
@@ -516,41 +518,273 @@ function SectionBlock({ section, quoteId, versionId, productsGrouped, onUpdate, 
   )
 }
 
-// ─── Payment Schedule ─────────────────────────────────────────────────────────
-function PaymentScheduleBlock({ schedule, totalPence }: { schedule: PaymentMilestone[]; totalPence: number }) {
+// ─── Payment Schedule (editable) ─────────────────────────────────────────────
+function PaymentScheduleBlock({
+  schedule: initialSchedule,
+  totalPence,
+  quoteId,
+  versionId,
+}: {
+  schedule: PaymentMilestone[]
+  totalPence: number
+  quoteId: string
+  versionId: string
+}) {
+  const [schedule, setSchedule] = useState<PaymentMilestone[]>(initialSchedule)
+  const [markingPaid, setMarkingPaid] = useState<string | null>(null)
+  const [paymentRef, setPaymentRef] = useState('')
+  const [pushingXero, setPushingXero] = useState<string | null>(null)
+
   if (!schedule.length) return null
+
+  async function saveMilestone(id: string, updates: Record<string, unknown>) {
+    try {
+      const res = await fetch(
+        `/api/quotes/${quoteId}/versions/${versionId}/payment-schedule/${id}`,
+        { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) }
+      )
+      if (!res.ok) throw new Error()
+      const { milestone } = await res.json()
+      setSchedule(s => s.map(m => m.id === id ? milestone : m))
+      return milestone
+    } catch {
+      toast.error('Save failed')
+    }
+  }
+
+  async function markPaid(m: PaymentMilestone) {
+    await saveMilestone(m.id, {
+      paid_at: new Date().toISOString(),
+      payment_ref: paymentRef || null,
+    })
+    toast.success(`${m.label} marked as paid`)
+    setMarkingPaid(null)
+    setPaymentRef('')
+  }
+
+  async function markUnpaid(m: PaymentMilestone) {
+    await saveMilestone(m.id, { paid_at: null, payment_ref: null })
+    toast.success('Marked as unpaid')
+  }
+
+  async function pushToXero(m: PaymentMilestone) {
+    if (m.xero_invoice_id) { toast.error('Invoice already exists in Xero'); return }
+    setPushingXero(m.id)
+    try {
+      const res = await fetch(
+        `/api/quotes/${quoteId}/versions/${versionId}/payment-schedule/${m.id}/xero`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }
+      )
+      if (!res.ok) {
+        const { error } = await res.json()
+        toast.error(error ?? 'Xero push failed')
+        return
+      }
+      const { milestone } = await res.json()
+      setSchedule(s => s.map(x => x.id === m.id ? milestone : x))
+      toast.success(`Invoice created in Xero`)
+    } catch {
+      toast.error('Xero push failed')
+    } finally {
+      setPushingXero(null)
+    }
+  }
+
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-4">
       <h3 className="text-sm font-semibold text-[var(--primary)] mb-3">Payment Schedule</h3>
       <div className="space-y-2">
-        {schedule.map(m => (
-          <div key={m.id} className="flex items-center justify-between gap-4 py-1.5 border-b border-gray-50 last:border-0">
-            <div>
-              <div className="text-sm font-medium text-gray-800">{m.label}</div>
-              <div className="text-xs text-gray-400">{m.due_trigger.replace(/_/g, ' ')}</div>
-            </div>
-            <div className="text-right shrink-0">
-              <div className="text-sm font-semibold text-gray-900">
-                {poundStr(totalPence > 0 ? Math.round(totalPence * (m.percentage ?? 0) / 100) : m.amount_pence)}
-              </div>
-              {m.percentage && <div className="text-xs text-gray-400">{m.percentage}%</div>}
-              {m.paid_at && (
-                <div className="text-xs text-green-600 font-medium mt-0.5 flex items-center gap-1 justify-end">
-                  <Check size={10} /> Paid
+        {schedule.map(m => {
+          const amount = totalPence > 0 && m.percentage
+            ? Math.round(totalPence * m.percentage / 100)
+            : m.amount_pence
+          return (
+            <div key={m.id} className="py-1.5 border-b border-gray-50 last:border-0">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-800">{m.label}</div>
+                  <div className="text-xs text-gray-400 flex items-center gap-2 mt-0.5">
+                    <span>{m.due_trigger.replace(/_/g, ' ')}</span>
+                    {m.xero_invoice_number && (
+                      <span className="text-blue-500">#{m.xero_invoice_number}</span>
+                    )}
+                  </div>
                 </div>
-              )}
-              {m.xero_invoice_id && !m.paid_at && (
-                <div className="text-xs text-blue-500 mt-0.5">Invoice sent</div>
-              )}
+                <div className="text-right shrink-0">
+                  <div className="text-sm font-semibold text-gray-900">{poundStr(amount)}</div>
+                  {m.percentage && <div className="text-xs text-gray-400">{m.percentage}%</div>}
+                </div>
+              </div>
+
+              {/* Status + actions */}
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                {m.paid_at ? (
+                  <div className="flex items-center gap-1.5 flex-1">
+                    <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                      <Check size={10} /> Paid {new Date(m.paid_at).toLocaleDateString('en-GB')}
+                    </span>
+                    {m.payment_ref && <span className="text-xs text-gray-400">· {m.payment_ref}</span>}
+                    <button onClick={() => markUnpaid(m)} className="text-xs text-gray-400 hover:text-red-500 ml-auto">undo</button>
+                  </div>
+                ) : markingPaid === m.id ? (
+                  <div className="flex items-center gap-1.5 flex-1">
+                    <input
+                      autoFocus
+                      value={paymentRef}
+                      onChange={e => setPaymentRef(e.target.value)}
+                      placeholder="Ref (optional)"
+                      className="flex-1 text-xs border border-gray-200 rounded px-2 py-1 outline-none focus:border-[var(--primary)]"
+                    />
+                    <button
+                      onClick={() => markPaid(m)}
+                      className="text-xs font-medium text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded"
+                    >
+                      Confirm
+                    </button>
+                    <button onClick={() => { setMarkingPaid(null); setPaymentRef('') }} className="text-xs text-gray-400">Cancel</button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setMarkingPaid(m.id)}
+                      className="text-xs text-gray-500 hover:text-green-600 border border-gray-200 hover:border-green-300 px-2 py-0.5 rounded transition-colors"
+                    >
+                      Mark paid
+                    </button>
+                    {!m.xero_invoice_id && (
+                      <button
+                        onClick={() => pushToXero(m)}
+                        disabled={pushingXero === m.id}
+                        className="text-xs text-blue-500 hover:text-blue-700 border border-blue-200 hover:border-blue-300 px-2 py-0.5 rounded transition-colors disabled:opacity-40 flex items-center gap-1"
+                      >
+                        <FileText size={10} />
+                        {pushingXero === m.id ? 'Pushing…' : 'Xero invoice'}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
         {totalPence > 0 && (
           <div className="flex items-center justify-between pt-2 border-t border-gray-200 mt-2">
             <span className="text-sm font-semibold text-gray-700">Total (inc VAT)</span>
             <span className="text-base font-bold text-gray-900">{poundStr(totalPence)}</span>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Share Link Button ────────────────────────────────────────────────────────
+function ShareLinkButton({ quoteId, versionId }: { quoteId: string; versionId: string }) {
+  const [loading, setLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  async function getLink() {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/quotes/${quoteId}/token`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ versionId }),
+      })
+      const { url } = await res.json()
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      toast.success('Client link copied to clipboard')
+      setTimeout(() => setCopied(false), 3000)
+    } catch {
+      toast.error('Failed to generate link')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <button
+      onClick={getLink}
+      disabled={loading}
+      className="w-full text-sm text-gray-500 border border-gray-200 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+    >
+      {copied ? <><Check size={13} /> Link copied!</> : loading ? 'Generating…' : 'Copy client link'}
+    </button>
+  )
+}
+
+// ─── Send Quote Modal ─────────────────────────────────────────────────────────
+function SendQuoteModal({ lead, quoteId, versionId, quoteRef, onClose, onSent }: {
+  lead: Lead
+  quoteId: string
+  versionId: string
+  quoteRef: string
+  onClose: () => void
+  onSent: () => void
+}) {
+  const [email, setEmail] = useState(lead.email ?? '')
+  const [name, setName]   = useState(lead.name)
+  const [subject, setSubject] = useState(`Your Garden Room Proposal — The Green Rooms (${quoteRef})`)
+  const [bodyText, setBodyText] = useState('')
+  const [sending, setSending] = useState(false)
+
+  async function send() {
+    if (!email.trim()) { toast.error('Email address required'); return }
+    setSending(true)
+    try {
+      const res = await fetch(`/api/quotes/${quoteId}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ versionId, recipientEmail: email.trim(), recipientName: name, subject, bodyText: bodyText || undefined }),
+      })
+      if (!res.ok) throw new Error('Send failed')
+      toast.success(`Quote sent to ${email}`)
+      onSent()
+      onClose()
+    } catch {
+      toast.error('Failed to send — check your email settings')
+      setSending(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <span className="font-semibold text-gray-800">Send Quote to Client</span>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+        </div>
+        <div className="p-5 space-y-3">
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Recipient Name</label>
+            <input value={name} onChange={e => setName(e.target.value)}
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[var(--primary)]" />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Email Address</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[var(--primary)]" />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Subject</label>
+            <input value={subject} onChange={e => setSubject(e.target.value)}
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[var(--primary)]" />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Personal message (optional — replaces default intro)</label>
+            <textarea value={bodyText} onChange={e => setBodyText(e.target.value)} rows={4}
+              placeholder={`Hi ${lead.name.split(' ')[0]},\n\nGreat meeting you today…`}
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[var(--primary)] resize-y placeholder:text-gray-300" />
+          </div>
+          <p className="text-xs text-gray-400">The PDF proposal will be attached automatically. A copy will be CC'd to info@thegreenrooms.com.</p>
+        </div>
+        <div className="flex gap-2 px-5 pb-5">
+          <button onClick={onClose} className="flex-1 text-sm text-gray-500 border border-gray-200 rounded-lg py-2.5 hover:bg-gray-50">Cancel</button>
+          <button onClick={send} disabled={sending}
+            className="flex-1 text-sm font-medium text-white bg-[var(--primary)] hover:opacity-90 rounded-lg py-2.5 disabled:opacity-50">
+            {sending ? 'Sending…' : 'Send Quote →'}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -566,6 +800,7 @@ export function QuoteEditorClient({
   const [versionTotal, setVersionTotal] = useState(currentVersion.total_pence)
   const [coverLetter, setCoverLetter] = useState(currentVersion.cover_letter ?? '')
   const [savingCover, setSavingCover] = useState(false)
+  const [showSendModal, setShowSendModal] = useState(false)
   const coverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Refresh total from server (called after any mutation)
@@ -715,7 +950,12 @@ export function QuoteEditorClient({
         </div>
 
         {/* Payment schedule */}
-        <PaymentScheduleBlock schedule={initialPaymentSchedule} totalPence={versionTotal} />
+        <PaymentScheduleBlock
+          schedule={initialPaymentSchedule}
+          totalPence={versionTotal}
+          quoteId={quoteId}
+          versionId={currentVersion.id}
+        />
 
         {/* Version history */}
         {versions.length > 1 && (
@@ -740,18 +980,25 @@ export function QuoteEditorClient({
         {/* Actions */}
         <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-2">
           <h3 className="text-sm font-semibold text-[var(--primary)] mb-1">Actions</h3>
+          <button
+            onClick={() => setShowSendModal(true)}
+            className="block w-full text-center text-sm font-medium text-white bg-[var(--primary)] hover:opacity-90 px-4 py-2.5 rounded-lg transition-opacity"
+          >
+            Send to Client →
+          </button>
           <a
             href={`/leads/${leadId}/quotes/${quoteId}/preview`}
             target="_blank"
-            className="block w-full text-center text-sm font-medium text-white bg-[var(--primary)] hover:opacity-90 px-4 py-2.5 rounded-lg transition-opacity"
+            className="block w-full text-center text-sm font-medium text-[var(--primary)] border border-[var(--primary)] px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            Preview PDF →
+            Preview PDF
           </a>
+          <ShareLinkButton quoteId={quoteId} versionId={currentVersion.id} />
           <button
             onClick={createNewVersion}
-            className="w-full text-sm font-medium text-[var(--primary)] border border-[var(--primary)] px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+            className="w-full text-sm text-gray-500 border border-gray-200 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            Create new version
+            New revision
           </button>
           <a
             href={`/leads/${leadId}`}
@@ -761,6 +1008,17 @@ export function QuoteEditorClient({
           </a>
         </div>
       </div>
+
+      {showSendModal && (
+        <SendQuoteModal
+          lead={lead}
+          quoteId={quoteId}
+          versionId={currentVersion.id}
+          quoteRef={quoteRef}
+          onClose={() => setShowSendModal(false)}
+          onSent={() => router.refresh()}
+        />
+      )}
     </div>
   )
 }

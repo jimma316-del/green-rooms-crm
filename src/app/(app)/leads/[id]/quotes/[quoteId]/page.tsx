@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { QuoteEditorClient } from '@/components/quotes/QuoteEditorClient'
+import { VariationsPanel } from '@/components/quotes/VariationsPanel'
+import { ElevationDiagramBuilder } from '@/components/quotes/ElevationDiagramBuilder'
 
 interface Props { params: Promise<{ id: string; quoteId: string }> }
 
@@ -15,7 +17,7 @@ export default async function QuoteEditorPage({ params }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const adminAny = admin as any
 
-  const [leadRes, quoteRes, productsRes] = await Promise.all([
+  const [leadRes, quoteRes, productsRes, variationsRes] = await Promise.all([
     admin.from('leads').select('id, name, email, mobile, address, postcode').eq('id', leadId).single(),
     adminAny.from('quotes')
       .select(`
@@ -31,10 +33,15 @@ export default async function QuoteEditorPage({ params }: Props) {
       .select('id, category, sku, name, description, unit, base_price_pence, vat_rate, sort_order')
       .eq('is_active', true)
       .order('category').order('sort_order'),
+    adminAny.from('quote_variations')
+      .select('*')
+      .eq('quote_id', quoteId)
+      .order('variation_number'),
   ])
 
   const lead = leadRes.data
   const quote = quoteRes.data
+  const variations = variationsRes.data ?? []
   if (!lead || !quote) notFound()
 
   // Verify quote belongs to this lead
@@ -48,8 +55,8 @@ export default async function QuoteEditorPage({ params }: Props) {
 
   if (!currentVersion) notFound()
 
-  // Load current version's sections + items + payment schedule
-  const [sectionsRes, paymentRes] = await Promise.all([
+  // Load current version's sections + items + payment schedule + elevation assets
+  const [sectionsRes, paymentRes, assetsRes] = await Promise.all([
     adminAny.from('quote_sections')
       .select(`
         id, title, sort_order, show_subtotal, notes,
@@ -65,7 +72,14 @@ export default async function QuoteEditorPage({ params }: Props) {
       .select('*')
       .eq('quote_version_id', currentVersion.id)
       .order('sort_order'),
+    adminAny.from('quote_assets')
+      .select('id, elevation_face, svg_data, caption, width_mm, height_mm, sort_order')
+      .eq('quote_version_id', currentVersion.id)
+      .eq('asset_type', 'elevation_svg')
+      .order('sort_order'),
   ])
+
+  const elevationAssets = assetsRes.data ?? []
 
   // Sort items within each section
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -122,6 +136,31 @@ export default async function QuoteEditorPage({ params }: Props) {
         initialPaymentSchedule={paymentRes.data ?? []}
         productsGrouped={productsGrouped}
       />
+
+      {/* Variations + Elevation panels */}
+      <div className="max-w-5xl mx-auto w-full px-4 pb-8 space-y-4">
+        {/* Elevation diagrams */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4">
+          <h3 className="text-sm font-semibold text-[var(--primary)] mb-3">Elevation Diagrams</h3>
+          <ElevationDiagramBuilder
+            quoteId={quoteId}
+            versionId={currentVersion.id}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            initialAssets={elevationAssets as any}
+          />
+        </div>
+
+        {/* Variation orders */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4">
+          <VariationsPanel
+            quoteId={quoteId}
+            leadEmail={lead.email}
+            leadName={lead.name}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            initialVariations={variations as any}
+          />
+        </div>
+      </div>
     </div>
   )
 }

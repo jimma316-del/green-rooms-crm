@@ -44,6 +44,57 @@ export default async function SettingsPage() {
 
       {profile?.role !== 'site' && (
         <div className="bg-white rounded-xl border border-gray-100 p-6 mt-4">
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">Quoting</h2>
+          <a
+            href="/settings/catalogue"
+            className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center shrink-0">
+                <span className="text-white font-bold text-xs">P</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-800">Product Catalogue</p>
+                <p className="text-xs text-gray-400">Manage products &amp; pricing used in quotes</p>
+              </div>
+            </div>
+            <span className="text-gray-300 group-hover:text-gray-500 transition-colors">→</span>
+          </a>
+          <a
+            href="/settings/templates"
+            className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center shrink-0">
+                <span className="text-white font-bold text-xs">T</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-800">Quote Templates</p>
+                <p className="text-xs text-gray-400">Pre-built section structures for new quotes</p>
+              </div>
+            </div>
+            <span className="text-gray-300 group-hover:text-gray-500 transition-colors">→</span>
+          </a>
+          <a
+            href="/settings/terms"
+            className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center shrink-0">
+                <span className="text-white font-bold text-xs">§</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-800">Terms &amp; Conditions</p>
+                <p className="text-xs text-gray-400">Manage T&amp;Cs included in all PDF quotes</p>
+              </div>
+            </div>
+            <span className="text-gray-300 group-hover:text-gray-500 transition-colors">→</span>
+          </a>
+        </div>
+      )}
+
+      {profile?.role !== 'site' && (
+        <div className="bg-white rounded-xl border border-gray-100 p-6 mt-4">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">Integrations</h2>
           <a
             href="/settings/xero"
