@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { QuoteEditorClient } from '@/components/quotes/QuoteEditorClient'
 import { VariationsPanel } from '@/components/quotes/VariationsPanel'
 import { ElevationDiagramBuilder } from '@/components/quotes/ElevationDiagramBuilder'
+import { QuotePhotosTab } from '@/components/quotes/QuotePhotosTab'
 import { QuoteEditorTabs, QuoteTabPanel } from '@/components/quotes/QuoteEditorTabs'
 
 interface Props { params: Promise<{ id: string; quoteId: string }> }
@@ -18,14 +19,15 @@ export default async function QuoteEditorPage({ params }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const adminAny = admin as any
 
-  const [leadRes, quoteRes, productsRes, variationsRes] = await Promise.all([
+  const [leadRes, quoteRes, productsRes, variationsRes, assessmentRes] = await Promise.all([
     admin.from('leads').select('id, name, email, mobile, address, postcode').eq('id', leadId).single(),
     adminAny.from('quotes')
       .select(`
         id, quote_ref, lead_id, created_at,
         quote_versions (
           id, version_number, status, title, internal_notes, cover_letter,
-          total_pence, is_current, created_at, sent_at, pdf_url
+          total_pence, is_current, created_at, sent_at, pdf_url,
+          build_date, expires_at
         )
       `)
       .eq('id', quoteId)
@@ -38,11 +40,17 @@ export default async function QuoteEditorPage({ params }: Props) {
       .select('*')
       .eq('quote_id', quoteId)
       .order('variation_number'),
+    adminAny.from('site_assessments')
+      .select('width_m, depth_m, roof_type')
+      .eq('lead_id', leadId)
+      .single(),
   ])
 
   const lead = leadRes.data
   const quote = quoteRes.data
   const variations = variationsRes.data ?? []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const assessment = assessmentRes.data as any ?? null
   if (!lead || !quote) notFound()
 
   // Verify quote belongs to this lead
@@ -56,8 +64,8 @@ export default async function QuoteEditorPage({ params }: Props) {
 
   if (!currentVersion) notFound()
 
-  // Load current version's sections + items + payment schedule + elevation assets
-  const [sectionsRes, paymentRes, assetsRes] = await Promise.all([
+  // Load current version's sections + items + payment schedule + elevation assets + photos
+  const [sectionsRes, paymentRes, assetsRes, photosRes] = await Promise.all([
     adminAny.from('quote_sections')
       .select(`
         id, title, sort_order, show_subtotal, notes,
@@ -74,13 +82,19 @@ export default async function QuoteEditorPage({ params }: Props) {
       .eq('quote_version_id', currentVersion.id)
       .order('sort_order'),
     adminAny.from('quote_assets')
-      .select('id, elevation_face, svg_data, caption, width_mm, height_mm, sort_order')
+      .select('id, elevation_face, svg_data, caption, width_mm, height_mm, sort_order, include_in_pdf')
       .eq('quote_version_id', currentVersion.id)
       .eq('asset_type', 'elevation_svg')
+      .order('sort_order'),
+    adminAny.from('quote_assets')
+      .select('id, image_url, caption, include_in_pdf, sort_order')
+      .eq('quote_version_id', currentVersion.id)
+      .eq('asset_type', 'photo')
       .order('sort_order'),
   ])
 
   const elevationAssets = assetsRes.data ?? []
+  const photoAssets = photosRes.data ?? []
 
   // Sort items within each section
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -138,6 +152,7 @@ export default async function QuoteEditorPage({ params }: Props) {
             initialSections={sections}
             initialPaymentSchedule={paymentRes.data ?? []}
             productsGrouped={productsGrouped}
+            assessment={assessment}
           />
         </QuoteTabPanel>
 
@@ -147,6 +162,15 @@ export default async function QuoteEditorPage({ params }: Props) {
             versionId={currentVersion.id}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             initialAssets={elevationAssets as any}
+          />
+        </QuoteTabPanel>
+
+        <QuoteTabPanel tabId="photos" className="max-w-5xl mx-auto w-full px-4 py-6">
+          <QuotePhotosTab
+            quoteId={quoteId}
+            versionId={currentVersion.id}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            initialPhotos={photoAssets as any}
           />
         </QuoteTabPanel>
 

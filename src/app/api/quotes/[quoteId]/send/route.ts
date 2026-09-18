@@ -4,7 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { createElement } from 'react'
 import { QuotePDFDocument } from '@/lib/pdf/QuotePDF'
-import type { QuotePDFData } from '@/lib/pdf/QuotePDF'
+import type { QuotePDFData, PDFTCClause, PDFSpecSummary } from '@/lib/pdf/QuotePDF'
+import { CLADDING_LABELS } from '@/types/assessment'
 import { sendEmail, TEAM_EMAIL } from '@/lib/email'
 import path from 'path'
 import fs from 'fs'
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const adminAny = admin as any
 
-  // Load quote + lead + version
+  // Load quote + lead
   const { data: quote } = await adminAny
     .from('quotes')
     .select('id, quote_ref, lead_id, leads(id, name, email, address, postcode)')
@@ -43,14 +44,14 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const { data: version } = await adminAny
     .from('quote_versions')
-    .select('id, version_number, status, total_pence, cover_letter, created_at')
+    .select('id, version_number, status, total_pence, cover_letter, created_at, build_date, expires_at')
     .eq('id', versionId)
     .single()
 
   if (!version) return NextResponse.json({ error: 'Version not found' }, { status: 404 })
 
-  // Load sections + items + payment schedule for PDF
-  const [{ data: sections }, { data: paymentSchedule }] = await Promise.all([
+  // Load all PDF data in parallel
+  const [sectionsRes, paymentRes, elevationsRes, tcRes, assessmentRes] = await Promise.all([
     adminAny.from('quote_sections')
       .select(`id, title, sort_order, show_subtotal,
         quote_line_items(id, name, description, quantity, unit, unit_price_pence, line_total_pence, is_optional, is_included, sort_order)`)
@@ -60,30 +61,76 @@ export async function POST(req: NextRequest, { params }: Params) {
       .select('milestone, label, amount_pence, percentage, due_trigger')
       .eq('quote_version_id', versionId)
       .order('sort_order'),
+    adminAny.from('quote_assets')
+      .select('id, elevation_face, svg_data, caption')
+      .eq('quote_version_id', versionId)
+      .eq('asset_type', 'elevation_svg')
+      .eq('include_in_pdf', true)
+      .order('sort_order'),
+    adminAny.from('tc_versions').select('clauses').eq('is_current', true).limit(1),
+    adminAny.from('site_assessments')
+      .select('width_m, depth_m, roof_type, single_cladding, cladding_better, cladding_good, planning_type')
+      .eq('lead_id', quote.lead_id)
+      .single(),
   ])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sortedSections = (sections ?? []).map((s: any) => ({
+  const sortedSections = (sectionsRes.data ?? []).map((s: any) => ({
     ...s,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     quote_line_items: (s.quote_line_items ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order),
   }))
 
+  // Build spec summary
+  let specSummary: PDFSpecSummary | null = null
+  if (assessmentRes.data) {
+    const a = assessmentRes.data
+    const clad = a.single_cladding || a.cladding_better || a.cladding_good
+    specSummary = {
+      dimensions: a.width_m && a.depth_m ? `${a.width_m}m × ${a.depth_m}m` : undefined,
+      sqm: a.width_m && a.depth_m ? `${(a.width_m * a.depth_m).toFixed(1)}m²` : undefined,
+      roofType: a.roof_type ?? undefined,
+      cladding: clad ? (CLADDING_LABELS[clad] ?? clad) : undefined,
+      planningType: a.planning_type ?? undefined,
+    }
+  }
+
+  // Pull T&Cs
+  let tcClauses: PDFTCClause[] | null = null
+  if (tcRes.data?.[0]?.clauses) {
+    try {
+      const raw = tcRes.data[0].clauses
+      tcClauses = Array.isArray(raw) ? raw as PDFTCClause[] : null
+    } catch { /* fall through */ }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const elevationAssets = (elevationsRes.data ?? []).filter((a: any) => a.svg_data)
+
   const lead = quote.leads as { name: string; email: string | null; address: string | null; postcode: string | null }
   const siteAddress = [lead.address, lead.postcode].filter(Boolean).join(', ') || null
+
+  let buildDate: string | null = null
+  if (version.build_date) {
+    buildDate = new Date(version.build_date).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+  }
 
   const pdfData: QuotePDFData = {
     quoteRef: quote.quote_ref,
     versionNumber: version.version_number,
-    customerName: lead.name,
-    customerEmail: lead.email,
+    customerName: recipientName,
+    customerEmail: recipientEmail,
     siteAddress,
     totalPence: version.total_pence,
     coverLetter: version.cover_letter,
     sections: sortedSections,
-    paymentSchedule: paymentSchedule ?? [],
+    paymentSchedule: paymentRes.data ?? [],
     preparedDate: new Date(version.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
     validDays: 30,
+    buildDate,
+    elevationAssets,
+    tcClauses,
+    specSummary,
   }
 
   // Load logo
@@ -120,29 +167,24 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   if (!sent) return NextResponse.json({ error: 'Email send failed' }, { status: 500 })
 
-  // Record in quote_emails
-  await adminAny.from('quote_emails').insert({
-    quote_version_id: versionId,
-    sent_by: user.id,
-    recipient_email: recipientEmail,
-    recipient_name: recipientName,
-    subject: emailSubject,
-    body_html: emailHtml,
-  })
-
-  // Mark version as sent
-  await adminAny.from('quote_versions').update({
-    status: 'sent',
-    sent_at: new Date().toISOString(),
-  }).eq('id', versionId)
-
-  // Activity log
-  await admin.from('activities').insert({
-    lead_id: quote.lead_id,
-    created_by: user.id,
-    type: 'note',
-    body: `Quote ${quote.quote_ref} v${version.version_number} sent to ${recipientEmail}`,
-  })
+  // Record + update status
+  await Promise.all([
+    adminAny.from('quote_emails').insert({
+      quote_version_id: versionId,
+      sent_by: user.id,
+      recipient_email: recipientEmail,
+      recipient_name: recipientName,
+      subject: emailSubject,
+      body_html: emailHtml,
+    }),
+    adminAny.from('quote_versions').update({ status: 'sent', sent_at: new Date().toISOString() }).eq('id', versionId),
+    admin.from('activities').insert({
+      lead_id: quote.lead_id,
+      created_by: user.id,
+      type: 'note',
+      body: `Quote ${quote.quote_ref} v${version.version_number} sent to ${recipientEmail}`,
+    }),
+  ])
 
   return NextResponse.json({ success: true })
 }

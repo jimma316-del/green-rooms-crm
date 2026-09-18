@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState } from 'react'
-import { FileText, Image, GitBranch } from 'lucide-react'
+import { FileText, Image, GitBranch, Camera } from 'lucide-react'
 
 const TabCtx = createContext('quote')
 
@@ -15,7 +15,8 @@ export function QuoteEditorTabs({ children }: { children: React.ReactNode }) {
         <div className="flex max-w-5xl mx-auto">
           {([
             { id: 'quote',      label: 'Quote',             Icon: FileText },
-            { id: 'elevations', label: 'Elevation Diagrams', Icon: Image },
+            { id: 'elevations', label: 'Elevations',         Icon: Image },
+            { id: 'photos',     label: 'Photos',             Icon: Camera },
             { id: 'variations', label: 'Variations',         Icon: GitBranch },
           ] as const).map(({ id, label, Icon }) => (
             <button

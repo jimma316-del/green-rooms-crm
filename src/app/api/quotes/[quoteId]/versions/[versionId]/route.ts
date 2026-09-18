@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const body = await req.json()
   // Only allow updating safe fields (no overwriting id, quote_id, version_number)
-  const allowed = ['title', 'internal_notes', 'cover_letter', 'status', 'sent_at', 'viewed_at', 'responded_at', 'pdf_url', 'is_current']
+  const allowed = ['title', 'internal_notes', 'cover_letter', 'status', 'sent_at', 'viewed_at', 'responded_at', 'pdf_url', 'is_current', 'build_date', 'expires_at']
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patch = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k))) as any
 

@@ -9,6 +9,8 @@ import { OverdueTasksPanel } from '@/components/dashboard/OverdueTasksPanel'
 import { RecentActivityPanel } from '@/components/dashboard/RecentActivityPanel'
 import { PipelineSummary } from '@/components/dashboard/PipelineSummary'
 import { SmsRepliesPanel } from '@/components/dashboard/SmsRepliesPanel'
+import { QuoteFollowUpPanel } from '@/components/dashboard/QuoteFollowUpPanel'
+import { QuoteMetricsPanel } from '@/components/dashboard/QuoteMetricsPanel'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -95,10 +97,62 @@ export default async function DashboardPage() {
     supabase.from('leads').select('id', { count: 'exact' }).eq('stage', 'followup'),
   ])
 
+  // Quote follow-up: versions viewed 3+ days ago with no response
+  const threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: viewedQuotes } = await (createAdminClient() as any)
+    .from('quote_versions')
+    .select('id, total_pence, viewed_at, quotes(id, quote_ref, lead_id, leads(name))')
+    .eq('status', 'viewed')
+    .lte('viewed_at', threeDaysAgo)
+    .order('viewed_at', { ascending: true })
+    .limit(10)
+
+  // Quote metrics (rolling 90 days)
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 86400000).toISOString()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: recentVersions } = await (createAdminClient() as any)
+    .from('quote_versions')
+    .select('id, status, total_pence, sent_at')
+    .in('status', ['sent', 'viewed', 'accepted', 'rejected'])
+    .gte('sent_at', ninetyDaysAgo)
+
   const { data: stockAlerts } = await createAdminClient()
     .from('stock_items')
     .select('id, name')
     .eq('needs_reorder', true)
+
+  // Build follow-up list
+  type VersionRow = { id: string; total_pence: number; viewed_at: string; quotes: { id: string; quote_ref: string; lead_id: string; leads: { name: string } } }
+  const followUpQuotes = ((viewedQuotes ?? []) as VersionRow[]).map(v => {
+    const daysSince = Math.floor((Date.now() - new Date(v.viewed_at).getTime()) / 86400000)
+    const q = v.quotes
+    return {
+      quoteId: q.id,
+      leadId: q.lead_id,
+      leadName: q.leads.name,
+      quoteRef: q.quote_ref,
+      totalPence: v.total_pence,
+      viewedAt: v.viewed_at,
+      daysSinceViewed: daysSince,
+    }
+  })
+
+  // Quote metrics
+  type VersionMetric = { status: string; total_pence: number }
+  const allVersions = ((recentVersions ?? []) as VersionMetric[])
+  const acceptedVersions = allVersions.filter(v => v.status === 'accepted')
+  const rejectedVersions = allVersions.filter(v => v.status === 'rejected')
+  const openVersions = allVersions.filter(v => v.status === 'sent' || v.status === 'viewed')
+  const quoteMetrics = {
+    totalSent: allVersions.length,
+    accepted: acceptedVersions.length,
+    rejected: rejectedVersions.length,
+    pipelineValuePence: openVersions.reduce((s, v) => s + (v.total_pence ?? 0), 0),
+    avgAcceptedPence: acceptedVersions.length > 0
+      ? Math.round(acceptedVersions.reduce((s, v) => s + (v.total_pence ?? 0), 0) / acceptedVersions.length)
+      : 0,
+  }
 
   type TaskItem = { id: string; title: string; due_date: string | null; type: string; priority: string; lead_id: string | null; leads: { name: string } | null }
   const PRIORITY_ORDER: Record<string, number> = { high: 0, normal: 1, low: 2 }
@@ -151,7 +205,10 @@ export default async function DashboardPage() {
 
       <SmsRepliesPanel replies={(smsReplies ?? []) as Parameters<typeof SmsRepliesPanel>[0]['replies']} />
 
+      <QuoteFollowUpPanel quotes={followUpQuotes} />
+
       <DashboardKPIs kpis={kpis} />
+      <QuoteMetricsPanel metrics={quoteMetrics} />
       <PipelineSummary leads={stageCounts ?? []} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">

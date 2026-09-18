@@ -78,8 +78,8 @@ type Draft = Omit<SiteAssessment, 'id' | 'lead_id' | 'created_by' | 'created_at'
 
 function defaultDraft(data?: Partial<SiteAssessment>): Draft {
   return {
-    width_m: data?.width_m ?? null,
-    depth_m: data?.depth_m ?? null,
+    width_m: data?.width_m ?? 4,
+    depth_m: data?.depth_m ?? 3,
     height_eaves_m: data?.height_eaves_m ?? null,
     roof_type: data?.roof_type ?? 'flat',
     has_canopy: data?.has_canopy ?? false,

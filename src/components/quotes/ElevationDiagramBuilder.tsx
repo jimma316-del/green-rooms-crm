@@ -41,6 +41,7 @@ interface Asset {
   caption: string | null
   width_mm: number | null
   height_mm: number | null
+  include_in_pdf: boolean
 }
 
 interface Props {
@@ -557,13 +558,37 @@ export function ElevationDiagramBuilder({ quoteId, versionId, initialAssets }: P
           <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
             <div dangerouslySetInnerHTML={{ __html: currentAsset.svg_data ?? '' }} className="w-full" />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap items-center">
             <button
               onClick={() => setNewDiagram(true)}
               className="flex items-center gap-1.5 text-sm text-[var(--primary)] border border-[var(--primary)] hover:bg-green-50 px-3 py-2 rounded-lg"
             >
               <RotateCcw size={13} /> Edit / regenerate
             </button>
+            {/* Include in PDF toggle */}
+            <label className="flex items-center gap-2 ml-2 cursor-pointer select-none">
+              <span className="relative inline-flex items-center">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={currentAsset.include_in_pdf !== false}
+                  onChange={async e => {
+                    const val = e.target.checked
+                    try {
+                      await fetch(`/api/quotes/${quoteId}/versions/${versionId}/assets/${currentAsset.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ include_in_pdf: val }),
+                      })
+                      setAssets(as => as.map(a => a.id === currentAsset.id ? { ...a, include_in_pdf: val } : a))
+                    } catch { toast.error('Update failed') }
+                  }}
+                />
+                <span className="w-8 h-4 bg-gray-200 rounded-full peer-checked:bg-[var(--primary)] transition-colors" />
+                <span className="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
+              </span>
+              <span className="text-xs text-gray-500">Include in PDF</span>
+            </label>
             <button
               onClick={() => deleteAsset(currentAsset.id)}
               className="flex items-center gap-1.5 text-sm text-red-500 border border-red-200 hover:bg-red-50 px-3 py-2 rounded-lg ml-auto"

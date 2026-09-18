@@ -127,7 +127,7 @@ export default async function LeadPage({ params }: Props) {
                   <>
                     <span className="text-sm font-medium text-gray-900">
                       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {(assessment as any).width_m}m × {(assessment as any).depth_m}m
+                      {(assessment as any).width_m ?? '?'}m × {(assessment as any).depth_m ?? '?'}m
                     </span>
                     <span className="text-xs text-green-600">✓ Completed — edit ↗</span>
                   </>

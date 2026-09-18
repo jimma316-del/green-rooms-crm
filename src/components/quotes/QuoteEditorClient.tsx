@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Plus, Trash2, ChevronDown, ChevronUp, X, Check, Pencil, FileText } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronUp, X, Check, Pencil, FileText, Briefcase } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface LineItem {
@@ -53,6 +53,8 @@ interface Version {
   sent_at: string | null
   cover_letter: string | null
   internal_notes: string | null
+  build_date: string | null
+  expires_at: string | null
 }
 
 interface Product {
@@ -75,6 +77,12 @@ interface Lead {
   postcode: string | null
 }
 
+interface Assessment {
+  width_m: number | null
+  depth_m: number | null
+  roof_type: string | null
+}
+
 interface Props {
   leadId: string
   lead: Lead
@@ -85,6 +93,7 @@ interface Props {
   initialSections: Section[]
   initialPaymentSchedule: PaymentMilestone[]
   productsGrouped: Record<string, Product[]>
+  assessment?: Assessment | null
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -487,7 +496,7 @@ function SectionBlock({ section, quoteId, versionId, productsGrouped, onUpdate, 
                 <button onClick={() => setAddingCustom(false)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => setShowPicker(true)}
                   className="flex items-center gap-1.5 text-xs text-[var(--primary)] hover:opacity-80 font-medium"
@@ -500,6 +509,31 @@ function SectionBlock({ section, quoteId, versionId, productsGrouped, onUpdate, 
                   className="text-xs text-gray-400 hover:text-gray-600"
                 >
                   + Custom item
+                </button>
+                <span className="text-gray-200">|</span>
+                <button
+                  onClick={async () => {
+                    const label = window.prompt('Discount description:', 'Discount')
+                    if (!label) return
+                    const amountStr = window.prompt('Discount amount (£):')
+                    if (!amountStr) return
+                    const amountPounds = parseFloat(amountStr)
+                    if (isNaN(amountPounds) || amountPounds <= 0) return
+                    const res = await fetch(
+                      `/api/quotes/${quoteId}/versions/${versionId}/sections/${section.id}/items`,
+                      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: label, quantity: 1, unit: 'item',
+                          unit_price_pence: -Math.round(amountPounds * 100),
+                          sort_order: section.quote_line_items.length }) }
+                    )
+                    if (!res.ok) { toast.error('Failed to add discount'); return }
+                    const { item } = await res.json()
+                    onUpdate({ ...section, quote_line_items: [...section.quote_line_items, item] })
+                    onTotalChange()
+                  }}
+                  className="text-xs text-amber-600 hover:text-amber-700 font-medium"
+                >
+                  − Discount
                 </button>
               </div>
             )}
@@ -793,7 +827,7 @@ function SendQuoteModal({ lead, quoteId, versionId, quoteRef, onClose, onSent }:
 // ─── Main Component ────────────────────────────────────────────────────────────
 export function QuoteEditorClient({
   leadId, lead, quoteId, quoteRef, versions, currentVersion,
-  initialSections, initialPaymentSchedule, productsGrouped,
+  initialSections, initialPaymentSchedule, productsGrouped, assessment,
 }: Props) {
   const router = useRouter()
   const [sections, setSections] = useState<Section[]>(initialSections)
@@ -801,7 +835,21 @@ export function QuoteEditorClient({
   const [coverLetter, setCoverLetter] = useState(currentVersion.cover_letter ?? '')
   const [savingCover, setSavingCover] = useState(false)
   const [showSendModal, setShowSendModal] = useState(false)
+  const [buildDate, setBuildDate] = useState(currentVersion.build_date ?? '')
+  const [expiresAt, setExpiresAt] = useState(currentVersion.expires_at ?? '')
   const coverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dateTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function autoSaveDates(field: 'build_date' | 'expires_at', value: string) {
+    if (dateTimer.current) clearTimeout(dateTimer.current)
+    dateTimer.current = setTimeout(async () => {
+      await fetch(`/api/quotes/${quoteId}/versions/${currentVersion.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value || null }),
+      })
+    }, 1000)
+  }
 
   // Refresh total from server (called after any mutation)
   const refreshTotal = useCallback(async () => {
@@ -857,6 +905,18 @@ export function QuoteEditorClient({
     if (!res.ok) { toast.error('Failed to create new version'); return }
     toast.success('New version created')
     router.refresh()
+  }
+
+  async function convertToJob() {
+    if (!confirm('Convert this lead to a booked job? This will advance the stage to "Job Booked".')) return
+    const res = await fetch(`/api/leads/${leadId}/convert-to-job`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quoteRef }),
+    })
+    if (!res.ok) { toast.error('Failed to convert to job'); return }
+    toast.success('Lead advanced to Job Booked')
+    router.push(`/leads/${leadId}`)
   }
 
   // VAT breakdown (assume 20% VAT on everything)
@@ -927,6 +987,12 @@ export function QuoteEditorClient({
                 <span className="font-medium text-gray-800 text-right max-w-[140px]">{lead.address}</span>
               </div>
             )}
+            {assessment?.width_m && assessment?.depth_m && (
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Size</span>
+                <span className="font-semibold text-[var(--primary)]">{assessment.width_m}m × {assessment.depth_m}m · {(assessment.width_m * assessment.depth_m).toFixed(1)}m²</span>
+              </div>
+            )}
             <div className="flex justify-between text-xs text-gray-500">
               <span>Version</span>
               <span className="font-medium text-gray-800">v{currentVersion.version_number}</span>
@@ -945,6 +1011,28 @@ export function QuoteEditorClient({
             <div className="flex justify-between text-sm font-bold text-gray-900 pt-1 border-t border-gray-100">
               <span>Total inc VAT</span>
               <span className="text-[var(--primary)]">{poundStr(versionTotal)}</span>
+            </div>
+          </div>
+
+          {/* Build date + expiry */}
+          <div className="mt-4 pt-3 border-t border-gray-100 space-y-2">
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Est. build date</label>
+              <input
+                type="month"
+                value={buildDate}
+                onChange={e => { setBuildDate(e.target.value); autoSaveDates('build_date', e.target.value) }}
+                className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-[var(--primary)]"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Quote expires</label>
+              <input
+                type="date"
+                value={expiresAt}
+                onChange={e => { setExpiresAt(e.target.value); autoSaveDates('expires_at', e.target.value) }}
+                className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-[var(--primary)]"
+              />
             </div>
           </div>
         </div>
@@ -994,6 +1082,14 @@ export function QuoteEditorClient({
             Preview PDF
           </a>
           <ShareLinkButton quoteId={quoteId} versionId={currentVersion.id} />
+          {currentVersion.status === 'accepted' && (
+            <button
+              onClick={convertToJob}
+              className="w-full flex items-center justify-center gap-1.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 rounded-lg transition-colors"
+            >
+              <Briefcase size={14} /> Convert to Job
+            </button>
+          )}
           <button
             onClick={createNewVersion}
             className="w-full text-sm text-gray-500 border border-gray-200 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
