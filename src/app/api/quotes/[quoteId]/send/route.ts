@@ -44,7 +44,7 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const { data: version } = await adminAny
     .from('quote_versions')
-    .select('id, version_number, status, total_pence, cover_letter, created_at, build_date, expires_at')
+    .select('id, version_number, status, total_pence, cover_letter, created_at')
     .eq('id', versionId)
     .single()
 

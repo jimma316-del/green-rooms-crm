@@ -36,17 +36,22 @@ export async function POST(req: NextRequest, { params }: Params) {
     ?? 'unknown'
 
   const newStatus = action === 'accept' ? 'accepted' : 'rejected'
-  const updateData: Record<string, string | null> = {
-    status: newStatus,
-    responded_at: new Date().toISOString(),
-  }
-  if (action === 'accept') {
-    updateData.accepted_by_name = acceptedByName ?? null
-    updateData.accepted_at = new Date().toISOString()
-    updateData.acceptance_ip = ip
-  }
 
-  await adminAny.from('quote_versions').update(updateData).eq('id', version.id)
+  // Primary update — status + responded_at always exist
+  await adminAny.from('quote_versions')
+    .update({ status: newStatus, responded_at: new Date().toISOString() })
+    .eq('id', version.id)
+
+  // Acceptance audit trail — columns added in migration; best-effort
+  if (action === 'accept') {
+    await adminAny.from('quote_versions')
+      .update({
+        accepted_by_name: acceptedByName ?? null,
+        accepted_at: new Date().toISOString(),
+        acceptance_ip: ip,
+      })
+      .eq('id', version.id)
+  }
 
   const quote = version.quotes
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

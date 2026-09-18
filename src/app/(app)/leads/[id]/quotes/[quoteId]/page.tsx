@@ -26,8 +26,7 @@ export default async function QuoteEditorPage({ params }: Props) {
         id, quote_ref, lead_id, created_at,
         quote_versions (
           id, version_number, status, title, internal_notes, cover_letter,
-          total_pence, is_current, created_at, sent_at, pdf_url,
-          build_date, expires_at
+          total_pence, is_current, created_at, sent_at, pdf_url
         )
       `)
       .eq('id', quoteId)

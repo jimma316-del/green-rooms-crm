@@ -20,12 +20,31 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const admin = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (admin as any)
+  const adminAny = admin as any
+  let { data, error } = await adminAny
     .from('quote_versions')
     .update(patch)
     .eq('id', versionId)
     .select('id, title, status, internal_notes, cover_letter')
     .single()
+
+  // If update failed due to missing column (42703), strip new columns and retry
+  if (error?.code === '42703') {
+    const migratedColumns = ['build_date', 'expires_at', 'accepted_by_name', 'accepted_at', 'acceptance_ip']
+    const safePatch = Object.fromEntries(Object.entries(patch).filter(([k]) => !migratedColumns.includes(k)))
+    if (Object.keys(safePatch).length > 0) {
+      const retry = await adminAny
+        .from('quote_versions')
+        .update(safePatch)
+        .eq('id', versionId)
+        .select('id, title, status, internal_notes, cover_letter')
+        .single()
+      data = retry.data
+      error = retry.error
+    } else {
+      error = null
+    }
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ version: data })

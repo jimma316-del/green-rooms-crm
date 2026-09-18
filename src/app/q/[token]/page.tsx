@@ -18,7 +18,7 @@ export default async function ClientQuotePage({ params }: Props) {
     .from('quote_versions')
     .select(`
       id, version_number, status, total_pence, cover_letter,
-      created_at, sent_at, viewed_at, responded_at, build_date,
+      created_at, sent_at, viewed_at, responded_at,
       quotes (
         id, quote_ref, lead_id,
         leads ( name, address, postcode )
@@ -69,11 +69,6 @@ export default async function ClientQuotePage({ params }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const elevations = (elevationsRes.data ?? []).filter((a: any) => a.svg_data)
 
-  let buildDate: string | null = null
-  if (version.build_date) {
-    buildDate = new Date(version.build_date).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
-  }
-
   return (
     <ClientQuoteView
       token={token}
@@ -88,7 +83,6 @@ export default async function ClientQuotePage({ params }: Props) {
       sections={sortedSections}
       paymentSchedule={paymentRes.data ?? []}
       preparedDate={new Date(version.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-      buildDate={buildDate}
       elevations={elevations}
     />
   )

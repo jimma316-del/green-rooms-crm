@@ -35,7 +35,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   // Load the requested version (or current)
   let versionQuery = adminAny
     .from('quote_versions')
-    .select('id, version_number, status, total_pence, cover_letter, is_current, created_at, build_date, expires_at')
+    .select('id, version_number, status, total_pence, cover_letter, is_current, created_at')
     .eq('quote_id', quoteId)
 
   if (versionId) {
