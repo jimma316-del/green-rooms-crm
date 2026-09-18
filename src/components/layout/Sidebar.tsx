@@ -18,6 +18,7 @@ const navItems = [
   { href: '/jobs',       label: 'Jobs',       icon: HardHat },
   { href: '/stock',      label: 'Stock',      icon: Package },
 
+  { href: '/finance',    label: 'Finance',    icon: PoundSterling },
   { href: '/reports',    label: 'Reports',    icon: BarChart3 },
 ]
 

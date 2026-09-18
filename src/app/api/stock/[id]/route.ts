@@ -49,14 +49,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
   }
 
-  // When un-marking: complete any open stock task for this item
+  // When un-marking: record order date + complete any open stock task
   if (body.needs_reorder === false) {
+    const now = new Date().toISOString()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await admin.from('stock_items').update({ last_ordered_at: now } as any).eq('id', id)
     const { data: item } = await admin.from('stock_items').select('name').eq('id', id).single()
     if (item) {
       const title = `Order: ${item.name}`
       await admin
         .from('tasks')
-        .update({ completed_at: new Date().toISOString(), completed_by: user.id })
+        .update({ completed_at: now, completed_by: user.id })
         .eq('title', title)
         .eq('type', 'stock')
         .is('completed_at', null)

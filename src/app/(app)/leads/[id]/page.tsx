@@ -11,6 +11,7 @@ import { ActivityFeed } from '@/components/leads/ActivityFeed'
 import { LeadAnalytics } from '@/components/leads/LeadAnalytics'
 import { MergeBanner } from '@/components/leads/MergeBanner'
 import { SignOffRecord } from '@/components/leads/SignOffRecord'
+import { NewQuoteButton } from '@/components/quotes/NewQuoteButton'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -59,11 +60,12 @@ export default async function LeadPage({ params }: Props) {
       .single(),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (admin as any)
-      .from('lead_quotes')
-      .select('id, status, updated_at, tiers')
+      .from('quotes')
+      .select('id, quote_ref, created_at, quote_versions(id, version_number, status, total_pence, is_current)')
       .eq('lead_id', id)
-      .order('updated_at', { ascending: false })
-      .limit(1),
+      .is('archived_at', null)
+      .order('created_at', { ascending: false })
+      .limit(3),
   ])
 
   if (!lead) notFound()
@@ -137,26 +139,27 @@ export default async function LeadPage({ params }: Props) {
                 )}
               </a>
 
-              {quotes && quotes.length > 0 ? (
-                <a href={`/leads/${id}/quote/${(quotes[0] as { id: string }).id}`}
-                  className="flex flex-col gap-1 p-3 rounded-lg border border-gray-200 hover:border-[var(--primary)] hover:bg-gray-50 transition-colors">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quote</span>
-                  <span className="text-sm font-medium text-gray-900 capitalize">
-                    {(quotes[0] as { status: string }).status}
-                  </span>
-                  <span className="text-xs text-[var(--primary)]">Edit quote ↗</span>
-                </a>
-              ) : (
-                <a href={`/leads/${id}/quote`}
-                  className={`flex flex-col gap-1 p-3 rounded-lg border border-gray-200 transition-colors ${
-                    assessment ? 'hover:border-[var(--primary)] hover:bg-gray-50' : 'opacity-50 pointer-events-none'
-                  }`}>
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quote</span>
-                  <span className="text-sm text-gray-400">Not created</span>
-                  <span className="text-xs text-[var(--primary)]">
-                    {assessment ? 'Build quote ↗' : 'Complete assessment first'}
-                  </span>
-                </a>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {quotes && (quotes as any[]).length > 0 ? (() => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const q = (quotes as any[])[0]
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const currentV = (q.quote_versions ?? []).find((v: any) => v.is_current) ?? q.quote_versions?.[0]
+                const totalPence = currentV?.total_pence ?? 0
+                return (
+                  <a href={`/leads/${id}/quotes/${q.id}`}
+                    className="flex flex-col gap-1 p-3 rounded-lg border border-gray-200 hover:border-[var(--primary)] hover:bg-gray-50 transition-colors">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quote</span>
+                    <span className="text-sm font-medium text-gray-900">{q.quote_ref}</span>
+                    <span className="text-xs text-gray-500 capitalize">
+                      {currentV?.status ?? 'draft'}
+                      {totalPence > 0 && ` · £${(totalPence / 100).toLocaleString('en-GB', { maximumFractionDigits: 0 })}`}
+                    </span>
+                    <span className="text-xs text-[var(--primary)]">Edit quote ↗</span>
+                  </a>
+                )
+              })() : (
+                <NewQuoteButton leadId={id} hasAssessment={!!assessment} />
               )}
             </div>
           </div>

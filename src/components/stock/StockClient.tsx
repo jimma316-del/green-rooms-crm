@@ -8,6 +8,18 @@ interface StockItem {
   name: string
   needs_reorder: boolean
   order_index: number
+  last_ordered_at: string | null
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const days = Math.floor(diff / 86400000)
+  if (days < 1) return 'today'
+  if (days === 1) return 'yesterday'
+  if (days < 7) return `${days} days ago`
+  if (days < 31) return `${Math.floor(days / 7)} week${Math.floor(days / 7) > 1 ? 's' : ''} ago`
+  if (days < 365) return `${Math.floor(days / 30)} month${Math.floor(days / 30) > 1 ? 's' : ''} ago`
+  return `${Math.floor(days / 365)} year${Math.floor(days / 365) > 1 ? 's' : ''} ago`
 }
 
 interface Props {
@@ -26,7 +38,10 @@ export function StockClient({ initialItems, initialNotes }: Props) {
 
   async function toggleReorder(item: StockItem) {
     const updated = !item.needs_reorder
-    setItems(prev => prev.map(i => i.id === item.id ? { ...i, needs_reorder: updated } : i))
+    const now = updated ? null : new Date().toISOString()
+    setItems(prev => prev.map(i =>
+      i.id === item.id ? { ...i, needs_reorder: updated, last_ordered_at: now ?? i.last_ordered_at } : i
+    ))
     await fetch(`/api/stock/${item.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -175,17 +190,24 @@ function StockRow({
         onChange={() => onToggle(item)}
         className="w-4 h-4 rounded border-gray-300 accent-amber-500 shrink-0 cursor-pointer"
       />
-      <span className={`flex-1 text-sm ${item.needs_reorder ? 'text-amber-700 font-medium' : 'text-gray-700'}`}>
-        {item.name}
-      </span>
+      <div className="flex-1 min-w-0">
+        <span className={`text-sm ${item.needs_reorder ? 'text-amber-700 font-medium' : 'text-gray-700'}`}>
+          {item.name}
+        </span>
+        {item.last_ordered_at && (
+          <p className="text-[11px] text-gray-400 mt-0.5">
+            Last ordered {timeAgo(item.last_ordered_at)}
+          </p>
+        )}
+      </div>
       {item.needs_reorder && (
-        <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+        <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full shrink-0">
           Reorder
         </span>
       )}
       <button
         onClick={() => onDelete(item.id)}
-        className="p-1 text-gray-300 hover:text-red-400 transition-colors"
+        className="p-1 text-gray-300 hover:text-red-400 transition-colors shrink-0"
         title="Remove item"
       >
         <Trash2 className="w-3.5 h-3.5" />

@@ -23,7 +23,7 @@ export default async function StockPage() {
         </div>
       )}
       <StockClient
-        initialItems={items ?? []}
+        initialItems={(items ?? []) as Parameters<typeof StockClient>[0]['initialItems']}
         initialNotes={notesRow?.notes ?? ''}
       />
     </div>

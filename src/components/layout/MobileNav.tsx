@@ -15,6 +15,7 @@ const navItems = [
   { href: '/leads', label: 'Leads', icon: Users },
   { href: '/jobs', label: 'Jobs', icon: HardHat },
   { href: '/tasks', label: 'Tasks', icon: CheckSquare },
+  { href: '/finance', label: 'Finance', icon: PoundSterling },
   { href: '/reports', label: 'Reports', icon: BarChart3 },
 ]
 
