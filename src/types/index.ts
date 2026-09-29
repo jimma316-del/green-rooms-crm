@@ -208,7 +208,7 @@ export const STAGE_CONFIG: Record<string, { label: string; pipeline: Pipeline; c
   showroom_meeting:     { label: 'Showroom Meeting',       pipeline: 'sales',   color: 'bg-blue-100 text-blue-800' },
   quoting:              { label: 'Quoting',               pipeline: 'sales',   color: 'bg-indigo-100 text-indigo-800' },
   quote_sent:           { label: 'Quote Sent',            pipeline: 'sales',   color: 'bg-orange-100 text-orange-800' },
-  followup:             { label: 'Follow Up',              pipeline: 'sales',   color: 'bg-amber-100 text-amber-800' },
+  followup:             { label: 'No Response',             pipeline: 'sales',   color: 'bg-amber-100 text-amber-800' },
   in_conversation:      { label: 'In Conversation',       pipeline: 'sales',   color: 'bg-teal-100 text-teal-800' },
   job_booked:           { label: 'Job Booked',            pipeline: 'project', color: 'bg-green-100 text-green-800' },
   doors_windows_ordered:     { label: 'Doors & Windows Ordered',   pipeline: 'project', color: 'bg-cyan-100 text-cyan-800' },

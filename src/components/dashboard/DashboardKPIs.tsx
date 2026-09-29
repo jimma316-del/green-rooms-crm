@@ -63,7 +63,7 @@ const cards = [
   },
   {
     key: 'followUp' as const,
-    label: 'Follow Up',
+    label: 'No Response',
     sublabel: 'needs chasing',
     icon: Clock,
     href: '/leads?stage=followup',

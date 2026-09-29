@@ -45,7 +45,7 @@ const SALES_COLUMNS: ColumnConfig[] = [
   { id: 'quoting',             label: 'Quoting',           stages: ['quoting'],             dropStage: 'quoting',             color: STAGE_CONFIG.quoting.color },
   { id: 'quote_sent',          label: 'Quote Sent',        stages: ['quote_sent'],          dropStage: 'quote_sent',          color: STAGE_CONFIG.quote_sent.color },
   { id: 'in_conversation',     label: 'In Conversation',   stages: ['in_conversation'],     dropStage: 'in_conversation',     color: STAGE_CONFIG.in_conversation.color },
-  { id: 'followup',            label: 'Follow Up',         stages: ['followup'],            dropStage: 'followup',            color: STAGE_CONFIG.followup.color },
+  { id: 'followup',            label: 'No Response',       stages: ['followup'],            dropStage: 'followup',            color: STAGE_CONFIG.followup.color },
   { id: 'job_booked',          label: 'Job Booked',        stages: ['job_booked'],          dropStage: 'job_booked',          color: STAGE_CONFIG.job_booked.color },
 ]
 
