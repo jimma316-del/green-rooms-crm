@@ -52,17 +52,24 @@ export function SnaggingDetails({ leadId, name, address, existingPhotos, task }:
   const [savingTask, setSavingTask] = useState(false)
   const [snaggingDate, setSnaggingDate] = useState(task?.due_date?.slice(0, 10) ?? '')
   const [savingDate, setSavingDate] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   async function saveTaskNotes() {
     setSavingTask(true)
+    setSaveError(null)
     const res = await fetch(`/api/leads/${leadId}/snagging-task`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ taskId, notes: taskNotes }),
     })
     const data = await res.json()
+    if (!res.ok) {
+      setSaveError(data.error ?? 'Save failed')
+      setSavingTask(false)
+      return
+    }
     if (data.taskId) setTaskId(data.taskId)
     setSavingTask(false)
     setEditingTask(false)
@@ -194,12 +201,15 @@ export function SnaggingDetails({ leadId, name, address, existingPhotos, task }:
                     <Check className="w-3 h-3" /> {savingTask ? 'Saving…' : 'Save'}
                   </button>
                   <button
-                    onClick={() => { setTaskNotes(task?.notes ?? ''); setEditingTask(false) }}
+                    onClick={() => { setTaskNotes(task?.notes ?? ''); setEditingTask(false); setSaveError(null) }}
                     className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg"
                   >
                     Cancel
                   </button>
                 </div>
+                {saveError && (
+                  <p className="text-xs text-red-600 bg-red-50 rounded px-2 py-1">{saveError}</p>
+                )}
               </div>
             ) : (
               <p className="text-sm text-gray-600 whitespace-pre-wrap">
