@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         created_by: userId,
         assigned_to: userId,
         title: 'Snagging',
-        type: 'snagging',
+        type: 'call',
         notes: notes?.trim() || null,
         due_date: due_date || null,
         priority: 'normal',

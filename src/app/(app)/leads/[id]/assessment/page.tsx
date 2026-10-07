@@ -23,8 +23,16 @@ export default async function AssessmentPage({ params }: Props) {
 
   return (
     <div>
-      <div className="bg-white border-b border-gray-100 px-4 py-3">
+      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
         <a href={`/leads/${id}`} className="text-xs text-gray-500 hover:text-gray-700">← {lead.name}</a>
+        {assessment && (
+          <a
+            href={`/leads/${id}/assessment/quote`}
+            className="text-xs font-medium text-[#0ea3d4] hover:text-[#0891b2] border border-[#13B5EA]/40 rounded-md px-3 py-1.5 hover:bg-[#13B5EA]/5 transition-colors"
+          >
+            Generate Xero Quote →
+          </a>
+        )}
       </div>
       <AssessmentForm leadId={id} initialData={assessment ? (assessment as unknown as SiteAssessment) : undefined} />
     </div>

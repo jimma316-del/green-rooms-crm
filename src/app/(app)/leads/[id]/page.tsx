@@ -120,24 +120,32 @@ export default async function LeadPage({ params }: Props) {
           <div className="bg-white rounded-xl border border-border p-4">
             <h2 className="text-sm font-semibold text-[var(--primary)] mb-3">Site Assessment & Quote</h2>
             <div className="grid grid-cols-2 gap-3">
-              <a href={`/leads/${id}/assessment`}
-                className="flex flex-col gap-1 p-3 rounded-lg border border-gray-200 hover:border-[var(--primary)] hover:bg-gray-50 transition-colors">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Assessment</span>
-                {assessment ? (
-                  <>
-                    <span className="text-sm font-medium text-gray-900">
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {(assessment as any).width_m ?? '?'}m × {(assessment as any).depth_m ?? '?'}m
-                    </span>
-                    <span className="text-xs text-green-600">✓ Completed — edit ↗</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-sm text-gray-400">Not started</span>
-                    <span className="text-xs text-[var(--primary)]">Start assessment ↗</span>
-                  </>
+              <div className="flex flex-col gap-2">
+                <a href={`/leads/${id}/assessment`}
+                  className="flex flex-col gap-1 p-3 rounded-lg border border-gray-200 hover:border-[var(--primary)] hover:bg-gray-50 transition-colors">
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Assessment</span>
+                  {assessment ? (
+                    <>
+                      <span className="text-sm font-medium text-gray-900">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {(assessment as any).width_m ?? '?'}m × {(assessment as any).depth_m ?? '?'}m
+                      </span>
+                      <span className="text-xs text-green-600">✓ Completed — edit ↗</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-sm text-gray-400">Not started</span>
+                      <span className="text-xs text-[var(--primary)]">Start assessment ↗</span>
+                    </>
+                  )}
+                </a>
+                {assessment && (
+                  <a href={`/leads/${id}/assessment/quote`}
+                    className="flex items-center justify-between p-3 rounded-lg border border-[#13B5EA]/30 bg-[#13B5EA]/5 hover:bg-[#13B5EA]/10 hover:border-[#13B5EA]/60 transition-colors">
+                    <span className="text-xs font-semibold text-[#0ea3d4]">Generate Xero Quote ↗</span>
+                  </a>
                 )}
-              </a>
+              </div>
 
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {quotes && (quotes as any[]).length > 0 ? (() => {

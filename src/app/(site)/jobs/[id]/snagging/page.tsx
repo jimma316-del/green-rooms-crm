@@ -44,8 +44,8 @@ export default async function SnaggingPage({ params }: Props) {
     .filter((u): u is string => Boolean(u))
 
   const snaggingTask =
-    (adminTasks ?? []).find(t => t.type === 'snagging' && !t.completed_at) ??
-    (adminTasks ?? []).find(t => t.type === 'snagging') ??
+    (adminTasks ?? []).find(t => t.title === 'Snagging' && !t.completed_at) ??
+    (adminTasks ?? []).find(t => t.title === 'Snagging') ??
     null
 
   if (lead.snagging_signed_off_at) {
