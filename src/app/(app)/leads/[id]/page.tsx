@@ -73,6 +73,51 @@ export default async function LeadPage({ params }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const typedLead = lead as any
 
+  // Fetch HubSpot contact data by email
+  let hubspotContact: {
+    visits: number
+    pageViews: number
+    lastVisit: string | null
+    firstVisit: string | null
+    source: string | null
+    lastUrl: string | null
+  } | null = null
+  if (typedLead.email && process.env.HUBSPOT_ACCESS_TOKEN) {
+    try {
+      const hsRes = await fetch('https://api.hubapi.com/crm/v3/objects/contacts/search', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.HUBSPOT_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filterGroups: [{ filters: [{ propertyName: 'email', operator: 'EQ', value: typedLead.email }] }],
+          properties: [
+            'hs_analytics_num_visits', 'hs_analytics_num_page_views',
+            'hs_analytics_last_visit_timestamp', 'hs_analytics_first_visit_timestamp',
+            'hs_latest_source', 'hs_analytics_last_url',
+          ],
+          limit: 1,
+        }),
+        next: { revalidate: 300 },
+      })
+      if (hsRes.ok) {
+        const hsData = await hsRes.json()
+        const c = hsData.results?.[0]?.properties
+        if (c) {
+          hubspotContact = {
+            visits: Number(c.hs_analytics_num_visits ?? 0),
+            pageViews: Number(c.hs_analytics_num_page_views ?? 0),
+            lastVisit: c.hs_analytics_last_visit_timestamp ?? null,
+            firstVisit: c.hs_analytics_first_visit_timestamp ?? null,
+            source: c.hs_latest_source ?? null,
+            lastUrl: c.hs_analytics_last_url ?? null,
+          }
+        }
+      }
+    } catch { /* non-critical */ }
+  }
+
   // Check for duplicate leads with same email
   let duplicateLead: { id: string; name: string; created_at: string } | null = null
   if (typedLead.email) {
@@ -99,7 +144,7 @@ export default async function LeadPage({ params }: Props) {
         <div className="md:col-span-1 space-y-4">
           <LeadContact lead={lead} />
           <LeadDates lead={lead} />
-          <LeadAnalytics calculatorData={typedLead.calculator_data as Record<string, unknown> | null} createdAt={typedLead.created_at} />
+          <LeadAnalytics calculatorData={typedLead.calculator_data as Record<string, unknown> | null} createdAt={typedLead.created_at} hubspot={hubspotContact} />
           {typedLead.signed_off_at && (
             <SignOffRecord
               signedOffAt={typedLead.signed_off_at}
