@@ -24,7 +24,7 @@ const ROLE_COLOURS: Record<string, string> = {
   site: 'bg-gray-100 text-gray-600',
 }
 
-export function TeamMembers({ users: initial, currentUserId }: { users: User[]; currentUserId: string }) {
+export function TeamMembers({ users: initial, currentUserId, isAdmin }: { users: User[]; currentUserId: string; isAdmin?: boolean }) {
   const [users, setUsers] = useState(initial)
   const [changing, setChanging] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -74,7 +74,7 @@ export function TeamMembers({ users: initial, currentUserId }: { users: User[]; 
               </p>
               <p className="text-xs text-gray-400 truncate">{u.email}</p>
             </div>
-            {isMe ? (
+            {isMe || !isAdmin ? (
               <span className={`text-xs px-2 py-1 rounded-full font-medium ${ROLE_COLOURS[u.role] ?? 'bg-gray-100 text-gray-600'}`}>
                 {ROLE_LABELS[u.role] ?? u.role}
               </span>

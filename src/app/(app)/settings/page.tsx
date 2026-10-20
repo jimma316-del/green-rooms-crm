@@ -42,13 +42,16 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      {profile?.role === 'admin' && (
+      {profile?.role !== 'site' && (
         <div className="bg-white rounded-xl border border-gray-100 p-6 mt-4">
           <h2 className="text-sm font-semibold text-gray-700 mb-1">Team Accounts</h2>
-          <p className="text-xs text-gray-400 mb-4">Manage access levels and remove accounts.</p>
+          <p className="text-xs text-gray-400 mb-4">
+            {profile?.role === 'admin' ? 'Manage access levels and remove accounts.' : 'View team members and their access levels.'}
+          </p>
           <TeamMembers
             users={(allUsers ?? []) as { id: string; full_name: string; email: string; role: string }[]}
             currentUserId={user!.id}
+            isAdmin={profile?.role === 'admin'}
           />
         </div>
       )}
