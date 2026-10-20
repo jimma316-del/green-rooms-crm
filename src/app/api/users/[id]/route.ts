@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-async function requireAdmin() {
+async function requireOfficeUser() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
   const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') return null
+  if (!profile || profile.role === 'site') return null
   return user
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const caller = await requireAdmin()
+  const caller = await requireOfficeUser()
   if (!caller) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params
@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const caller = await requireAdmin()
+  const caller = await requireOfficeUser()
   if (!caller) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params

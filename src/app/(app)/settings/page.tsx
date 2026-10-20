@@ -51,7 +51,7 @@ export default async function SettingsPage() {
           <TeamMembers
             users={(allUsers ?? []) as { id: string; full_name: string; email: string; role: string }[]}
             currentUserId={user!.id}
-            isAdmin={profile?.role === 'admin'}
+            isAdmin={profile?.role !== 'site'}
           />
         </div>
       )}
