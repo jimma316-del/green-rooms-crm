@@ -320,7 +320,7 @@ export function generateXeroLineItems(a: Partial<SiteAssessment>): XeroLineItem[
   if (climateKey !== 'none') {
     const climateOpt = CLIMATE_OPTIONS.find(o => o.value === climateKey)
     const isAC = climateKey.startsWith('ac_')
-    const sizeLabel = climateKey === 'ac_2_5kw' ? '2.5kW' : climateKey === 'ac_5kw' ? '5kW' : ''
+    const sizeLabel = climateKey === 'ac_2_5kw' ? '2.5kW' : climateKey === 'ac_3_5kw' ? '3.5kW' : climateKey === 'ac_5kw' ? '5kW' : ''
     items.push({
       id: 'climate',
       label: isAC ? 'Air Conditioning' : climateOpt?.label || 'Climate Control',

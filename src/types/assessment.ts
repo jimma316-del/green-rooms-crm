@@ -7,7 +7,7 @@ export const PRICING = {
   DOORS:   { upvc_sliding: 1400, alu_french: 1900, alu_sliding_2m: 2300, alu_sliding_26: 2600, alu_bifold_36: 2300, alu_crittal_3m: 3225, alu_bifold_4m: 4000, alu_crittal_4m: 5175, alu_bifold_5m: 4660, alu_crittal_5m: 6085 } as Record<string,number>,
   WINDOWS: { slot: 600, square: 750, double: 900, bifold_win: 1900, full_height: 860 } as Record<string,number>,
   ELEC:    { ext_lights: 240, canopy_lights: 280, smart_switch: 75, cat6: 550, smart_socket: 145 } as Record<string,number>,
-  CLIMATE: { none: 0, ac_2_5kw: 1860, ac_5kw: 2740, wall_heater: 330 } as Record<string,number>,
+  CLIMATE: { none: 0, ac_2_5kw: 1860, ac_3_5kw: 2250, ac_5kw: 2740, wall_heater: 330 } as Record<string,number>,
 }
 
 export const CLADDING_OPTIONS = [
@@ -60,6 +60,7 @@ export const ELEC_OPTIONS = [
 export const CLIMATE_OPTIONS = [
   { value: 'none',      label: 'None',                           price: 0    },
   { value: 'ac_2_5kw', label: 'Air con 2.5kW (heat & cool)',    price: 1860 },
+  { value: 'ac_3_5kw', label: 'Air con 3.5kW (heat & cool)',    price: 2250 },
   { value: 'ac_5kw',   label: 'Air con 5kW (heat & cool)',      price: 2740 },
   { value: 'wall_heater',label: 'Electric panel heater',        price: 330  },
 ]
