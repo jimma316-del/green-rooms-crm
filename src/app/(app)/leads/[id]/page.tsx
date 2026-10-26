@@ -12,6 +12,7 @@ import { LeadAnalytics } from '@/components/leads/LeadAnalytics'
 import { MergeBanner } from '@/components/leads/MergeBanner'
 import { SignOffRecord } from '@/components/leads/SignOffRecord'
 import { NewQuoteButton } from '@/components/quotes/NewQuoteButton'
+import { StagedPayments } from '@/components/leads/StagedPayments'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -143,6 +144,15 @@ export default async function LeadPage({ params }: Props) {
         {/* Left column */}
         <div className="md:col-span-1 space-y-4">
           <LeadContact lead={lead} />
+          {typedLead.pipeline === 'project' && (
+            <StagedPayments
+              leadId={id}
+              payment1Amount={typedLead.payment_1_amount ?? null}
+              payment1Due={typedLead.payment_1_due ?? null}
+              payment2Amount={typedLead.payment_2_amount ?? null}
+              payment2Due={typedLead.payment_2_due ?? null}
+            />
+          )}
           <LeadDates lead={lead} />
           <LeadAnalytics calculatorData={typedLead.calculator_data as Record<string, unknown> | null} createdAt={typedLead.created_at} hubspot={hubspotContact} />
           {typedLead.signed_off_at && (
