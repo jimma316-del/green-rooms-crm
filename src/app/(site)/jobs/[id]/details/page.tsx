@@ -28,10 +28,9 @@ export default async function JobDetailsPage({ params }: Props) {
   if (!user) notFound()
 
   const [{ data: lead }, { data: profile }] = await Promise.all([
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase as any)
+    supabase
       .from('leads')
-      .select('id, name, address, address_line_2, city, postcode, job_files, delivery_info, xero_quote_url, payment_1_amount, payment_1_due, payment_2_amount, payment_2_due')
+      .select('id, name, address, address_line_2, city, postcode, job_files, delivery_info, xero_quote_url')
       .eq('id', id)
       .single(),
     supabase
@@ -43,10 +42,17 @@ export default async function JobDetailsPage({ params }: Props) {
 
   if (!lead) notFound()
 
+  // Fetch payment columns separately — they may not exist until migration is run
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: paymentData } = await (supabase as any)
+    .from('leads')
+    .select('payment_1_amount, payment_1_due, payment_2_amount, payment_2_due')
+    .eq('id', id)
+    .single()
+    .catch(() => ({ data: null }))
+
   const address = [lead.address, lead.address_line_2, lead.city, lead.postcode].filter(Boolean).join(', ')
   const canUpload = profile?.role !== 'site'
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const typedLead = lead as any
 
   return (
     <JobDetails
@@ -57,10 +63,10 @@ export default async function JobDetailsPage({ params }: Props) {
       jobFiles={(lead.job_files ?? {}) as Partial<Record<Category, FileEntry[]>>}
       deliveryInfo={(lead.delivery_info ?? {}) as DeliveryInfo}
       jobSpecUrl={lead.xero_quote_url ?? null}
-      payment1Amount={typedLead.payment_1_amount ?? null}
-      payment1Due={typedLead.payment_1_due ?? null}
-      payment2Amount={typedLead.payment_2_amount ?? null}
-      payment2Due={typedLead.payment_2_due ?? null}
+      payment1Amount={paymentData?.payment_1_amount ?? null}
+      payment1Due={paymentData?.payment_1_due ?? null}
+      payment2Amount={paymentData?.payment_2_amount ?? null}
+      payment2Due={paymentData?.payment_2_due ?? null}
     />
   )
 }
