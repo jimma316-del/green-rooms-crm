@@ -44,12 +44,12 @@ export default async function JobDetailsPage({ params }: Props) {
 
   // Fetch payment columns separately — they may not exist until migration is run
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: paymentData } = await (supabase as any)
+  const { data: paymentData } = await Promise.resolve((supabase as any)
     .from('leads')
     .select('payment_1_amount, payment_1_due, payment_2_amount, payment_2_due')
     .eq('id', id)
     .single()
-    .catch(() => ({ data: null }))
+  ).catch(() => ({ data: null }))
 
   const address = [lead.address, lead.address_line_2, lead.city, lead.postcode].filter(Boolean).join(', ')
   const canUpload = profile?.role !== 'site'
