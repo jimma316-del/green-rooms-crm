@@ -2,9 +2,8 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload, FileText, Trash2, Loader2, ExternalLink, Save } from 'lucide-react'
+import { ArrowLeft, Upload, FileText, Trash2, Loader2, ExternalLink, Save, PoundSterling } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { cn } from '@/lib/utils'
 
 type FileEntry = { url: string; name: string; uploaded_at: string }
 type Category = 'cut_list' | 'elevation'
@@ -29,6 +28,10 @@ interface Props {
   jobFiles: Partial<Record<Category, FileEntry[]>>
   deliveryInfo: DeliveryInfo
   jobSpecUrl: string | null
+  payment1Amount: number | null
+  payment1Due: string | null
+  payment2Amount: number | null
+  payment2Due: string | null
 }
 
 const SECTIONS: { key: Category; label: string; description: string }[] = [
@@ -230,6 +233,125 @@ function JobSpecSection({
   )
 }
 
+function PaymentsSection({
+  leadId,
+  canEdit,
+  initialP1Amount,
+  initialP1Due,
+  initialP2Amount,
+  initialP2Due,
+}: {
+  leadId: string
+  canEdit: boolean
+  initialP1Amount: number | null
+  initialP1Due: string | null
+  initialP2Amount: number | null
+  initialP2Due: string | null
+}) {
+  const [p1Amount, setP1Amount] = useState(initialP1Amount ? String(initialP1Amount) : '')
+  const [p1Due, setP1Due]       = useState(initialP1Due ?? '')
+  const [p2Amount, setP2Amount] = useState(initialP2Amount ? String(initialP2Amount) : '')
+  const [p2Due, setP2Due]       = useState(initialP2Due ?? '')
+  const [saving, setSaving]     = useState(false)
+  const [saved, setSaved]       = useState(false)
+
+  async function save() {
+    setSaving(true)
+    await fetch(`/api/leads/${leadId}/staged-payments`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        payment_1_amount: p1Amount ? Math.round(parseFloat(p1Amount)) : null,
+        payment_1_due:    p1Due || null,
+        payment_2_amount: p2Amount ? Math.round(parseFloat(p2Amount)) : null,
+        payment_2_due:    p2Due || null,
+      }),
+    })
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  function formatDisplayDate(iso: string) {
+    const [y, m, d] = iso.split('-')
+    return `${d}/${m}/${y}`
+  }
+
+  const stages = [
+    { label: 'Stage 1', amount: p1Amount, setAmount: setP1Amount, due: p1Due, setDue: setP1Due },
+    { label: 'Stage 2', amount: p2Amount, setAmount: setP2Amount, due: p2Due, setDue: setP2Due },
+  ]
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <PoundSterling className="w-4 h-4 text-gray-400" />
+        <p className="text-sm font-semibold text-gray-900">Staged Payments</p>
+      </div>
+
+      <div className="space-y-4">
+        {stages.map(({ label, amount, setAmount, due, setDue }) => (
+          <div key={label}>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-2">{label}</p>
+            {canEdit ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">Amount</p>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">£</span>
+                    <input
+                      type="number" min="0" step="1"
+                      value={amount}
+                      onChange={e => setAmount(e.target.value)}
+                      placeholder="0"
+                      className="w-full pl-7 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">Due date</p>
+                  <input
+                    type="date"
+                    value={due}
+                    onChange={e => setDue(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">Amount</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {amount ? `£${Number(amount).toLocaleString('en-GB')}` : <span className="text-gray-300">Not set</span>}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">Due date</p>
+                  <p className="text-sm text-gray-700">
+                    {due ? formatDisplayDate(due) : <span className="text-gray-300">Not set</span>}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {canEdit && (
+        <button
+          onClick={save}
+          disabled={saving}
+          className="mt-4 flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[var(--brand-header)] text-white rounded-lg hover:opacity-90 disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+          {saved ? 'Saved!' : saving ? 'Saving…' : 'Save payments'}
+        </button>
+      )}
+    </div>
+  )
+}
+
 function DeliverySection({
   leadId,
   canUpload,
@@ -324,7 +446,7 @@ function DeliverySection({
   )
 }
 
-export function JobDetails({ leadId, name, address, canUpload, jobFiles: initialJobFiles, deliveryInfo, jobSpecUrl }: Props) {
+export function JobDetails({ leadId, name, address, canUpload, jobFiles: initialJobFiles, deliveryInfo, jobSpecUrl, payment1Amount, payment1Due, payment2Amount, payment2Due }: Props) {
   const router = useRouter()
   const [jobFiles, setJobFiles] = useState(initialJobFiles)
 
@@ -346,6 +468,15 @@ export function JobDetails({ leadId, name, address, canUpload, jobFiles: initial
           <p className="font-bold text-gray-900 text-lg">{name}</p>
           {address && <p className="text-sm text-gray-500 mt-0.5">{address}</p>}
         </div>
+
+        <PaymentsSection
+          leadId={leadId}
+          canEdit={canUpload}
+          initialP1Amount={payment1Amount}
+          initialP1Due={payment1Due}
+          initialP2Amount={payment2Amount}
+          initialP2Due={payment2Due}
+        />
 
         <JobSpecSection leadId={leadId} canUpload={canUpload} initialUrl={jobSpecUrl} />
 
