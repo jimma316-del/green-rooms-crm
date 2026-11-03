@@ -60,8 +60,8 @@ export async function POST(req: NextRequest) {
     if (distance_miles !== null) distance_miles = Math.round(distance_miles * 10) / 10
   }
 
-  // Auto-lost if more than 100 miles away
-  const tooFar = distance_miles !== null && distance_miles > 100
+  // Auto-lost if more than 50 miles away
+  const tooFar = distance_miles !== null && distance_miles > 50
   const stage = tooFar ? 'out_of_area' : 'new_lead'
   const pipeline = tooFar ? 'lost' : 'sales'
 

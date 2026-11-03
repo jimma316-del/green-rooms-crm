@@ -59,6 +59,7 @@ export async function GET(req: NextRequest) {
     .is('sms_sent_at', null)
     .lte('created_at', cutoff)
     .neq('pipeline', 'lost')
+    .neq('stage', 'out_of_area')
 
   if (error) {
     console.error('SMS cron query error:', error)
