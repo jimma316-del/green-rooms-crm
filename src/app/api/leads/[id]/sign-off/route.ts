@@ -193,13 +193,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const admin = createAdminClient()
   const { data: lead } = await admin
     .from('leads')
-    .select('id, name, address, postcode, email')
+    .select('id, name, address, postcode, email, delivery_info')
     .eq('id', id)
     .single()
 
   if (!lead) return NextResponse.json({ error: 'Lead not found' }, { status: 404 })
 
   const address = [lead.address, lead.postcode].filter(Boolean).join(', ')
+
+  // build_location is stored separately via the BuildApproval step, not in checks
+  const deliveryInfo = (lead.delivery_info ?? {}) as Record<string, unknown>
+  const buildApproved = !!(deliveryInfo.build_approval as { initials?: string } | null)?.initials
+  const checks = { build_location: buildApproved ? 'yes' : 'no', ...body.checks }
 
   // Convert base64 signatures to buffers
   const toBuffer = (dataUrl: string) =>
@@ -224,7 +229,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     customerName: lead.name,
     address,
     projectDate: body.projectDate,
-    checks: body.checks,
+    checks,
     customerSatisfied: body.customerSatisfied,
     satisfactionDetails: body.satisfactionDetails,
     comments: body.comments,
