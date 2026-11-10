@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/advance-stages",
-      "schedule": "0 * * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }
