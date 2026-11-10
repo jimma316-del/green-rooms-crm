@@ -16,8 +16,8 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Auto-advance any leads whose site visit has passed
-  await autoAdvanceSiteVisits(supabase)
+  // Use admin client so RLS doesn't block seeing/updating all leads
+  await autoAdvanceSiteVisits(createAdminClient())
 
   // Fetch all dashboard data in parallel
   const [

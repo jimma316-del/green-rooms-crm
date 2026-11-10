@@ -24,7 +24,7 @@ export default async function LeadPage({ params }: Props) {
 
   const admin = createAdminClient()
   await Promise.all([
-    autoAdvanceSiteVisits(supabase),
+    autoAdvanceSiteVisits(admin),
     autoAdvanceToAwaitingPayment(admin),
     autoAdvanceOnJobDates(admin),
   ])
