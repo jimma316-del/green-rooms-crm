@@ -93,6 +93,7 @@ function defaultDraft(data?: Partial<SiteAssessment>): Draft {
     location_notes: data?.location_notes ?? null,
     planning_type: data?.planning_type ?? null,
     has_decking: data?.has_decking ?? false,
+    decking_material: data?.decking_material ?? 'millboard',
     deck_w: data?.deck_w ?? null,
     deck_d: data?.deck_d ?? null,
     cladding_good: data?.cladding_good ?? null,
@@ -235,13 +236,13 @@ function DimensionsTab({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) 
             <Toggle checked={draft.has_canopy} onChange={v => set({ has_canopy: v })} label="Front canopy" />
             {draft.has_canopy && (
               <div className="ml-15 pl-3">
-                <FieldLabel>Canopy depth (m)</FieldLabel>
-                <NumStepper value={draft.canopy_depth_m ?? 1} step={0.1}
-                  onChange={v => set({ canopy_depth_m: Math.round(v * 10) / 10 })} min={0.5} max={3} />
+                <FieldLabel>Canopy depth (mm)</FieldLabel>
+                <NumStepper value={Math.round((draft.canopy_depth_m ?? 0.35) * 1000)} step={50}
+                  onChange={v => set({ canopy_depth_m: Math.round(v) / 1000 })} min={300} max={3000} />
               </div>
             )}
             <Toggle checked={draft.has_side_canopy} onChange={v => set({ has_side_canopy: v })} label="Side canopy" />
-            <Toggle checked={draft.has_storage} onChange={v => set({ has_storage: v })} label="Hidden storage (under deck/behind panel) +£1,740" />
+            <Toggle checked={draft.has_storage} onChange={v => set({ has_storage: v })} label="Storage room +£1,740" />
           </div>
           <div className="space-y-4">
             <Toggle checked={draft.has_glass_corner} onChange={v => set({ has_glass_corner: v })} label="Glass corner +£1,450" />
@@ -255,16 +256,35 @@ function DimensionsTab({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) 
         <SectionHead title="Decking" />
         <Toggle checked={draft.has_decking} onChange={v => set({ has_decking: v })} label="Decking included" />
         {draft.has_decking && (
-          <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="mt-4 space-y-4">
             <div>
-              <FieldLabel>Deck width (m)</FieldLabel>
-              <NumStepper value={draft.deck_w ?? 3} step={0.1}
-                onChange={v => set({ deck_w: Math.round(v * 10) / 10 })} min={1} max={12} />
+              <FieldLabel>Material</FieldLabel>
+              <div className="grid grid-cols-2 gap-3">
+                {([
+                  { value: 'millboard',    label: 'Millboard',      sub: `£${Math.round(225 + 360 * (draft.deck_w ?? 3) * (draft.deck_d ?? 2)).toLocaleString()}` },
+                  { value: 'yellow_balau', label: 'Yellow Balau',   sub: `£${Math.round((draft.deck_w ?? 3) * (draft.deck_d ?? 2) * 260 + 225).toLocaleString()}` },
+                ] as const).map(opt => (
+                  <button key={opt.value} type="button"
+                    onClick={() => set({ decking_material: opt.value })}
+                    className={`p-3 rounded-xl border-2 text-left transition-all ${draft.decking_material === opt.value ? 'border-[var(--primary)] bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
+                  >
+                    <div className="font-semibold text-sm text-gray-800">{opt.label}</div>
+                    <div className="text-xs text-[var(--primary)] font-medium mt-0.5">{opt.sub}</div>
+                  </button>
+                ))}
+              </div>
             </div>
-            <div>
-              <FieldLabel>Deck depth (m)</FieldLabel>
-              <NumStepper value={draft.deck_d ?? 2} step={0.1}
-                onChange={v => set({ deck_d: Math.round(v * 10) / 10 })} min={1} max={6} />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <FieldLabel>Deck width (m)</FieldLabel>
+                <NumStepper value={draft.deck_w ?? 3} step={0.1}
+                  onChange={v => set({ deck_w: Math.round(v * 10) / 10 })} min={1} max={12} />
+              </div>
+              <div>
+                <FieldLabel>Deck depth (m)</FieldLabel>
+                <NumStepper value={draft.deck_d ?? 2} step={0.1}
+                  onChange={v => set({ deck_d: Math.round(v * 10) / 10 })} min={1} max={6} />
+              </div>
             </div>
           </div>
         )}

@@ -111,6 +111,7 @@ export interface SiteAssessment {
 
   // Decking
   has_decking: boolean
+  decking_material: 'millboard' | 'yellow_balau' | null
   deck_w: number | null
   deck_d: number | null
 
@@ -171,7 +172,12 @@ export function estimatePrice(a: Partial<SiteAssessment>): number {
   const storage   = a.has_storage ? 1740 : 0
   const glassCorner = a.has_glass_corner ? 1450 : 0
   const skylight  = a.has_skylight ? 1400 : 0
-  const decking   = a.has_decking ? 225 + 360 * (a.deck_w ?? 3) * (a.deck_d ?? 2) : 0
+  const deckSqm   = (a.deck_w ?? 3) * (a.deck_d ?? 2)
+  const decking   = a.has_decking
+    ? a.decking_material === 'yellow_balau'
+      ? Math.round(deckSqm * 260 + 225)
+      : Math.round(225 + 360 * deckSqm)  // millboard (default)
+    : 0
   const doors     = (a.doors ?? []).reduce((s, dr) => s + (PRICING.DOORS[dr.key] ?? 0), 0)
   const windows   = (a.windows ?? []).reduce((s, win) => s + (PRICING.WINDOWS[win.type] ?? 0) * win.count, 0)
   const elec      = (a.electricals ?? []).reduce((s, e) => s + (PRICING.ELEC[e] ?? 0), 0)
