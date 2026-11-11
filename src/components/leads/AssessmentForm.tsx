@@ -9,6 +9,7 @@ import {
   CLADDING_OPTIONS, DOOR_OPTIONS, WINDOW_OPTIONS, ROOF_OPTIONS,
   ELEC_OPTIONS, CLIMATE_OPTIONS, estimatePrice, poundK, PRICING,
 } from '@/types/assessment'
+import { SketchCanvas } from './SketchCanvas'
 
 // ─── Shared helper components ────────────────────────────────────────────────
 
@@ -115,8 +116,50 @@ function defaultDraft(data?: Partial<SiteAssessment>): Draft {
     climate: data?.climate ?? 'none',
     ground_type: data?.ground_type ?? null,
     access_notes: data?.access_notes ?? null,
+    landscaping_notes: data?.landscaping_notes ?? null,
     site_notes: data?.site_notes ?? null,
     photo_urls: data?.photo_urls ?? [],
+    sketch_data: data?.sketch_data ?? null,
+  }
+}
+
+// Auto-fill draft from customer's calculator config
+function draftFromCalculator(raw: Record<string, unknown>): Partial<Draft> {
+  const c = (raw?.calculator_data ?? raw) as Record<string, unknown>
+  if (!c?.roofType && !c?.width) return {}
+
+  const doors: DoorSpec[] = []
+  if (c.door && c.door !== 'none') {
+    doors.push({ id: crypto.randomUUID(), key: c.door as string, colour: 'Anthracite Grey', position: 'front' })
+  }
+
+  const windows: WindowSpec[] = []
+  if (Array.isArray(c.wins)) {
+    for (const w of c.wins as string[]) {
+      if (w && w !== 'none') {
+        windows.push({ id: crypto.randomUUID(), type: w, width_mm: 1000, height_mm: 1000, position: 'left', count: 1, opening: false, glazing: 'double', colour: 'Anthracite Grey' })
+      }
+    }
+  }
+
+  return {
+    width_m:         c.width  ? Math.round(parseFloat(String(c.width))  * 10) / 10 : undefined,
+    depth_m:         c.depth  ? Math.round(parseFloat(String(c.depth))  * 10) / 10 : undefined,
+    roof_type:       (c.roofType  as string) || undefined,
+    doors,
+    windows,
+    single_cladding: (c.claddingMaterial as string) || undefined,
+    cladding_walls:  c.claddingWalls ? parseInt(String(c.claddingWalls)) : undefined,
+    climate:         (c.climate as string) || 'none',
+    has_canopy:      Boolean(c.canopy),
+    has_side_canopy: Boolean(c.side_canopy),
+    has_storage:     Boolean(c.storage),
+    has_glass_corner:Boolean(c.glass_corner),
+    has_skylight:    Boolean(c.skylight),
+    has_decking:     Boolean(c.hasDecking),
+    deck_w:          c.deckW ? parseFloat(String(c.deckW)) : undefined,
+    deck_d:          c.deckD ? parseFloat(String(c.deckD)) : undefined,
+    electricals:     Array.isArray(c.electricals) ? c.electricals as string[] : [],
   }
 }
 
@@ -271,12 +314,33 @@ function DimensionsTab({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) 
         </div>
       </div>
 
+      {/* Access */}
+      <div>
+        <SectionHead title="Access & Landscaping" />
+        <div className="space-y-4">
+          <div>
+            <FieldLabel>Access notes (gates, paths, overhead cables, obstructions)</FieldLabel>
+            <textarea value={draft.access_notes ?? ''} rows={2}
+              onChange={e => set({ access_notes: e.target.value || null })}
+              placeholder="e.g. narrow side gate, low fence to lift over, 6ft headroom under pergola..."
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-opacity-30 focus:border-[var(--primary)] resize-none" />
+          </div>
+          <div>
+            <FieldLabel>Landscaping requirements</FieldLabel>
+            <textarea value={draft.landscaping_notes ?? ''} rows={2}
+              onChange={e => set({ landscaping_notes: e.target.value || null })}
+              placeholder="e.g. turf to clear, raised area, retaining wall, existing path to integrate..."
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-opacity-30 focus:border-[var(--primary)] resize-none" />
+          </div>
+        </div>
+      </div>
+
       {/* Site notes */}
       <div>
         <FieldLabel>Additional site notes</FieldLabel>
         <textarea value={draft.site_notes ?? ''} rows={3}
           onChange={e => set({ site_notes: e.target.value || null })}
-          placeholder="Access constraints, neighbour issues, trees, utilities, anything else..."
+          placeholder="Neighbour issues, trees, utilities, anything else..."
           className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-opacity-30 focus:border-[var(--primary)] resize-none" />
       </div>
     </div>
@@ -679,18 +743,27 @@ function ElectricsTab({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) =
 
 // ─── Main component ──────────────────────────────────────────────────────────
 
-const TABS = ['Dimensions', 'Cladding', 'Doors & Windows', 'Electrics']
+const TABS = ['Dimensions', 'Cladding', 'Doors & Windows', 'Electrics', 'Sketch']
 
 interface Props {
   leadId: string
   initialData?: Partial<SiteAssessment>
+  calculatorData?: Record<string, unknown> | null
   quoteId?: string
 }
 
-export function AssessmentForm({ leadId, initialData, quoteId }: Props) {
+export function AssessmentForm({ leadId, initialData, calculatorData, quoteId }: Props) {
   const router = useRouter()
   const [tab, setTab] = useState(0)
-  const [draft, setDraft] = useState<Draft>(() => defaultDraft(initialData))
+  const [draft, setDraft] = useState<Draft>(() => {
+    const base = defaultDraft(initialData)
+    // If no existing assessment and calculator data available, auto-fill from customer's quote
+    if (!initialData && calculatorData) {
+      const fill = draftFromCalculator(calculatorData)
+      return { ...base, ...fill }
+    }
+    return base
+  })
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
@@ -783,6 +856,18 @@ export function AssessmentForm({ leadId, initialData, quoteId }: Props) {
         {tab === 1 && <CladdingTab draft={draft} set={set} />}
         {tab === 2 && <DoorsWindowsTab draft={draft} set={set} />}
         {tab === 3 && <ElectricsTab draft={draft} set={set} />}
+        {tab === 4 && (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-base font-semibold text-gray-800 mb-1">Floor Plan Sketch</h3>
+              <p className="text-sm text-gray-500 mb-4">Sketch the plot showing room position, window & door locations, and any key measurements or notes. Use Apple Pencil on iPad for best results.</p>
+              <SketchCanvas
+                initialData={draft.sketch_data ?? null}
+                onChange={v => set({ sketch_data: v })}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Save bar */}

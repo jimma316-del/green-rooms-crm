@@ -142,8 +142,10 @@ export interface SiteAssessment {
   // Site
   ground_type: string | null
   access_notes: string | null
+  landscaping_notes: string | null
   site_notes: string | null
   photo_urls: string[]
+  sketch_data: string | null  // base64 PNG floor plan sketch
 }
 
 // ─── Price estimate ──────────────────────────────────────────────────────────
