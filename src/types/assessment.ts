@@ -149,6 +149,7 @@ export interface SiteAssessment {
 
   // Electrics
   has_consumer_unit: boolean
+  has_existing_swa: boolean
   cable_run_m: number | null
   downlight_count: number
   double_socket_count: number

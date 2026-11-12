@@ -111,9 +111,10 @@ function defaultDraft(data?: Partial<SiteAssessment>): Draft {
     doors: data?.doors ?? [],
     windows: data?.windows ?? [],
     has_consumer_unit: data?.has_consumer_unit ?? true,
+    has_existing_swa: data?.has_existing_swa ?? false,
     cable_run_m: data?.cable_run_m ?? null,
     downlight_count: data?.downlight_count ?? 6,
-    double_socket_count: data?.double_socket_count ?? 2,
+    double_socket_count: data?.double_socket_count ?? 4,
     usb_socket_count: data?.usb_socket_count ?? 0,
     electricals: data?.electricals ?? [],
     climate: data?.climate ?? 'none',
@@ -168,7 +169,7 @@ function draftFromCalculator(raw: Record<string, unknown>): Partial<Draft> {
 }
 
 function newDoor(key = 'alu_bifold_36'): DoorSpec {
-  return { id: crypto.randomUUID(), key, colour: 'Anthracite Grey', position: 'front', width_mm: DOOR_DEFAULT_WIDTHS[key] ?? 2000, height_mm: 2100 }
+  return { id: crypto.randomUUID(), key, colour: 'Anthracite Grey', position: 'front', width_mm: DOOR_DEFAULT_WIDTHS[key] ?? 2000, height_mm: 2050 }
 }
 
 function newWindow(): WindowSpec {
@@ -535,8 +536,7 @@ function DoorCard({ door, onChange, onRemove }: {
             ))}
           </Select>
         </div>
-        <DimInput label="Width"  value={door.width_mm  ?? (DOOR_DEFAULT_WIDTHS[door.key] ?? 2000)} onChange={v => onChange({ ...door, width_mm: v })} />
-        <DimInput label="Height" value={door.height_mm ?? 2100} onChange={v => onChange({ ...door, height_mm: v })} />
+        <DimInput label="Width" value={door.width_mm ?? (DOOR_DEFAULT_WIDTHS[door.key] ?? 2000)} onChange={v => onChange({ ...door, width_mm: v })} />
         <div>
           <FieldLabel>Position</FieldLabel>
           <Select value={door.position} onChange={v => onChange({ ...door, position: v })}>
@@ -735,7 +735,7 @@ function ElectricsTab({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) =
           </div>
         </div>
         <div className="mt-4">
-          <Toggle checked={draft.has_consumer_unit} onChange={v => set({ has_consumer_unit: v })} label="Consumer unit / fuse board" />
+          <Toggle checked={draft.has_existing_swa} onChange={v => set({ has_existing_swa: v })} label="Existing SWA power supply already in place" />
         </div>
       </div>
 
