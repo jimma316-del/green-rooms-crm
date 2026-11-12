@@ -10,6 +10,7 @@ import {
   ELEC_OPTIONS, CLIMATE_OPTIONS, estimatePrice, poundK, PRICING,
 } from '@/types/assessment'
 import { SketchCanvas } from './SketchCanvas'
+import { CalculatorQuoteSummary } from './CalculatorQuoteSummary'
 
 // ─── Shared helper components ────────────────────────────────────────────────
 
@@ -769,10 +770,11 @@ interface Props {
   leadId: string
   initialData?: Partial<SiteAssessment>
   calculatorData?: Record<string, unknown> | null
+  estimatedPrice?: number | null
   quoteId?: string
 }
 
-export function AssessmentForm({ leadId, initialData, calculatorData, quoteId }: Props) {
+export function AssessmentForm({ leadId, initialData, calculatorData, estimatedPrice, quoteId }: Props) {
   const router = useRouter()
   const [tab, setTab] = useState(0)
   const [draft, setDraft] = useState<Draft>(() => {
@@ -870,8 +872,14 @@ export function AssessmentForm({ leadId, initialData, calculatorData, quoteId }:
         </div>
       </div>
 
-      {/* Tab content */}
+      {/* Tab content — calculator summary scrolls away with content */}
       <div className="flex-1 overflow-y-auto p-6">
+        {calculatorData && (
+          <CalculatorQuoteSummary
+            calculatorData={calculatorData}
+            estimatedPrice={estimatedPrice ?? null}
+          />
+        )}
         {tab === 0 && <DimensionsTab draft={draft} set={set} />}
         {tab === 1 && <CladdingTab draft={draft} set={set} />}
         {tab === 2 && <DoorsWindowsTab draft={draft} set={set} />}

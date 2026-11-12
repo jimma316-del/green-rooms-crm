@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AssessmentForm } from '@/components/leads/AssessmentForm'
-import { CalculatorQuoteSummary } from '@/components/leads/CalculatorQuoteSummary'
 import type { SiteAssessment } from '@/types/assessment'
 
 interface Props { params: Promise<{ id: string }> }
@@ -44,20 +43,11 @@ export default async function AssessmentPage({ params }: Props) {
         )}
       </div>
 
-      {/* Show calculator quote summary at the top of the form area */}
-      {calcData && (
-        <div className="px-6 pt-5">
-          <CalculatorQuoteSummary
-            calculatorData={calcData}
-            estimatedPrice={estimatedPrice}
-          />
-        </div>
-      )}
-
       <AssessmentForm
         leadId={id}
         initialData={assessment ? (assessment as unknown as SiteAssessment) : undefined}
         calculatorData={calcData}
+        estimatedPrice={estimatedPrice}
       />
     </div>
   )
