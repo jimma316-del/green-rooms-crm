@@ -12,18 +12,19 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const navItems = [
-  { href: '/dashboard',  label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/leads',      label: 'All Leads',  icon: Users },
-  { href: '/pipeline',   label: 'Pipeline',   icon: KanbanSquare },
-  { href: '/quotes',     label: 'Quotes',     icon: FileText },
-  { href: '/jobs',       label: 'Jobs',       icon: HardHat },
-  { href: '/stock',      label: 'Stock',      icon: Package },
-
-  { href: '/finance',    label: 'Finance',    icon: PoundSterling },
-  { href: '/reports',    label: 'Reports',    icon: BarChart3 },
+  { href: '/dashboard',  label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'management'] },
+  { href: '/leads',      label: 'All Leads',  icon: Users,           roles: ['admin', 'management'] },
+  { href: '/pipeline',   label: 'Pipeline',   icon: KanbanSquare,    roles: ['admin', 'management'] },
+  { href: '/quotes',     label: 'Quotes',     icon: FileText,        roles: ['admin'] },
+  { href: '/jobs',       label: 'Jobs',       icon: HardHat,         roles: ['admin', 'management', 'installer'] },
+  { href: '/stock',      label: 'Stock',      icon: Package,         roles: ['admin', 'management', 'installer'] },
+  { href: '/finance',    label: 'Finance',    icon: PoundSterling,   roles: ['admin'] },
+  { href: '/reports',    label: 'Reports',    icon: BarChart3,       roles: ['admin'] },
 ]
 
-export function Sidebar() {
+export function Sidebar({ role }: { role?: string }) {
+  const effectiveRole = role ?? 'admin'
+  const visibleItems = navItems.filter(i => i.roles.includes(effectiveRole))
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -48,7 +49,7 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {visibleItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (
             <Link

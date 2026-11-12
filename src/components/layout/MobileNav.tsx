@@ -10,17 +10,19 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
-  { href: '/leads', label: 'Leads', icon: Users },
-  { href: '/quotes', label: 'Quotes', icon: FileText },
-  { href: '/jobs', label: 'Jobs', icon: HardHat },
-  { href: '/tasks', label: 'Tasks', icon: CheckSquare },
-  { href: '/finance', label: 'Finance', icon: PoundSterling },
-  { href: '/reports', label: 'Reports', icon: BarChart3 },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'management'] },
+  { href: '/pipeline',  label: 'Pipeline',  icon: KanbanSquare,    roles: ['admin', 'management'] },
+  { href: '/leads',     label: 'Leads',     icon: Users,           roles: ['admin', 'management'] },
+  { href: '/quotes',    label: 'Quotes',    icon: FileText,        roles: ['admin'] },
+  { href: '/jobs',      label: 'Jobs',      icon: HardHat,         roles: ['admin', 'management', 'installer'] },
+  { href: '/tasks',     label: 'Tasks',     icon: CheckSquare,     roles: ['admin', 'management'] },
+  { href: '/finance',   label: 'Finance',   icon: PoundSterling,   roles: ['admin'] },
+  { href: '/reports',   label: 'Reports',   icon: BarChart3,       roles: ['admin'] },
 ]
 
-export function MobileNav() {
+export function MobileNav({ role }: { role?: string }) {
+  const effectiveRole = role ?? 'admin'
+  const visibleItems = navItems.filter(i => i.roles.includes(effectiveRole))
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const router = useRouter()
@@ -59,7 +61,7 @@ export function MobileNav() {
               </button>
             </div>
             <nav className="flex-1 px-3 py-4 space-y-0.5">
-              {navItems.map(({ href, label, icon: Icon }) => {
+              {visibleItems.map(({ href, label, icon: Icon }) => {
                 const active = pathname === href || pathname.startsWith(href + '/')
                 return (
                   <Link
@@ -93,7 +95,7 @@ export function MobileNav() {
 
       {/* Bottom tab bar */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-40 flex">
-        {navItems.slice(0, 4).map(({ href, label, icon: Icon }) => {
+        {visibleItems.slice(0, 4).map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (
             <Link

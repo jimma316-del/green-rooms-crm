@@ -8,5 +8,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   if (!user) redirect('/login')
 
-  return <AppShell>{children}</AppShell>
+  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
+
+  return <AppShell role={profile?.role ?? 'admin'}>{children}</AppShell>
 }

@@ -16,5 +16,5 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     return <SiteShell userName={profile?.full_name ?? ''}>{children}</SiteShell>
   }
 
-  return <AppShell>{children}</AppShell>
+  return <AppShell role={profile?.role ?? 'admin'}>{children}</AppShell>
 }
