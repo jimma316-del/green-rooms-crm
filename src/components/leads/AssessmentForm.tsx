@@ -287,7 +287,7 @@ function DimensionsTab({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) 
               <div>
                 <FieldLabel>Deck depth (m)</FieldLabel>
                 <NumStepper value={draft.deck_d ?? 2} step={0.1}
-                  onChange={v => set({ deck_d: Math.round(v * 10) / 10 })} min={1} max={6} />
+                  onChange={v => set({ deck_d: Math.round(v * 10) / 10 })} min={0.1} max={6} />
               </div>
             </div>
           </div>
