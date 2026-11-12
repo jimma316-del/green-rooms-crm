@@ -58,11 +58,11 @@ export async function updateSession(request: NextRequest) {
 
     if (isAuthRoute) {
       const url = request.nextUrl.clone()
-      url.pathname = role === 'site' ? '/jobs' : '/dashboard'
+      url.pathname = role === 'installer' ? '/jobs' : '/dashboard'
       return NextResponse.redirect(url)
     }
 
-    if (role === 'site') {
+    if (role === 'installer') {
       // Block any API route except sign-off submission
       if (isApiRoute && !SITE_ALLOWED_API.test(path)) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

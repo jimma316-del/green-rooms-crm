@@ -7,7 +7,7 @@ async function requireOfficeUser() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
   const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
-  if (!profile || profile.role === 'site') return null
+  if (!profile || profile.role !== 'admin') return null
   return user
 }
 
@@ -18,7 +18,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params
   const { role } = await req.json() as { role: string }
 
-  const validRoles = ['admin', 'sales', 'operations', 'site']
+  const validRoles = ['admin', 'management', 'installer']
   if (!validRoles.includes(role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
 
   // Prevent demoting yourself

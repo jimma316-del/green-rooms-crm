@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'sales' | 'operations' | 'site'
+export type UserRole = 'admin' | 'management' | 'installer'
 
 export type Pipeline = 'sales' | 'project' | 'lost'
 

@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
   const { data: profile } = await admin.from('users').select('role').eq('id', user.id).single()
-  if (!['admin', 'sales'].includes(profile?.role ?? '')) return NextResponse.json({ error: 'Not authorised' }, { status: 403 })
+  if (profile?.role !== 'admin') return NextResponse.json({ error: 'Not authorised' }, { status: 403 })
 
   const { email, name } = await req.json() as { email: string; name: string }
   if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     id: userId,
     email,
     full_name: displayName,
-    role: 'site',
+    role: 'installer',
   })
 
   // Send credentials via Resend
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     subject: 'Your Green Rooms team portal access',
     html: `
       <p>Hi ${displayName},</p>
-      <p>Your account has been set up for The Green Rooms team portal.</p>
+      <p>Your installer account has been set up for The Green Rooms team portal.</p>
       <p><strong>Login:</strong> <a href="${siteUrl}/login">${siteUrl}/login</a></p>
       <p><strong>Email:</strong> ${email}</p>
       <p><strong>Temporary password:</strong> <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:16px;">${tempPassword}</code></p>

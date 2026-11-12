@@ -52,7 +52,7 @@ export default async function JobDetailsPage({ params }: Props) {
   ).catch(() => ({ data: null }))
 
   const address = [lead.address, lead.address_line_2, lead.city, lead.postcode].filter(Boolean).join(', ')
-  const canUpload = profile?.role !== 'site'
+  const canUpload = profile?.role !== 'installer'
 
   return (
     <JobDetails

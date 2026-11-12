@@ -12,16 +12,14 @@ interface User {
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Admin',
-  sales: 'Sales',
-  operations: 'Operations',
-  site: 'Site Team',
+  management: 'Management',
+  installer: 'Installer',
 }
 
 const ROLE_COLOURS: Record<string, string> = {
   admin: 'bg-purple-100 text-purple-700',
-  sales: 'bg-blue-100 text-blue-700',
-  operations: 'bg-green-100 text-green-700',
-  site: 'bg-gray-100 text-gray-600',
+  management: 'bg-blue-100 text-blue-700',
+  installer: 'bg-gray-100 text-gray-600',
 }
 
 export function TeamMembers({ users: initial, currentUserId, isAdmin }: { users: User[]; currentUserId: string; isAdmin?: boolean }) {
@@ -88,9 +86,8 @@ export function TeamMembers({ users: initial, currentUserId, isAdmin }: { users:
                     className={`appearance-none text-xs px-2 py-1 pr-6 rounded-full font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500/30 disabled:opacity-50 ${ROLE_COLOURS[u.role] ?? 'bg-gray-100 text-gray-600'}`}
                   >
                     <option value="admin">Admin</option>
-                    <option value="sales">Sales</option>
-                    <option value="operations">Operations</option>
-                    <option value="site">Site Team</option>
+                    <option value="management">Management</option>
+                    <option value="installer">Installer</option>
                   </select>
                   <ChevronDown className="w-3 h-3 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-current opacity-60" />
                 </div>

@@ -23,7 +23,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: true, taskId })
   } else {
     // Find an admin user to assign the task to
-    const { data: adminUser } = await admin.from('users').select('id').in('role', ['admin', 'sales']).limit(1).single()
+    const { data: adminUser } = await admin.from('users').select('id').in('role', ['admin', 'management']).limit(1).single()
     const userId = adminUser?.id
     if (!userId) return NextResponse.json({ error: 'No admin user found' }, { status: 500 })
 

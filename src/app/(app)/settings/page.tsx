@@ -42,29 +42,27 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      {profile?.role !== 'site' && (
+      {profile?.role === 'admin' && (
         <div className="bg-white rounded-xl border border-gray-100 p-6 mt-4">
           <h2 className="text-sm font-semibold text-gray-700 mb-1">Team Accounts</h2>
-          <p className="text-xs text-gray-400 mb-4">
-            {profile?.role === 'admin' ? 'Manage access levels and remove accounts.' : 'View team members and their access levels.'}
-          </p>
+          <p className="text-xs text-gray-400 mb-4">Manage access levels and remove accounts.</p>
           <TeamMembers
             users={(allUsers ?? []) as { id: string; full_name: string; email: string; role: string }[]}
             currentUserId={user!.id}
-            isAdmin={profile?.role !== 'site'}
+            isAdmin={true}
           />
         </div>
       )}
 
-      {profile?.role !== 'site' && (
+      {profile?.role === 'admin' && (
         <div className="bg-white rounded-xl border border-gray-100 p-6 mt-4">
-          <h2 className="text-sm font-semibold text-gray-700 mb-1">Site Team Access</h2>
-          <p className="text-xs text-gray-400 mb-4">Invite site team members — they can only log in and complete sign-off sheets.</p>
+          <h2 className="text-sm font-semibold text-gray-700 mb-1">Installer Access</h2>
+          <p className="text-xs text-gray-400 mb-4">Invite installers — they can only view jobs and complete sign-off sheets.</p>
           <InviteSiteUser />
         </div>
       )}
 
-      {profile?.role !== 'site' && (
+      {profile?.role === 'admin' && (
         <div className="bg-white rounded-xl border border-gray-100 p-6 mt-4">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">Quoting</h2>
           <a
@@ -115,7 +113,7 @@ export default async function SettingsPage() {
         </div>
       )}
 
-      {profile?.role !== 'site' && (
+      {profile?.role === 'admin' && (
         <div className="bg-white rounded-xl border border-gray-100 p-6 mt-4">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">Integrations</h2>
           <a

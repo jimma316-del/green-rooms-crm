@@ -7,7 +7,7 @@ async function requireEditor() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
   const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
-  if (!profile || profile.role === 'site') return null
+  if (!profile || profile.role === 'installer') return null
   return user
 }
 

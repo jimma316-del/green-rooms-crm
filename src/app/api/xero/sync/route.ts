@@ -76,7 +76,7 @@ export async function POST() {
 
   const admin = createAdminClient()
   const { data: profile } = await admin.from('users').select('role').eq('id', user.id).single()
-  if (profile?.role === 'site') return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+  if (profile?.role !== 'admin') return NextResponse.json({ error: 'Access denied' }, { status: 403 })
 
   const now2 = new Date().toISOString()
   const now = new Date()

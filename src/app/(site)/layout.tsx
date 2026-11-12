@@ -11,8 +11,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
   const { data: profile } = await supabase.from('users').select('role, full_name').eq('id', user.id).single()
 
-  // Site team get the minimal layout; everyone else gets the full CRM sidebar
-  if (profile?.role === 'site') {
+  // Installers get the minimal layout; everyone else gets the full CRM sidebar
+  if (profile?.role === 'installer') {
     return <SiteShell userName={profile?.full_name ?? ''}>{children}</SiteShell>
   }
 
