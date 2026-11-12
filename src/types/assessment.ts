@@ -71,6 +71,22 @@ export interface DoorSpec {
   key: string          // e.g. 'alu_bifold_4m'
   colour: string       // 'Anthracite Grey' | 'Black' | custom RAL
   position: string     // 'front' | 'left' | 'right' | 'rear'
+  width_mm: number     // default derived from door type
+  height_mm: number    // default 2100
+}
+
+// Default opening width implied by each door key
+export const DOOR_DEFAULT_WIDTHS: Record<string, number> = {
+  upvc_sliding:    1800,
+  alu_french:      1800,
+  alu_sliding_2m:  2000,
+  alu_sliding_26:  2600,
+  alu_bifold_36:   3600,
+  alu_bifold_4m:   4000,
+  alu_bifold_5m:   5000,
+  alu_crittal_3m:  3000,
+  alu_crittal_4m:  4000,
+  alu_crittal_5m:  5000,
 }
 
 export interface WindowSpec {

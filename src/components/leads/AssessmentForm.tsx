@@ -8,6 +8,7 @@ import type { SiteAssessment, DoorSpec, WindowSpec } from '@/types/assessment'
 import {
   CLADDING_OPTIONS, DOOR_OPTIONS, WINDOW_OPTIONS, ROOF_OPTIONS,
   ELEC_OPTIONS, CLIMATE_OPTIONS, estimatePrice, poundK, PRICING,
+  DOOR_DEFAULT_WIDTHS,
 } from '@/types/assessment'
 import { SketchCanvas } from './SketchCanvas'
 import { CalculatorQuoteSummary } from './CalculatorQuoteSummary'
@@ -132,7 +133,8 @@ function draftFromCalculator(raw: Record<string, unknown>): Partial<Draft> {
 
   const doors: DoorSpec[] = []
   if (c.door && c.door !== 'none') {
-    doors.push({ id: crypto.randomUUID(), key: c.door as string, colour: 'Anthracite Grey', position: 'front' })
+    const key = c.door as string
+    doors.push({ id: crypto.randomUUID(), key, colour: 'Anthracite Grey', position: 'front', width_mm: DOOR_DEFAULT_WIDTHS[key] ?? 2000, height_mm: 2100 })
   }
 
   const windows: WindowSpec[] = []
@@ -165,8 +167,8 @@ function draftFromCalculator(raw: Record<string, unknown>): Partial<Draft> {
   }
 }
 
-function newDoor(): DoorSpec {
-  return { id: crypto.randomUUID(), key: 'alu_bifold_36', colour: 'Anthracite Grey', position: 'front' }
+function newDoor(key = 'alu_bifold_36'): DoorSpec {
+  return { id: crypto.randomUUID(), key, colour: 'Anthracite Grey', position: 'front', width_mm: DOOR_DEFAULT_WIDTHS[key] ?? 2000, height_mm: 2100 }
 }
 
 function newWindow(): WindowSpec {
@@ -487,6 +489,31 @@ function DoorCard({ door, onChange, onRemove }: {
   door: DoorSpec; onChange: (d: DoorSpec) => void; onRemove: () => void
 }) {
   const opt = DOOR_OPTIONS.find(d => d.value === door.key)
+  function DimInput({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+    return (
+      <div>
+        <FieldLabel>{label} (mm)</FieldLabel>
+        <div className="flex items-center">
+          <button type="button"
+            onClick={() => onChange(Math.max(500, value - 50))}
+            className="w-10 h-10 rounded-l-lg border border-gray-200 text-lg font-medium text-gray-600 hover:bg-gray-100 active:bg-gray-200 flex-shrink-0 flex items-center justify-center">
+            −
+          </button>
+          <input
+            type="number" value={value} min={500} max={6000} step={50}
+            onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 500) onChange(v) }}
+            className="w-20 h-10 border-y border-gray-200 text-center text-sm font-semibold text-gray-800 focus:outline-none focus:bg-gray-50"
+          />
+          <button type="button"
+            onClick={() => onChange(Math.min(6000, value + 50))}
+            className="w-10 h-10 rounded-r-lg border border-gray-200 text-lg font-medium text-gray-600 hover:bg-gray-100 active:bg-gray-200 flex-shrink-0 flex items-center justify-center">
+            +
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="border border-gray-200 rounded-xl p-4 space-y-3 bg-gray-50">
       <div className="flex items-start justify-between">
@@ -499,22 +526,24 @@ function DoorCard({ door, onChange, onRemove }: {
           <Trash2 size={16} />
         </button>
       </div>
-      <div className="grid grid-cols-3 gap-2">
-        <div className="col-span-3">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="col-span-2">
           <FieldLabel>Door type</FieldLabel>
-          <Select value={door.key} onChange={v => onChange({ ...door, key: v })}>
+          <Select value={door.key} onChange={v => onChange({ ...door, key: v, width_mm: DOOR_DEFAULT_WIDTHS[v] ?? door.width_mm })}>
             {DOOR_OPTIONS.map(d => (
               <option key={d.value} value={d.value}>{d.label} — £{d.price.toLocaleString()}</option>
             ))}
           </Select>
         </div>
+        <DimInput label="Width"  value={door.width_mm  ?? (DOOR_DEFAULT_WIDTHS[door.key] ?? 2000)} onChange={v => onChange({ ...door, width_mm: v })} />
+        <DimInput label="Height" value={door.height_mm ?? 2100} onChange={v => onChange({ ...door, height_mm: v })} />
         <div>
           <FieldLabel>Position</FieldLabel>
           <Select value={door.position} onChange={v => onChange({ ...door, position: v })}>
             {POSITIONS.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
           </Select>
         </div>
-        <div className="col-span-2">
+        <div>
           <FieldLabel>Colour</FieldLabel>
           <Select value={door.colour} onChange={v => onChange({ ...door, colour: v })}>
             {COLOURS.map(c => <option key={c} value={c}>{c}</option>)}
