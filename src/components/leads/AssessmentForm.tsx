@@ -328,11 +328,9 @@ function DimensionsTab({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) 
             <FieldLabel>Ground / base type</FieldLabel>
             <Select value={draft.ground_type ?? ''} onChange={v => set({ ground_type: v || null })}>
               <option value="">Unknown / TBC</option>
-              <option value="concrete_slab">Concrete slab (existing)</option>
-              <option value="new_slab">New concrete slab needed</option>
-              <option value="screw_piles">Screw pile foundations</option>
-              <option value="timber_frame">Timber frame/bearers</option>
-              <option value="sloped">Sloped — stepped foundations</option>
+              <option value="ground_screws">Ground screws</option>
+              <option value="concrete_pedestals">Concrete pedestals off existing slab</option>
+              <option value="screws_and_pedestals">Screws and concrete pedestals</option>
             </Select>
           </div>
         </div>
