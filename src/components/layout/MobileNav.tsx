@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, KanbanSquare, CheckSquare, Menu, X, BarChart3, Settings, LogOut, HardHat, PoundSterling, FileText } from 'lucide-react'
+import { LayoutDashboard, Users, KanbanSquare, CheckSquare, Menu, X, BarChart3, Settings, LogOut, HardHat, Package, PoundSterling, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/pipeline',  label: 'Pipeline',  icon: KanbanSquare,    roles: ['admin', 'management'] },
   { href: '/leads',     label: 'Leads',     icon: Users,           roles: ['admin', 'management'] },
   { href: '/jobs',      label: 'Jobs',      icon: HardHat,         roles: ['admin', 'management', 'installer'] },
+  { href: '/stock',     label: 'Stock',     icon: Package,         roles: ['admin', 'management', 'installer'] },
   { href: '/quotes',    label: 'Quotes',    icon: FileText,        roles: ['admin'] },
   { href: '/tasks',     label: 'Tasks',     icon: CheckSquare,     roles: ['admin', 'management'] },
   { href: '/finance',   label: 'Finance',   icon: PoundSterling,   roles: ['admin'] },
