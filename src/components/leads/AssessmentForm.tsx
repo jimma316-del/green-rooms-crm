@@ -312,8 +312,8 @@ function DimensionsTab({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) 
             <FieldLabel>Shape / layout</FieldLabel>
             <Select value={draft.shape ?? ''} onChange={v => set({ shape: v || null })}>
               <option value="">Standard rectangle</option>
-              <option value="L-shape">L-shape</option>
-              <option value="corner">Corner unit</option>
+              <option value="L-shape">L shaped</option>
+              <option value="5-sides">5 sides</option>
               <option value="bespoke">Bespoke</option>
             </Select>
           </div>
