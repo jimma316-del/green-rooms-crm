@@ -104,6 +104,13 @@ function buildMonthData(rows: CacheRow[]): Map<string, MonthData> {
       case 'Net Profit':               m.netProfit = row.net_amount_pence; break
     }
   }
+  // Derive opex from gross profit - net profit when the summary row is missing or suspiciously low
+  for (const m of map.values()) {
+    const derived = m.grossProfit - m.netProfit
+    if (derived > 0 && (m.opex === 0 || m.opex < derived * 0.5)) {
+      m.opex = derived
+    }
+  }
   return map
 }
 
