@@ -205,8 +205,8 @@ function DimensionsTab({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) 
           </div>
         </div>
         <div className="mt-4 max-w-xs">
-          <FieldLabel>Eaves height (m) — leave blank for standard</FieldLabel>
-          <NumStepper value={draft.height_eaves_m ?? 2.4} step={0.05}
+          <FieldLabel>Eaves height (m)</FieldLabel>
+          <NumStepper value={draft.height_eaves_m ?? 2.5} step={0.05}
             onChange={v => set({ height_eaves_m: Math.round(v * 20) / 20 })} min={2} max={4} />
         </div>
       </div>
@@ -336,34 +336,33 @@ function DimensionsTab({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) 
         </div>
       </div>
 
-      {/* Access */}
-      <div>
-        <SectionHead title="Access & Landscaping" />
-        <div className="space-y-4">
-          <div>
-            <FieldLabel>Access notes (gates, paths, overhead cables, obstructions)</FieldLabel>
-            <textarea value={draft.access_notes ?? ''} rows={2}
-              onChange={e => set({ access_notes: e.target.value || null })}
-              placeholder="e.g. narrow side gate, low fence to lift over, 6ft headroom under pergola..."
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-opacity-30 focus:border-[var(--primary)] resize-none" />
-          </div>
-          <div>
-            <FieldLabel>Landscaping requirements</FieldLabel>
-            <textarea value={draft.landscaping_notes ?? ''} rows={2}
-              onChange={e => set({ landscaping_notes: e.target.value || null })}
-              placeholder="e.g. turf to clear, raised area, retaining wall, existing path to integrate..."
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-opacity-30 focus:border-[var(--primary)] resize-none" />
-          </div>
+      {/* Notes — prominent card */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-4">
+        <h3 className="text-sm font-semibold text-blue-800 flex items-center gap-2">
+          <span className="w-5 h-5 rounded-full bg-blue-200 flex items-center justify-center text-blue-700 text-xs font-bold">✎</span>
+          Site Notes
+        </h3>
+        <div>
+          <FieldLabel>Access (gates, paths, overhead cables, obstructions)</FieldLabel>
+          <textarea value={draft.access_notes ?? ''} rows={3}
+            onChange={e => set({ access_notes: e.target.value || null })}
+            placeholder="e.g. narrow side gate, low fence to lift over, 6ft headroom under pergola..."
+            className="w-full px-3 py-2.5 border border-blue-200 bg-white rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400 resize-none" />
         </div>
-      </div>
-
-      {/* Site notes */}
-      <div>
-        <FieldLabel>Additional site notes</FieldLabel>
-        <textarea value={draft.site_notes ?? ''} rows={3}
-          onChange={e => set({ site_notes: e.target.value || null })}
-          placeholder="Neighbour issues, trees, utilities, anything else..."
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-opacity-30 focus:border-[var(--primary)] resize-none" />
+        <div>
+          <FieldLabel>Landscaping requirements</FieldLabel>
+          <textarea value={draft.landscaping_notes ?? ''} rows={3}
+            onChange={e => set({ landscaping_notes: e.target.value || null })}
+            placeholder="e.g. turf to clear, raised area, retaining wall, existing path to integrate..."
+            className="w-full px-3 py-2.5 border border-blue-200 bg-white rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400 resize-none" />
+        </div>
+        <div>
+          <FieldLabel>Additional notes</FieldLabel>
+          <textarea value={draft.site_notes ?? ''} rows={4}
+            onChange={e => set({ site_notes: e.target.value || null })}
+            placeholder="Neighbour issues, trees, utilities, anything else..."
+            className="w-full px-3 py-2.5 border border-blue-200 bg-white rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400 resize-none" />
+        </div>
       </div>
     </div>
   )
