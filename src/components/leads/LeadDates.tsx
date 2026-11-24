@@ -20,7 +20,7 @@ interface Lead {
   job_end_date: string | null
 }
 
-const PRE_VISIT_STAGES = ['new_lead']
+const PRE_VISIT_STAGES = ['new_lead', 'showroom_meeting', 'quoting', 'quote_sent', 'followup', 'in_conversation']
 
 function toCalendarDate(iso: string) {
   // Format: YYYYMMDDTHHmmss / YYYYMMDD
